@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, ArrowDownAZ, Filter, Search } from "lucide-react";
 import Link from "next/link";
@@ -8,53 +11,59 @@ interface UserData {
   role: string;
   phone: string;
   outlet: string;
-  status: "Aktif" | "Revoked";
+  status: "Active" | "Revoked";
 }
 
-const userData: UserData[] = [
-  {
-    username: "abcde12345",
-    name: "ghaniaica",
-    role: "barista",
-    phone: "087878788088",
-    outlet: "Margonda",
-    status: "Aktif",
-  },
-  {
-    username: "abcde12345",
-    name: "ghaniaica",
-    role: "barista",
-    phone: "087878788088",
-    outlet: "Margonda",
-    status: "Aktif",
-  },
-  {
-    username: "abcde12345",
-    name: "ghaniaica",
-    role: "barista",
-    phone: "087878788088",
-    outlet: "Margonda",
-    status: "Aktif",
-  },
-  {
-    username: "abcde12345",
-    name: "ghaniaica",
-    role: "barista",
-    phone: "087878788088",
-    outlet: "Margonda",
-    status: "Aktif",
-  },
-  {
-    username: "abcde12345",
-    name: "ghaniaica",
-    role: "barista",
-    phone: "087878788088",
-    outlet: "Margonda",
-    status: "Revoked",
-  },
-];
-
 export default function DaftarAkun() {
+  const [users, setUsers] = useState<UserData[]>([]);
+
+  useEffect(() => {
+    async function fetchUserData() {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          alert("Token tidak ditemukan. Silakan login ulang.");
+          return;
+        }
+
+        const response = await fetch(
+          "http://localhost:8080/api/account/viewall",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          alert("Gagal mengambil data user. Silakan coba lagi.");
+          return;
+        }
+
+        const result = await response.json();
+        if (result?.data) {
+          const mappedUsers: UserData[] = result.data.map((item: any) => {
+            return {
+              username: item.username ?? "-",
+              name: item.fullName ?? "-",
+              role: item.role ?? "-",
+              phone: item.phoneNumber ?? "-",
+              outlet: item.outlet ?? "-",
+              status: item.status === "Revoked" ? "Revoked" : "Active",
+            };
+          });
+          setUsers(mappedUsers);
+        }
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+        alert("Terjadi kesalahan saat mengambil data user.");
+      }
+    }
+
+    fetchUserData();
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen p-6">
       <div className="flex flex-col items-center mb-6">
@@ -101,11 +110,8 @@ export default function DaftarAkun() {
             </tr>
           </thead>
           <tbody>
-            {userData.map((user, index) => (
-              <tr
-                key={index}
-                className="border-b even:bg-primary-bg"
-              >
+            {users.map((user, index) => (
+              <tr key={index} className="border-b even:bg-primary-bg">
                 <td className="py-4 px-6">{user.username}</td>
                 <td className="py-4 px-6">{user.name}</td>
                 <td className="py-4 px-6">{user.role}</td>
@@ -114,7 +120,7 @@ export default function DaftarAkun() {
                 <td className="py-4 px-6">
                   <span
                     className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      user.status === "Aktif"
+                      user.status === "Active"
                         ? "text-green-600 bg-green-100"
                         : "text-red-600 bg-red-100"
                     }`}
@@ -122,17 +128,19 @@ export default function DaftarAkun() {
                     {user.status}
                   </span>
                 </td>
-                <td className="py-4 px-6">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="rounded-lg bg-primary-light text-white border-none hover:bg-primary-lightest/80 mr-2"
-                  >
-                    Edit
-                  </Button>
-                  <Button size="sm" className="rounded-lg">
-                    Detail
-                  </Button>
+                <td className="py-4 px-6 whitespace-nowrap">
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="rounded-lg bg-primary-light text-white border-none hover:bg-primary-lightest/80"
+                    >
+                      Edit
+                    </Button>
+                    <Button size="sm" className="rounded-lg">
+                      Detail
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}
