@@ -4,6 +4,8 @@
 
 @layer base {
   :root {
+
+
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
@@ -41,4 +43,8 @@
     @apply bg-background text-foreground;
   }
 }
-
+/* Add this to your CSS file */
+select option {
+  background-color: white;
+  color: black;
+}
