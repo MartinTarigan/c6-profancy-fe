@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Calendar from "react-calendar";
+import Toast from "@/components/Toast";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface BaristaOption {
   id: string;
@@ -20,6 +22,11 @@ export default function MyCalendar() {
   const [backupSchedules, setBackupSchedules] = useState<any>({});
   const [date, setDate] = useState<Date>(new Date());
   const [isEditing, setIsEditing] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  const [toast, setToast] = useState<{ type: string; message: string } | null>(
+    null
+  );
 
   // ✅ Gunakan outletId sebagai key!
   const selectedDateKey = date.toDateString();
@@ -287,12 +294,22 @@ export default function MyCalendar() {
       // }
 
       if (!currentOutlet) {
-        alert("❌ Outlet tidak ditemukan! Pastikan outlet telah dipilih.");
+        // alert("❌ Outlet tidak ditemukan! Pastikan outlet telah dipilih.");
+        setToast({
+          type: "error",
+          message: "Outlet tidak ditemukan! Pastikan outlet telah dipilih.",
+        });
+
         return;
       }
 
       if (!currentOutlet.headBarId) {
-        alert("❌ HeadBar belum di-assign di outlet ini!");
+        // alert("❌ HeadBar belum di-assign di outlet ini!");
+        setToast({
+          type: "error",
+          message: "HeadBar belum di-assign di outlet ini!",
+        });
+
         return;
       }
 
@@ -333,24 +350,43 @@ export default function MyCalendar() {
         });
 
         if (!res.ok) {
-          throw new Error(`❌ Gagal simpan shift! Status: ${res.status}`);
+          // throw new Error(`❌ Gagal simpan shift! Status: ${res.status}`);
+          setToast({
+            type: "error",
+            message: `Gagal simpan shift! Status: ${res.status}`,
+          });
+          return;
         }
       }
 
-      alert("✅ Jadwal berhasil disimpan!");
+      // alert("✅ Jadwal berhasil disimpan!");
+      setToast({ type: "success", message: "Jadwal berhasil disimpan!" });
       setIsEditing(false);
     } catch (error) {
-      console.error("❌ Gagal simpan shift:", error);
-      alert("Gagal menyimpan jadwal.");
+      console.error("Gagal simpan shift:", error);
+      setToast({
+        type: "error",
+        message: "Gagal menyimpan jadwal. Silakan coba lagi!",
+      });
+
+      // alert("Gagal menyimpan jadwal.");
     }
   };
 
-  const cancelEdit = () => {
-    const confirmCancel = window.confirm(
-      "Batal edit jadwal? Perubahan tidak akan disimpan."
-    );
-    if (!confirmCancel) return;
+  // const cancelEdit = () => {
+  //   const confirmCancel = window.confirm(
+  //     "Batal edit jadwal? Perubahan tidak akan disimpan."
+  //   );
+  //   if (!confirmCancel) return;
 
+  //   setSchedules(backupSchedules);
+  //   setIsEditing(false);
+  // };
+  const cancelEdit = () => {
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmCancel = () => {
     setSchedules(backupSchedules);
     setIsEditing(false);
   };
@@ -389,6 +425,24 @@ export default function MyCalendar() {
 
   return (
     <div className="flex flex-col items-center w-full max-w-5xl mx-auto p-6 gap-4">
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      {showConfirmModal && (
+        <ConfirmModal
+          isOpen={showConfirmModal}
+          onClose={() => setShowConfirmModal(false)}
+          onConfirm={handleConfirmCancel}
+          title="Batalkan Edit Jadwal"
+          message="Batal edit jadwal? Perubahan tidak akan disimpan."
+        />
+      )}
+
       {/* SECTION PILIH OUTLET */}
       <div className="flex flex-col items-center w-full gap-2">
         {/* <label
@@ -492,7 +546,8 @@ export default function MyCalendar() {
                       <strong>
                         {barista ? barista.fullName : `ID ${baristaId}`}
                       </strong>{" "}
-                      tidak boleh diassign ke dua shift pada tanggal yang sama.
+                      seharusnya tidak boleh diassign ke dua shift pada tanggal
+                      yang sama.
                     </p>
                   );
                 })}
