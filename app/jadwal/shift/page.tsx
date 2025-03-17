@@ -1,10 +1,24 @@
-import MyCalendar from "@/components/MyCalendar"; // Pastikan path ini sesuai dengan struktur project kamu
+import MyCalendar from "@/components/MyCalendar";
+
 
 export default function ShiftPage() {
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Halaman Jadwal Shift</h1>
-      <MyCalendar /> {/* Ini memanggil komponen MyCalendar */}
+    // <div className="min-h-screen  py-8 px-6">
+    <div className="min-h-screen   px-6">
+
+      <div className="max-w-7xl mx-auto">
+        <h3
+          className="text-center text-[44px] font-bold leading-none mb-[10px]"
+          style={{
+            color: "#5171E3",
+            fontFamily: "Inter",
+          }}
+        >
+          Manajemen Jadwal
+        </h3>
+
+        <MyCalendar />
+      </div>
     </div>
   );
 }

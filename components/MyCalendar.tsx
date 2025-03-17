@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
 
 interface BaristaOption {
   id: string;
@@ -29,6 +28,42 @@ export default function MyCalendar() {
     morningShift: [],
     eveningShift: [],
   };
+
+  const validateShift = (shiftList: string[], minBarista: number) => {
+    const validBaristas = shiftList.filter((id) => id !== "");
+    return validBaristas.length >= minBarista;
+  };
+
+  const getDoubleShiftBaristas = () => {
+    const pagi = currentSchedule.morningShift.filter((id) => id !== "");
+    const sore = currentSchedule.eveningShift.filter((id) => id !== "");
+    const duplicates = pagi.filter((id) => sore.includes(id));
+    return duplicates;
+  };
+
+  const isMorningShiftValid = validateShift(currentSchedule.morningShift, 1);
+  const isEveningShiftValid = validateShift(currentSchedule.eveningShift, 2);
+  const doubleShiftBaristas = getDoubleShiftBaristas();
+
+  {
+    /* GLOBAL WARNING */
+  }
+  {
+    isEditing && getDoubleShiftBaristas().length > 0 && (
+      <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded mb-4">
+        <p className="font-semibold">⚠️ Catatan:</p>
+        {getDoubleShiftBaristas().map((baristaId) => {
+          const barista = baristaOptions.find((b) => b.id === baristaId);
+          return (
+            <p key={baristaId}>
+              Barista <strong>{barista?.fullName || baristaId}</strong>{" "}
+              seharusnya tidak diassign ke dua shift di tanggal yang sama.
+            </p>
+          );
+        })}
+      </div>
+    );
+  }
 
   // ✅ FETCH USER DATA ON LOAD
   useEffect(() => {
@@ -242,6 +277,15 @@ export default function MyCalendar() {
       const dateShift = date.toISOString().split("T")[0];
       const currentOutlet = outlets.find((o) => o.outletId === outletId);
 
+      // if (
+      //   !isMorningShiftValid ||
+      //   !isEveningShiftValid ||
+      //   doubleShiftBaristas.length > 0
+      // ) {
+      //   alert("❌ Periksa kembali validasi shift sebelum menyimpan!");
+      //   return;
+      // }
+
       if (!currentOutlet) {
         alert("❌ Outlet tidak ditemukan! Pastikan outlet telah dipilih.");
         return;
@@ -336,87 +380,170 @@ export default function MyCalendar() {
     const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     fetchShiftsByRange(selectedId, startDate, endDate);
   };
+  const formattedDate = date.toLocaleDateString("id-ID", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl mx-auto bg-white p-6 rounded-lg shadow-md">
-      {/* Sidebar Kalender */}
-      <div className="flex flex-col items-center">
-        <h2 className="text-xl font-semibold mb-4">
-          Manajemen Jadwal ({userRole})
-        </h2>
+    <div className="flex flex-col items-center w-full max-w-5xl mx-auto p-6 gap-4">
+      {/* SECTION PILIH OUTLET */}
+      <div className="flex flex-col items-center w-full gap-2">
+        {/* <label
+          className="text-center text-[20px] font-medium leading-none"
+          style={{
+            color: "#5171E3",        // Tens-Muted-Blue
+            fontFamily: "Inter",
+          }}
+        >
+          Pilih Outlet
+        </label> */}
 
-        {/* FIXED DROPDOWN - Added fixed position and higher z-index */}
-        <div className="relative w-full z-50">
+        <div className="relative w-full max-w-md">
           <select
             value={outletId || ""}
             onChange={handleOutletChange}
             disabled={
               isEditing || (userRole !== "Admin" && userRole !== "C-Level")
             }
-            className="px-4 py-2 border rounded-md w-full text-black bg-white"
+            className="w-full px-4 py-3 rounded-[12px] bg-[#EFF2FF] text-center text-[20px] font-medium text-[#5171E3] appearance-none border-none"
+            style={{
+              fontFamily: "Inter",
+            }}
           >
-            <option value="">Pilih Outlet</option>
+            <option value="" className="text-[#5171E3]">
+              Pilih Outlet
+            </option>
             {outlets.map((outlet) => (
-              <option key={outlet.outletId} value={outlet.outletId}>
+              <option
+                key={outlet.outletId}
+                value={outlet.outletId}
+                className="text-[#5171E3]"
+              >
                 {outlet.name}
               </option>
             ))}
           </select>
+
+          {/* Chevron Icon */}
+          <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+            <svg
+              className="h-5 w-5 text-[#5171E3]"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M5.23 7.21a.75.75 0 011.06.02L10 11.085l3.71-3.855a.75.75 0 111.08 1.04l-4.25 4.417a.75.75 0 01-1.08 0L5.25 8.27a.75.75 0 01-.02-1.06z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
         </div>
-
-        <Calendar
-          onChange={(value) => setDate(value as Date)}
-          value={date}
-          className="mt-6 border border-gray-300 rounded-lg p-4"
-        />
-
-        <p className="mt-4 text-sm">Tanggal: {selectedDateKey}</p>
       </div>
 
-      {/* Jadwal Shift */}
-      <div className="bg-indigo-50 p-6 rounded-lg">
-        <h3 className="text-xl font-semibold mb-4">
-          Jadwal Shift ({selectedOutlet})
-        </h3>
-
-        {renderShiftSection(
-          "Shift Pagi",
-          currentSchedule.morningShift,
-          "morningShift"
-        )}
-        {renderShiftSection(
-          "Shift Sore",
-          currentSchedule.eveningShift,
-          "eveningShift"
-        )}
-
-        <div className="flex gap-4 mt-6">
-          <button
-            onClick={() => {
-              if (isEditing) {
-                saveSchedule();
-              } else {
-                setBackupSchedules(JSON.parse(JSON.stringify(schedules)));
-                setIsEditing(true);
+      {/* SECTION KALENDER + JADWAL */}
+      <div
+        className="flex flex-col md:flex-row justify-center items-center gap-[10px] w-full rounded-[20px] shadow-md bg-[#EDF1FF]"
+        style={{
+          padding: "28px 40px",
+          alignSelf: "stretch", // Supaya bisa full container
+        }}
+      >
+        {" "}
+        {/* Sidebar Kalender */}
+        <div className="flex flex-col items-center">
+          <Calendar
+            onChange={(value) => setDate(value as Date)}
+            value={date}
+            className="react-calendar"
+            tileClassName={({ date }) => {
+              if (date.toDateString() === new Date().toDateString()) {
+                return "selected-tile";
               }
+              return "";
             }}
-            className={`${
-              isEditing
-                ? "bg-green-600 hover:bg-green-700"
-                : "bg-blue-600 hover:bg-blue-700"
-            } text-white py-2 px-4 rounded-md w-full`}
-          >
-            {isEditing ? "Simpan Jadwal" : "Edit Jadwal"}
-          </button>
+          />
+        </div>
+        {/* Jadwal Shift */}
+        <div className="bg-white pt-0 px-0 pb-6 rounded-lg shadow-md w-full max-w-md overflow-hidden">
+          {/* Header tanggal */}
+          <div className="bg-[#5171E3] text-white text-center w-full py-3 rounded-t-lg">
+            <h3 className="text-lg font-semibold">{formattedDate}</h3>
+          </div>
+          {/* Wrapper isi konten shift + catatan */}
+          <div className="px-6 mt-4">
+            {/* Warning Catatan */}
+            {isEditing && doubleShiftBaristas.length > 0 && (
+              <div className="text-yellow-800 text-xs mb-4 max-w-xs">
+                <p className="font-semibold flex items-center gap-1">
+                  ⚠️ Catatan:
+                </p>
+                {doubleShiftBaristas.map((baristaId, idx) => {
+                  const barista = baristaOptions.find(
+                    (b) => b.id === baristaId
+                  );
+                  return (
+                    <p key={`${baristaId}-${idx}`}>
+                      Barista{" "}
+                      <strong>
+                        {barista ? barista.fullName : `ID ${baristaId}`}
+                      </strong>{" "}
+                      tidak boleh diassign ke dua shift pada tanggal yang sama.
+                    </p>
+                  );
+                })}
+              </div>
+            )}
 
-          {isEditing && (
-            <button
-              onClick={cancelEdit}
-              className="border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white py-2 px-4 rounded-md w-full transition duration-300"
-            >
-              Cancel
-            </button>
-          )}
+            {/* Shift Pagi */}
+            {renderShiftSection(
+              "Shift Pagi",
+              currentSchedule.morningShift,
+              "morningShift"
+            )}
+
+            {/* Shift Sore */}
+            {renderShiftSection(
+              "Shift Sore",
+              currentSchedule.eveningShift,
+              "eveningShift"
+            )}
+
+            {/* Tombol Aksi */}
+            <div className="flex gap-4 mt-6">
+              {isEditing && (
+                <button
+                  onClick={cancelEdit}
+                  className="border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white py-2 px-4 rounded-md w-full transition duration-300"
+                >
+                  Cancel
+                </button>
+              )}
+
+              <button
+                onClick={() => {
+                  if (isEditing) {
+                    saveSchedule();
+                  } else {
+                    setBackupSchedules(JSON.parse(JSON.stringify(schedules)));
+                    setIsEditing(true);
+                  }
+                }}
+                className={`${
+                  isEditing
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "bg-blue-600 hover:bg-blue-700"
+                } text-white py-2 px-4 rounded-md w-full transition duration-300`}
+              >
+                {isEditing ? "Simpan Jadwal" : "Edit Jadwal"}
+              </button>
+            </div>
+          </div>{" "}
+          {/* end px-6 wrapper */}
         </div>
       </div>
     </div>
@@ -427,66 +554,122 @@ export default function MyCalendar() {
     shiftList: string[],
     shiftType: "morningShift" | "eveningShift"
   ) {
+    const hasValidBarista = shiftList.some((baristaId) => baristaId !== "");
+
+    // Tentuin minimal barista tiap shift
+    const minBarista = shiftType === "morningShift" ? 1 : 2;
+
+    const isValidShift = validateShift(shiftList, minBarista);
+
     return (
       <div className="mb-6">
-        <h4 className="text-md font-semibold mb-2">{title}</h4>
+        <h4
+          className="text-md font-semibold mb-4 px-4 py-2 text-center mx-auto"
+          style={{
+            borderRadius: "24px",
+            border: "2px solid #D5DEFF",
+            color: "#5171E3", // Warna teks biru seperti yang lain
+            width: "fit-content", // Supaya width-nya mengikuti isi
+            fontFamily: "Inter",
+            backgroundColor: "#ffffff", // Biar kontras sama section bg
+          }}
+        >
+          {title}
+        </h4>
 
-        {shiftList.length === 0 && !isEditing && (
+        {/* WARNING untuk minimal barista */}
+        {!isValidShift && isEditing && (
+          <p className="text-red-600 text-sm mb-2">
+            Catatan: Minimal {minBarista} barista yang harus dipilih di {title}.
+          </p>
+        )}
+
+        {/* Kalau gak ada barista & gak editing */}
+        {!hasValidBarista && !isEditing && (
           <p className="text-gray-500">Belum ada barista di shift ini.</p>
         )}
 
-        {shiftList.map((baristaId, index) => (
-          <div key={index} className="flex items-center gap-2 mb-2">
-            {/* FIXED SELECT - Added higher z-index and inline styles */}
-            <div className="relative flex-1 z-10">
-              <select
-                value={baristaId}
-                onChange={(e) => {
-                  const updated = [...shiftList];
-                  updated[index] = e.target.value;
-                  updateSchedule({
-                    ...currentSchedule,
-                    [shiftType]: updated,
-                  });
-                }}
-                disabled={!isEditing}
-                className="w-full px-4 py-2 border rounded-md text-black bg-white"
-                style={{ color: "black" }}
-              >
-                <option
-                  value=""
-                  style={{ backgroundColor: "white", color: "black" }}
-                >
-                  Pilih Barista
-                </option>
-                {baristaOptions.map((opt) => (
-                  <option
-                    key={opt.id}
-                    value={opt.id}
-                    style={{ backgroundColor: "white", color: "black" }}
-                  >
-                    {opt.fullName} ({opt.role})
-                  </option>
-                ))}
-              </select>
-            </div>
+        {/* Render dropdown */}
+        {(isEditing || hasValidBarista) &&
+          shiftList.map((baristaId, index) => {
+            if (!isEditing && baristaId === "") return null;
 
-            {isEditing && index > 0 && (
-              <button
-                onClick={() => {
-                  const updated = shiftList.filter((_, i) => i !== index);
-                  updateSchedule({
-                    ...currentSchedule,
-                    [shiftType]: updated,
-                  });
-                }}
-                className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md"
-              >
-                ❌
-              </button>
-            )}
-          </div>
-        ))}
+            return (
+              <div key={index} className="flex items-center gap-2 mb-2">
+                <div className="relative flex-1 z-10">
+                  <select
+                    value={baristaId}
+                    onChange={(e) => {
+                      const updated = [...shiftList];
+                      updated[index] = e.target.value;
+                      updateSchedule({
+                        ...currentSchedule,
+                        [shiftType]: updated,
+                      });
+                    }}
+                    disabled={!isEditing}
+                    className="w-full px-4 py-3 rounded-[12px] bg-[#EFF2FF] text-center text-[16px] font-medium text-[#5171E3] appearance-none border-none"
+                    style={{
+                      fontFamily: "Inter",
+                    }}
+                  >
+                    <option value="" className="text-[#5171E3]">
+                      Pilih Barista
+                    </option>
+                    {baristaOptions.map((opt) => (
+                      <option
+                        key={opt.id}
+                        value={opt.id}
+                        className="text-[#5171E3]"
+                      >
+                        {opt.fullName} ({opt.role})
+                      </option>
+                    ))}
+                  </select>
+
+                  <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                    <svg
+                      className="h-5 w-5 text-[#5171E3]"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.085l3.71-3.855a.75.75 0 111.08 1.04l-4.25 4.417a.75.75 0 01-1.08 0L5.25 8.27a.75.75 0 01-.02-1.06z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                </div>
+
+                {isEditing && (
+                  <button
+                    onClick={() => {
+                      const updated = shiftList.filter((_, i) => i !== index);
+                      updateSchedule({
+                        ...currentSchedule,
+                        [shiftType]: updated,
+                      });
+                    }}
+                    className="
+                    bg-[#E45252]
+                    hover:bg-[#c73838]
+                    text-white
+                    px-4 py-2
+                    rounded-[7.253px]
+                    text-sm
+                    font-medium
+                    transition
+                    duration-300
+                  "
+                  >
+                    Hapus
+                  </button>
+                )}
+              </div>
+            );
+          })}
 
         {isEditing && (
           <button
@@ -496,7 +679,21 @@ export default function MyCalendar() {
                 [shiftType]: [...shiftList, ""],
               })
             }
-            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md"
+            className="
+          text-[#5171E3]
+          font-medium
+          py-2 px-4
+          border-2 border-[#D5DEFF]
+          rounded-[24px]
+          bg-white
+          hover:bg-[#5171E3]
+          hover:text-white
+          transition
+          duration-300
+        "
+            style={{
+              fontFamily: "Inter",
+            }}
           >
             + Tambah Barista
           </button>

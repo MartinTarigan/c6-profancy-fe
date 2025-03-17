@@ -48,3 +48,132 @@ select option {
   background-color: white;
   color: black;
 }
+.react-calendar {
+  width: 100%; 
+  max-width: 800px; 
+  border-radius: 12px;
+  border: 1px solid #5171e3;
+  background: #fff;
+  font-family: 'Inter', sans-serif;
+  padding: 28px;
+  color: #3C67FF;
+}
+
+/* NAVIGATION HEADER */
+.react-calendar__navigation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 6.473px;
+  border: 1px solid #3C67FF;
+  background: #D5DEFF;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  padding: 0;
+}
+
+.react-calendar__navigation button {
+  flex: unset;
+  width: 40px;
+  background: #D5DEFF;
+  color: #3C67FF;
+  border: none;
+  padding: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.react-calendar__navigation__label {
+  flex-grow: 1;
+  text-align: center;
+  background: #D5DEFF;
+  color: #3C67FF;
+  font-weight: 600;
+  padding: 10px 0;
+  border-left: 1px solid #3C67FF;
+  border-right: 1px solid #3C67FF;
+}
+
+/* WEEKDAY HEADERS */
+.react-calendar__month-view__weekdays {
+  text-align: center;
+  font-weight: 500;
+  font-size: 14px;
+  text-transform: uppercase;
+  color: #3C67FF;
+  background: #EFF2FF;
+  margin-bottom: 0.5rem;
+}
+
+.react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none !important;
+  border-bottom: none !important;
+  text-overflow: clip !important;
+  overflow: visible !important;
+  white-space: nowrap;
+}
+
+/* DAYS */
+.react-calendar__month-view__days__day {
+  color: #5171e3;
+  text-align: center;
+  padding: 0.75rem 0.5rem;
+  border-radius: 6px;
+  font-weight: 400;
+  border: none;
+}
+
+.react-calendar__month-view__days__day--weekend {
+  color: red !important; /* Sabtu & Minggu */
+}
+
+/* TODAY */
+.react-calendar__tile--now {
+  background: #eff2ff;
+  border: 1px solid #FFF;
+  color: #3C67FF;
+}
+
+/* SELECTED DAY */
+.react-calendar__tile--active {
+  background: #3C67FF;
+  border: 1px solid #FFF;
+  color: white !important;
+}
+
+/* NEIGHBORING MONTH (ini yang ngaruh) */
+.react-calendar__month-view__days__day--neighboringMonth {
+  color: #A0AEC0 !important;
+  opacity: 0.5 !important;
+}
+
+/* NEIGHBORING MONTH + WEEKEND */
+.react-calendar__month-view__days__day--weekend.react-calendar__month-view__days__day--neighboringMonth {
+  color: rgba(255, 0, 0, 0.5) !important;
+}
+
+/* HOVER (disable hover efek kalau bukan bulan itu) */
+.react-calendar__tile--neighboringMonth:enabled:hover {
+  background-color: transparent !important;
+  color: #A0AEC0 !important;
+  opacity: 0.5 !important;
+}
+
+/* SELECT NEIGHBORING MONTH DATE */
+.react-calendar__tile--neighboringMonth.react-calendar__tile--active {
+  background-color: #3C67FF !important;
+  color: white !important;
+  opacity: 1 !important;
+}
+
+/* HOVER NORMAL */
+.react-calendar__tile:enabled:hover {
+  background-color: #3C67FF;
+  color: white;
+}
+
+/* REMOVE FOCUS */
+.react-calendar button:focus {
+  outline: none;
+}
