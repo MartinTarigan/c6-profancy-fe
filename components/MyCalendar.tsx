@@ -110,7 +110,12 @@ export default function MyCalendar() {
           console.error("❌ Outlet not found for the user");
         }
 
-        if (userRes.data.role === "Admin" || userRes.data.role === "C-Level") {
+        if (
+          userRes.data.role === "Admin" ||
+          userRes.data.role === "CEO" ||
+          userRes.data.role === "COO" ||
+          userRes.data.role === "CFO"
+        ) {
           fetchAllOutlets(token); // Admin or C-Level can select any outlet
         } else {
           console.log("Non-admin, outlet associated with user:", outlet);
@@ -460,7 +465,11 @@ export default function MyCalendar() {
             value={outletId || ""}
             onChange={handleOutletChange}
             disabled={
-              isEditing || (userRole !== "Admin" && userRole !== "C-Level")
+              isEditing ||
+              (userRole !== "Admin" &&
+                userRole !== "CEO" &&
+                userRole !== "COO" &&
+                userRole !== "CFO")
             }
             className="w-full px-4 py-3 rounded-[12px] bg-[#EFF2FF] text-center text-[20px] font-medium text-[#5171E3] appearance-none border-none"
             style={{
@@ -569,34 +578,36 @@ export default function MyCalendar() {
             )}
 
             {/* Tombol Aksi */}
-            <div className="flex gap-4 mt-6">
-              {isEditing && (
-                <button
-                  onClick={cancelEdit}
-                  className="border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white py-2 px-4 rounded-md w-full transition duration-300"
-                >
-                  Cancel
-                </button>
-              )}
+            {userRole === "Head Bar" && (
+              <div className="flex gap-4 mt-6">
+                {isEditing && (
+                  <button
+                    onClick={cancelEdit}
+                    className="border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white py-2 px-4 rounded-md w-full transition duration-300"
+                  >
+                    Cancel
+                  </button>
+                )}
 
-              <button
-                onClick={() => {
-                  if (isEditing) {
-                    saveSchedule();
-                  } else {
-                    setBackupSchedules(JSON.parse(JSON.stringify(schedules)));
-                    setIsEditing(true);
-                  }
-                }}
-                className={`${
-                  isEditing
-                    ? "bg-green-600 hover:bg-green-700"
-                    : "bg-blue-600 hover:bg-blue-700"
-                } text-white py-2 px-4 rounded-md w-full transition duration-300`}
-              >
-                {isEditing ? "Simpan Jadwal" : "Edit Jadwal"}
-              </button>
-            </div>
+                <button
+                  onClick={() => {
+                    if (isEditing) {
+                      saveSchedule();
+                    } else {
+                      setBackupSchedules(JSON.parse(JSON.stringify(schedules)));
+                      setIsEditing(true);
+                    }
+                  }}
+                  className={`${
+                    isEditing
+                      ? "bg-green-600 hover:bg-green-700"
+                      : "bg-blue-600 hover:bg-blue-700"
+                  } text-white py-2 px-4 rounded-md w-full transition duration-300`}
+                >
+                  {isEditing ? "Simpan Jadwal" : "Edit Jadwal"}
+                </button>
+              </div>
+            )}
           </div>{" "}
           {/* end px-6 wrapper */}
         </div>
@@ -639,8 +650,16 @@ export default function MyCalendar() {
           </p>
         )}
 
+        {/* WARNING belum pilih outlet */}
+        {!outletId && (
+          <p className="text-gray-500">
+            Tidak ada data. Silahkan pilih outlet terlebih dahulu.
+          </p>
+        )}
+
+
         {/* Kalau gak ada barista & gak editing */}
-        {!hasValidBarista && !isEditing && (
+        {outletId && !hasValidBarista && !isEditing && (
           <p className="text-gray-500">Belum ada barista di shift ini.</p>
         )}
 
