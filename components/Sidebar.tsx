@@ -1,12 +1,12 @@
 "use client"
 
 import type React from "react"
-
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { ChevronDown, Home, Calendar, BookOpen } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
+import { Button } from "@/components/ui/button"
 
 interface NavItemProps {
   href: string
@@ -65,14 +65,32 @@ const SubNavItem = ({ href, label, isActive }: { href: string; label: string; is
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("http://localhost:8080/api/auth/logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      })
+      if (res.ok) {
+        localStorage.clear()
+        router.push("/login")
+      } else {
+        console.error("Logout gagal")
+      }
+    } catch (err) {
+      console.error("Error saat logout:", err)
+    }
+  }
 
   return (
-    <div className="w-[280px] p-2 h-[calc(100vh-24px)] ml-2">
-      <div className="bg-primary-bg rounded-2xl h-full shadow-sm border border-gray-100 overflow-hidden">
+    <div className="fixed left-2 top-[100px] w-[280px] h-[calc(100vh-116px)] z-10">
+      <div className="bg-primary-bg rounded-2xl h-full shadow-sm border border-gray-100 overflow-auto flex flex-col justify-between">
         <div className="flex flex-col py-4">
           <NavItem href="/" icon={<Home className="h-5 w-5" />} label="Home" isActive={pathname === "/"} />
           <NavItem
-            href="account/"
+            href="/account/"
             icon={
               <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path
@@ -108,6 +126,12 @@ export function Sidebar() {
             <SubNavItem href="/jadwal/izin-cuti" label="Izin/Cuti" isActive={pathname === "/jadwal/izin-cuti"} />
             <SubNavItem href="/jadwal/shift" label="Shift" isActive={pathname === "/jadwal/shift"} />
           </NavItem>
+        </div>
+
+        <div className="p-4 mt-auto">
+          <Button onClick={handleLogout} className="w-full bg-red-500 hover:bg-red-600 text-white">
+            Logout
+          </Button>
         </div>
       </div>
     </div>

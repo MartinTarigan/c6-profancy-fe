@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, ArrowDownAZ, Filter, Search } from "lucide-react";
@@ -16,7 +15,6 @@ interface UserData {
 
 export default function DaftarAkun() {
   const [users, setUsers] = useState<UserData[]>([]);
-
   useEffect(() => {
     async function fetchUserData() {
       try {
@@ -25,22 +23,16 @@ export default function DaftarAkun() {
           alert("Token tidak ditemukan. Silakan login ulang.");
           return;
         }
-
-        const response = await fetch(
-          "http://localhost:8080/api/account/viewall",
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
+        const response = await fetch("http://localhost:8080/api/account/viewall", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         if (!response.ok) {
           alert("Gagal mengambil data user. Silakan coba lagi.");
           return;
         }
-
         const result = await response.json();
         if (result?.data) {
           const mappedUsers: UserData[] = result.data.map((item: any) => {
@@ -60,15 +52,12 @@ export default function DaftarAkun() {
         alert("Terjadi kesalahan saat mengambil data user.");
       }
     }
-
     fetchUserData();
   }, []);
-
   return (
-    <div className="flex flex-col min-h-screen p-6">
+    <div className="flex flex-col">
       <div className="flex flex-col items-center mb-6">
         <h1 className="text-primary text-3xl font-bold mb-6">Daftar Akun</h1>
-
         <Link href="/account/create">
           <Button className="rounded-full">
             <Plus className="mr-2 h-5 w-5" />
@@ -76,7 +65,6 @@ export default function DaftarAkun() {
           </Button>
         </Link>
       </div>
-
       <div className="flex gap-4 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -95,7 +83,6 @@ export default function DaftarAkun() {
           Filter
         </Button>
       </div>
-
       <div className="overflow-x-auto">
         <table className="w-full border-collapse shadow-md rounded-lg overflow-hidden">
           <thead>
@@ -118,28 +105,20 @@ export default function DaftarAkun() {
                 <td className="py-4 px-6">{user.phone}</td>
                 <td className="py-4 px-6">{user.outlet}</td>
                 <td className="py-4 px-6">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      user.status === "Active"
-                        ? "text-green-600 bg-green-100"
-                        : "text-red-600 bg-red-100"
-                    }`}
-                  >
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${user.status === "Active" ? "text-green-600 bg-green-100" : "text-red-600 bg-red-100"}`}>
                     {user.status}
                   </span>
                 </td>
                 <td className="py-4 px-6 whitespace-nowrap">
                   <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="rounded-lg bg-primary-light text-white border-none hover:bg-primary-lightest/80"
-                    >
+                    <Button size="sm" variant="outline" className="rounded-lg bg-primary-light text-white border-none hover:bg-primary-lightest/80">
                       Edit
                     </Button>
-                    <Button size="sm" className="rounded-lg">
-                      Detail
-                    </Button>
+                    <Link href={`/account/${user.username}`}>
+                      <Button size="sm" className="rounded-lg">
+                        Detail
+                      </Button>
+                    </Link>
                   </div>
                 </td>
               </tr>

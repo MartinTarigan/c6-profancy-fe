@@ -1,21 +1,21 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
-import { Bell, User } from "lucide-react";
+import { useState, useEffect } from "react"
+import Image from "next/image"
+import { Bell, User } from "lucide-react"
 
 export function Header() {
-  const [role, setRole] = useState("User");
+  const [role, setRole] = useState("User")
 
   useEffect(() => {
-    const storedRole = localStorage.getItem("role");
+    const storedRole = localStorage.getItem("role")
     if (storedRole) {
-      setRole(storedRole);
+      setRole(storedRole)
     }
-  }, []);
+  }, [])
 
   return (
-    <div className="px-2 pt-2">
+    <div className="fixed top-0 left-0 right-0 p-2 z-20">
       <header className="bg-primary h-[80px] flex items-center justify-between px-8 rounded-2xl shadow-sm">
         <div className="hidden md:flex md:w-1/2 items-center">
           <Image
@@ -23,7 +23,7 @@ export function Header() {
             src="/images/login_logo.png"
             alt="Logo"
             width={90}
-            height={0}
+            height={90}
             priority
           />
         </div>
@@ -38,5 +38,6 @@ export function Header() {
         </div>
       </header>
     </div>
-  );
+  )
 }
+
