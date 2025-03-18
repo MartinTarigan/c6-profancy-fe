@@ -9,6 +9,23 @@ import Link from "next/link";
 
 type StepType = "checkUsername" | "defaultPassword" | "login" | "changePassword";
 
+function parseJwt(token: string) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.error("Failed to parse JWT:", e);
+    return null;
+  }
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState<string>("");
@@ -64,8 +81,21 @@ export default function LoginPage() {
             body: JSON.stringify({ username, password }),
           });
           const result = await res.json();
+          
           if (res.ok) {
+            const token = result.data.token;
             localStorage.setItem("token", result.data.token);
+            const jwtPayload = parseJwt(token);
+            if (jwtPayload && jwtPayload.roles) {
+              const cleanedRoles = jwtPayload.roles.map((role: string) => role.replace("ROLE_", ""));
+              
+              if (cleanedRoles.length === 1) {
+                localStorage.setItem("roles", cleanedRoles[0]); 
+              } else {
+                localStorage.setItem("roles", JSON.stringify(cleanedRoles));
+              }
+            }
+            
             router.push("/");
           } else {
             alert(result.message);

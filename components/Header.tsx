@@ -8,7 +8,7 @@ export function Header() {
   const [role, setRole] = useState("User")
 
   useEffect(() => {
-    const storedRole = localStorage.getItem("role")
+    const storedRole = localStorage.getItem("roles")
     if (storedRole) {
       setRole(storedRole)
     }

@@ -15,7 +15,10 @@ interface UserData {
 
 export default function DaftarAkun() {
   const [users, setUsers] = useState<UserData[]>([]);
+  const [userRole, setUserRole] = useState<string | null>(null)
   useEffect(() => {
+    const storedRole = localStorage.getItem("roles")
+    setUserRole(storedRole)
     async function fetchUserData() {
       try {
         const token = localStorage.getItem("token");
@@ -58,12 +61,14 @@ export default function DaftarAkun() {
     <div className="flex flex-col">
       <div className="flex flex-col items-center mb-6">
         <h1 className="text-primary text-3xl font-bold mb-6">Daftar Akun</h1>
-        <Link href="/account/create">
-          <Button className="rounded-full">
-            <Plus className="mr-2 h-5 w-5" />
-            Tambah Akun Baru
-          </Button>
-        </Link>
+        {userRole === "Admin" && (
+          <Link href="/daftar-akun/tambah">
+            <Button className="rounded-full">
+              <Plus className="mr-2 h-5 w-5" />
+              Tambah Akun Baru
+            </Button>
+          </Link>
+        )}
       </div>
       <div className="flex gap-4 mb-6">
         <div className="relative flex-1">
