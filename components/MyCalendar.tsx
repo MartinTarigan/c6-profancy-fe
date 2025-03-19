@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Key } from "react";
 import Calendar from "react-calendar";
 import Toast from "@/components/Toast";
 import ConfirmModal from "@/components/ConfirmModal";
@@ -28,7 +28,6 @@ export default function MyCalendar() {
     null
   );
 
-  // ✅ Gunakan outletId sebagai key!
   const selectedDateKey = date.toDateString();
   const currentOutletSchedules = schedules[outletId!] || {};
   const currentSchedule = currentOutletSchedules[selectedDateKey] || {
@@ -42,9 +41,9 @@ export default function MyCalendar() {
   };
 
   const getDoubleShiftBaristas = () => {
-    const pagi = currentSchedule.morningShift.filter((id) => id !== "");
-    const sore = currentSchedule.eveningShift.filter((id) => id !== "");
-    const duplicates = pagi.filter((id) => sore.includes(id));
+    const pagi = currentSchedule.morningShift.filter((id: string) => id !== "");
+    const sore = currentSchedule.eveningShift.filter((id: string) => id !== "");
+    const duplicates = pagi.filter((id: any) => sore.includes(id));
     return duplicates;
   };
 
@@ -59,7 +58,7 @@ export default function MyCalendar() {
     isEditing && getDoubleShiftBaristas().length > 0 && (
       <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded mb-4">
         <p className="font-semibold">⚠️ Catatan:</p>
-        {getDoubleShiftBaristas().map((baristaId) => {
+        {getDoubleShiftBaristas().map((baristaId: Key | null | undefined) => {
           const barista = baristaOptions.find((b) => b.id === baristaId);
           return (
             <p key={baristaId}>
@@ -72,7 +71,6 @@ export default function MyCalendar() {
     );
   }
 
-  // ✅ FETCH USER DATA ON LOAD
   useEffect(() => {
     const fetchUserData = async () => {
       const userId = localStorage.getItem("userid");
@@ -107,21 +105,16 @@ export default function MyCalendar() {
           setSelectedOutlet(selectedOutlet); // Set the outlet name for non-admin
           fetchAllOutlets(token, selectedOutlet); // Fetch all outlets and set selected outlet
         } else {
-          console.error("❌ Outlet not found for the user");
+          // console.error("❌ Outlet not found for the user");
         }
 
-        if (
-          userRes.data.role === "Admin" ||
-          userRes.data.role === "CEO" ||
-          userRes.data.role === "COO" ||
-          userRes.data.role === "CFO"
-        ) {
+        if (userRes.data.role === "admin" || userRes.data.role === "clevel") {
           fetchAllOutlets(token); // Admin or C-Level can select any outlet
         } else {
-          console.log("Non-admin, outlet associated with user:", outlet);
+          // console.log("Non-admin, outlet associated with user:", outlet);
         }
       } catch (err) {
-        console.error("❌ Gagal fetch user data:", err);
+        // console.error("❌ Gagal fetch user data:", err);
       }
     };
 
@@ -140,19 +133,21 @@ export default function MyCalendar() {
         // If non-admin, set the selected outlet
         console.log("User role:", userOutletName);
         if (userOutletName) {
-          const matchedOutlet = data.find((o) => o.name === userOutletName);
+          const matchedOutlet = data.find(
+            (o: { name: string }) => o.name === userOutletName
+          );
           if (matchedOutlet) {
             setSelectedOutlet(matchedOutlet.name);
             setOutletId(matchedOutlet.outletId); // Set the outletId for selected outlet
             console.log("✅ Outlet selected:", matchedOutlet); // Debugging selected outlet
           } else {
-            console.error("❌ Outlet terkait dengan pengguna tidak ditemukan");
+            // console.error("❌ Outlet terkait dengan pengguna tidak ditemukan");
           }
         }
 
         console.log("✅ All outlets:", data); // Debugging list of all outlets
       } catch (err) {
-        console.error("❌ Gagal fetch all outlets:", err);
+        // console.error("❌ Gagal fetch all outlets:", err);
       }
     };
 
@@ -192,7 +187,7 @@ export default function MyCalendar() {
       setBaristaOptions(data);
       console.log("✅ Baristas fetched:", data);
     } catch (error) {
-      console.error("❌ Gagal ambil baristas:", error);
+      // console.error("❌ Gagal ambil baristas:", error);
     }
   };
 
@@ -223,9 +218,9 @@ export default function MyCalendar() {
       );
 
       if (!res.ok) {
-        console.log(`❌ Server responded with status ${res.status}`);
+        // console.log(`❌ Server responded with status ${res.status}`);
         const errText = await res.text();
-        console.log("❌ Response body:", errText);
+        // console.log("❌ Response body:", errText);
         alert("Failed to fetch shifts");
         return;
       }
@@ -236,7 +231,7 @@ export default function MyCalendar() {
       const shiftMap = buildShiftMap(data);
       setSchedules(shiftMap);
     } catch (error) {
-      console.error("❌ Error fetching shifts:", error);
+      // console.error("❌ Error fetching shifts:", error);
     }
   };
 
@@ -286,7 +281,15 @@ export default function MyCalendar() {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const dateShift = date.toISOString().split("T")[0];
+      // const dateShift = date.toISOString().split("T")[0];
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, "0"); // tambah leading zero
+        const day = date.getDate().toString().padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      };
+
+      const dateShift = formatDate(date);
       const currentOutlet = outlets.find((o) => o.outletId === outletId);
 
       // if (
@@ -432,7 +435,9 @@ export default function MyCalendar() {
     <div className="flex flex-col items-center w-full max-w-5xl mx-auto p-6 gap-4">
       {toast && (
         <Toast
-          type={toast.type}
+          type={
+            toast.type as "error" | "success" | "info" | "warning" | undefined
+          } // Fix the code by adding a comma at the end
           message={toast.message}
           onClose={() => setToast(null)}
         />
@@ -465,11 +470,7 @@ export default function MyCalendar() {
             value={outletId || ""}
             onChange={handleOutletChange}
             disabled={
-              isEditing ||
-              (userRole !== "Admin" &&
-                userRole !== "CEO" &&
-                userRole !== "COO" &&
-                userRole !== "CFO")
+              isEditing || (userRole !== "admin" && userRole !== "clevel")
             }
             className="w-full px-4 py-3 rounded-[12px] bg-[#EFF2FF] text-center text-[20px] font-medium text-[#5171E3] appearance-none border-none"
             style={{
@@ -545,7 +546,7 @@ export default function MyCalendar() {
                 <p className="font-semibold flex items-center gap-1">
                   ⚠️ Catatan:
                 </p>
-                {doubleShiftBaristas.map((baristaId, idx) => {
+                {doubleShiftBaristas.map((baristaId: string, idx: any) => {
                   const barista = baristaOptions.find(
                     (b) => b.id === baristaId
                   );
@@ -578,7 +579,7 @@ export default function MyCalendar() {
             )}
 
             {/* Tombol Aksi */}
-            {userRole === "Head Bar" && (
+            {userRole === "head_bar" && (
               <div className="flex gap-4 mt-6">
                 {isEditing && (
                   <button
@@ -656,7 +657,6 @@ export default function MyCalendar() {
             Tidak ada data. Silahkan pilih outlet terlebih dahulu.
           </p>
         )}
-
 
         {/* Kalau gak ada barista & gak editing */}
         {outletId && !hasValidBarista && !isEditing && (
