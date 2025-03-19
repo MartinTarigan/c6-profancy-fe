@@ -8,6 +8,7 @@ interface AccountData {
   gender: boolean;
   role: string;
   phoneNumber: string;
+  address: string;
   dateOfBirth: string | null;
   status: string;
   outlet: string;
@@ -103,6 +104,10 @@ export default function DetailAkun() {
               <div>
                 <h3 className="font-medium mb-2">Nomor HP</h3>
                 <p>{accountData.phoneNumber}</p>
+              </div>
+              <div>
+                <h3 className="font-medium mb-2">Alamat</h3>
+                <p>{accountData.address}</p>
               </div>
               <div>
                 <h3 className="font-medium mb-2">Tanggal Lahir</h3>
