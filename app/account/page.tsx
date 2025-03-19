@@ -62,7 +62,7 @@ export default function DaftarAkun() {
       <div className="flex flex-col items-center mb-6">
         <h1 className="text-primary text-3xl font-bold mb-6">Daftar Akun</h1>
         {userRole === "Admin" && (
-          <Link href="/daftar-akun/tambah">
+          <Link href="/account/create">
             <Button className="rounded-full">
               <Plus className="mr-2 h-5 w-5" />
               Tambah Akun Baru
@@ -116,9 +116,19 @@ export default function DaftarAkun() {
                 </td>
                 <td className="py-4 px-6 whitespace-nowrap">
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline" className="rounded-lg bg-primary-light text-white border-none hover:bg-primary-lightest/80">
+                  <Link
+                    href={
+                      userRole === "Admin" ? `/account/edit/${user.username}` : `/account/edit-profile/${user.username}`
+                    }
+                  >
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="rounded-lg bg-primary-lightest text-primary border-none hover:bg-primary-lightest/80"
+                    >
                       Edit
                     </Button>
+                  </Link>
                     <Link href={`/account/${user.username}`}>
                       <Button size="sm" className="rounded-lg">
                         Detail
