@@ -114,7 +114,7 @@ export function Sidebar() {
           />
           <NavItem href="/training" icon={<BookOpen className="h-5 w-5" />} label="Training" hasDropdown>
             <SubNavItem href="/training/ujian" label="Ujian" isActive={pathname === "/training/ujian"} />
-            <SubNavItem href="/training/materi" label="Materi" isActive={pathname === "/training/materi"} />
+            <SubNavItem href="/training-materials" label="Materi" isActive={pathname === "/training/materi"} />
             <SubNavItem
               href="/training/peer-review"
               label="Peer Review"
