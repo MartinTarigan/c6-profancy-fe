@@ -6,7 +6,7 @@ import { useState, useEffect } from "react"
 import { Search, SlidersHorizontal, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import Link from "next/link";
+import Link from "next/link"
 
 interface OvertimeLog {
   id: number
@@ -26,25 +26,25 @@ interface OvertimeLog {
 }
 
 export default function OvertimeLogList() {
-    const [overtimeLogs, setOvertimeLogs] = useState<OvertimeLog[]>([
-        {
-          id: 1,
-          baristaId: 101,
-          userId: "user123",
-          outletId: 10,
-          dateOvertime: "2025-03-18",
-          startHour: "18:00",
-          duration: "02:30",
-          reason: "Menutupi shift kosong",
-          status: "APPROVED",
-          statusDisplay: "Diterima",
-          verifier: "Manager A",
-          outletName: "Outlet Jakarta Selatan",
-          createdAt: "2025-03-17T10:00:00Z",
-          updatedAt: "2025-03-17T12:00:00Z",
-        },
-      ])
-      
+  const [overtimeLogs, setOvertimeLogs] = useState<OvertimeLog[]>([
+    {
+      id: 1,
+      baristaId: 101,
+      userId: "user123",
+      outletId: 10,
+      dateOvertime: "2025-03-18",
+      startHour: "18:00",
+      duration: "02:30",
+      reason: "Menutupi shift kosong",
+      status: "APPROVED",
+      statusDisplay: "Diterima",
+      verifier: "Manager A",
+      outletName: "Outlet Jakarta Selatan",
+      createdAt: "2025-03-17T10:00:00Z",
+      updatedAt: "2025-03-17T12:00:00Z",
+    },
+  ])
+
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
 
@@ -55,8 +55,18 @@ export default function OvertimeLogList() {
   const fetchOvertimeLogs = async () => {
     setLoading(true)
     try {
-      // In a real app, you would filter by the current user's ID
-      const response = await fetch("/api/overtime-logs")
+      const token = localStorage.getItem("token")
+      if (!token) {
+        console.error("Token not found")
+        setLoading(false)
+        return
+      }
+
+      const response = await fetch("http://localhost:8080/api/overtime-logs", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
       if (!response.ok) throw new Error("Failed to fetch overtime logs")
 
       const data = await response.json()
@@ -68,7 +78,6 @@ export default function OvertimeLogList() {
     }
   }
 
-  
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value)
   }
@@ -116,12 +125,12 @@ export default function OvertimeLogList() {
           <h1 className="text-2xl font-bold text-[#4169E1]">Log Lembur Saya</h1>
         </div>
 
-        <Link href="/jadwal/lembur/create"> 
-            <Button className="rounded-full">
-              <Plus className="mr-2 h-5 w-5" />
-              Tambah Log Lembur
-            </Button>
-          </Link>
+        <Link href="/jadwal/lembur/create">
+          <Button className="rounded-full">
+            <Plus className="mr-2 h-5 w-5" />
+            Tambah Log Lembur
+          </Button>
+        </Link>
       </div>
 
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -192,11 +201,11 @@ export default function OvertimeLogList() {
                   <td className={`px-4 py-3 ${getStatusClass(log.status)}`}>{getStatusDisplay(log.status)}</td>
                   <td className="px-4 py-3">{log.verifier || "-"}</td>
                   <td className="px-4 py-3">
-                  <Link href={`/jadwal/lembur/${log.id}`}>
-                        <Button className="bg-[#4169E1] hover:bg-[#3a5ecc]" size="sm">
-                            Detail
-                        </Button>
-                  </Link>
+                    <Link href={`/jadwal/lembur/${log.id}`}>
+                      <Button className="bg-[#4169E1] hover:bg-[#3a5ecc]" size="sm">
+                        Detail
+                      </Button>
+                    </Link>
                   </td>
                 </tr>
               ))
