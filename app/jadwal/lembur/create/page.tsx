@@ -61,20 +61,6 @@ export default function TambahLogLembur() {
         status: formData.status, // ONGOING or CANCELLED
       }
 
-      const response = await fetch("/api/overtime-logs", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      })
-
-      if (!response.ok) throw new Error("Failed to create overtime log")
-
-      setToast({
-        type: "Berhasil!",
-        message: "Catatan lembur berhasil ditambahkan",
-      });
 
       // Redirect back to the overtime logs list
       window.location.href = "/jadwal/lembur"
@@ -132,7 +118,7 @@ export default function TambahLogLembur() {
               <label htmlFor="outlet" className="block font-medium">
                 Outlet
               </label>
-              <Select value={formData.outlet} onChange={(value) => handleSelectChange("outlet", value)} required>
+              <Select value={formData.outlet} onChange={(value) => handleSelectChange("outlet", value)} required>  // error
               <SelectTrigger>
                 <SelectValue> Pilih status </SelectValue>
               </SelectTrigger>
