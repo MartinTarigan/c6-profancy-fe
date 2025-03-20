@@ -103,7 +103,7 @@ export default function TambahMateriPelatihan() {
   return (
     <div className="flex flex-col">
       <div className="mb-6">
-        <Link href="/training/materi" className="inline-flex items-center text-primary hover:text-primary/80">
+        <Link href="/training-materials" className="inline-flex items-center text-primary hover:text-primary/80">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Link>
