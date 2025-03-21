@@ -1,17 +1,21 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 export default function OvertimeLogDetail() {
   const router = useRouter();
   const params = useParams();
+
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
   const [token, setToken] = useState<string | null>(null);
+
   const [overtimeLog, setOvertimeLog] = useState<any>(null);
+  const [outlets, setOutlets] = useState<
+    { outletId: number; name: string; headBarName: string; headBarId: string }[]
+  >([]);
 
   const [formData, setFormData] = useState({
     dateOvertime: "",
@@ -24,7 +28,6 @@ export default function OvertimeLogDetail() {
     status: "",
   });
 
-  // ✅ FETCH TOKEN & OVERTIME LOG DETAIL
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
 
@@ -36,9 +39,28 @@ export default function OvertimeLogDetail() {
 
     setToken(storedToken);
     fetchOvertimeLogDetail(storedToken);
+    fetchOutlets(storedToken);
   }, [params?.id]);
 
-  // FETCH OVERTIME LOG DETAIL
+  const fetchOutlets = async (storedToken: string) => {
+    try {
+      const res = await fetch("http://localhost:8080/api/outlets", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${storedToken}`,
+        },
+      });
+
+      if (!res.ok) throw new Error("Gagal mengambil data outlet");
+
+      const data = await res.json();
+      setOutlets(data);
+    } catch (error) {
+      console.error("❌ Gagal fetch outlets:", error);
+      setToast({ type: "Gagal", message: "Gagal mengambil daftar outlet" });
+    }
+  };
+
   const fetchOvertimeLogDetail = async (storedToken: string) => {
     if (!params?.id) {
       setToast({ type: "Gagal", message: "ID lembur tidak valid" });
@@ -59,7 +81,6 @@ export default function OvertimeLogDetail() {
       const data = await res.json();
       setOvertimeLog(data);
 
-      // Format the data for the form
       setFormData({
         dateOvertime: data.dateOvertime || "",
         startHour: data.startHour ? data.startHour.substring(0, 5) : "",
@@ -78,7 +99,6 @@ export default function OvertimeLogDetail() {
     }
   };
 
-  // ✅ HANDLE STATUS CHANGE
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setFormData((prev) => ({
       ...prev,
@@ -86,7 +106,6 @@ export default function OvertimeLogDetail() {
     }));
   };
 
-  // ✅ HANDLE UPDATE STATUS
   const handleUpdateStatus = async () => {
     if (!token) {
       setToast({ type: "Gagal", message: "Token tidak valid. Silakan login ulang!" });
@@ -96,7 +115,6 @@ export default function OvertimeLogDetail() {
     setUpdating(true);
 
     try {
-      // Note: You may need to create this endpoint in your backend
       const res = await fetch(`http://localhost:8080/api/overtime-logs/${params.id}/status`, {
         method: "PUT",
         headers: {
@@ -119,8 +137,6 @@ export default function OvertimeLogDetail() {
       }
 
       setToast({ type: "Berhasil", message: "Status berhasil diperbarui!" });
-
-      // Refetch to get updated data
       fetchOvertimeLogDetail(token);
     } catch (error: any) {
       console.error("❌ Error update status:", error);
@@ -134,10 +150,8 @@ export default function OvertimeLogDetail() {
     router.push("/jadwal/lembur");
   };
 
-  // Format a date to DD-MM-YYYY
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
-    
     try {
       const date = new Date(dateString);
       return date.toLocaleDateString("id-ID", {
@@ -148,6 +162,15 @@ export default function OvertimeLogDetail() {
     } catch (e) {
       return dateString;
     }
+  };
+
+  const getVerifierName = () => {
+    if (formData.verifier && formData.verifier.trim() !== "") {
+      return formData.verifier;
+    }
+
+    const outlet = outlets.find((o) => o.outletId === parseInt(formData.outletId));
+    return outlet?.headBarName || "-";
   };
 
   const getStatusClass = (status: string) => {
@@ -200,11 +223,8 @@ export default function OvertimeLogDetail() {
 
       <div className="max-w-3xl mx-auto bg-white border rounded-lg p-8 shadow space-y-6">
         <div className="space-y-6">
-          {/* Tanggal Lembur */}
           <div>
-            <label htmlFor="dateOvertime" className="block mb-2 font-medium">
-              Tanggal Lembur
-            </label>
+            <label htmlFor="dateOvertime" className="block mb-2 font-medium">Tanggal Lembur</label>
             <input
               id="dateOvertime"
               name="dateOvertime"
@@ -215,11 +235,8 @@ export default function OvertimeLogDetail() {
             />
           </div>
 
-          {/* Jam Mulai */}
           <div>
-            <label htmlFor="startHour" className="block mb-2 font-medium">
-              Jam Mulai
-            </label>
+            <label htmlFor="startHour" className="block mb-2 font-medium">Jam Mulai</label>
             <input
               id="startHour"
               name="startHour"
@@ -230,11 +247,8 @@ export default function OvertimeLogDetail() {
             />
           </div>
 
-          {/* Outlet */}
           <div>
-            <label htmlFor="outletName" className="block mb-2 font-medium">
-              Outlet
-            </label>
+            <label htmlFor="outletName" className="block mb-2 font-medium">Outlet</label>
             <input
               id="outletName"
               name="outletName"
@@ -245,11 +259,8 @@ export default function OvertimeLogDetail() {
             />
           </div>
 
-          {/* Durasi */}
           <div>
-            <label htmlFor="duration" className="block mb-2 font-medium">
-              Durasi (Jam)
-            </label>
+            <label htmlFor="duration" className="block mb-2 font-medium">Durasi (Jam)</label>
             <input
               id="duration"
               name="duration"
@@ -260,11 +271,8 @@ export default function OvertimeLogDetail() {
             />
           </div>
 
-          {/* Alasan */}
           <div>
-            <label htmlFor="reason" className="block mb-2 font-medium">
-              Alasan Lembur
-            </label>
+            <label htmlFor="reason" className="block mb-2 font-medium">Alasan Lembur</label>
             <textarea
               id="reason"
               name="reason"
@@ -275,25 +283,19 @@ export default function OvertimeLogDetail() {
             />
           </div>
 
-          {/* Verifikator */}
           <div>
-            <label htmlFor="verifier" className="block mb-2 font-medium">
-              Verifikator
-            </label>
+            <label htmlFor="verifier" className="block mb-2 font-medium">Verifikator</label>
             <input
               id="verifier"
               name="verifier"
-              value={formData.verifier || "-"}
+              value={getVerifierName()}
               readOnly
               className="w-full border border-gray-300 rounded p-2 bg-gray-100"
             />
           </div>
 
-          {/* Status - Only editable if PENDING */}
           <div>
-            <label htmlFor="status" className="block mb-2 font-medium">
-              Status
-            </label>
+            <label htmlFor="status" className="block mb-2 font-medium">Status</label>
             {overtimeLog?.status === "PENDING" ? (
               <div className="space-y-2">
                 <select
@@ -325,12 +327,9 @@ export default function OvertimeLogDetail() {
             )}
           </div>
 
-          {/* Created & Updated Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
             <div>
-              <label className="block mb-2 text-sm text-gray-500">
-                Tanggal Dibuat
-              </label>
+              <label className="block mb-2 text-sm text-gray-500">Tanggal Dibuat</label>
               <input
                 type="text"
                 value={formatDate(overtimeLog?.createdAt || "")}
@@ -339,9 +338,7 @@ export default function OvertimeLogDetail() {
               />
             </div>
             <div>
-              <label className="block mb-2 text-sm text-gray-500">
-                Terakhir Diperbarui
-              </label>
+              <label className="block mb-2 text-sm text-gray-500">Terakhir Diperbarui</label>
               <input
                 type="text"
                 value={formatDate(overtimeLog?.updatedAt || "")}
@@ -351,7 +348,6 @@ export default function OvertimeLogDetail() {
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex justify-center gap-4 pt-4">
             <button
               type="button"
