@@ -23,6 +23,7 @@ export default function MyCalendar() {
   const [date, setDate] = useState<Date>(new Date());
   const [isEditing, setIsEditing] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [formattedDate, setFormattedDate] = useState("");
 
   const [toast, setToast] = useState<{ type: string; message: string } | null>(
     null
@@ -85,7 +86,9 @@ export default function MyCalendar() {
         "btn-close-modal",
         "btn-cancel-modal",
         "btn-confirm-modal",
+        "jadwal-shift",
       ];
+      if (!target) return; 
 
       const isAllowed = allowedAreas.some((className) =>
         target.closest(`.${className}`)
@@ -453,12 +456,19 @@ export default function MyCalendar() {
     const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     fetchShiftsByRange(selectedId, startDate, endDate);
   };
-  const formattedDate = date.toLocaleDateString("id-ID", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  useEffect(() => {
+    const date = new Date();
+    const newDate = date.toLocaleDateString("id-ID", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    setFormattedDate(newDate);
+  }, []);
+  if (!formattedDate) return null;
+  
+  
 
   return (
     <div className="flex flex-col items-center w-full max-w-5xl mx-auto p-6 gap-4">
@@ -580,11 +590,16 @@ export default function MyCalendar() {
           />
         </div>
         {/* Jadwal Shift */}
-        <div className="bg-white pt-0 px-0 pb-6 rounded-lg shadow-md w-full max-w-md overflow-hidden">
+        <div className="jadwal-shift bg-white pt-0 px-0 pb-6 rounded-lg shadow-md w-full max-w-md overflow-hidden">
           {/* Header tanggal */}
-          <div className="bg-[#5171E3] text-white text-center w-full py-3 rounded-t-lg">
+          {/* <div className="bg-[#5171E3] text-white text-center w-full py-3 rounded-t-lg">
             <h3 className="text-lg font-semibold">{formattedDate}</h3>
-          </div>
+          </div> */}
+          {formattedDate && (
+            <div className="bg-[#5171E3] text-white text-center w-full py-3 rounded-t-lg">
+              <h3 className="text-lg font-semibold">{formattedDate}</h3>
+            </div>
+          )}
           {/* Wrapper isi konten shift + catatan */}
           <div className="px-6 mt-4">
             {/* Warning Catatan */}
