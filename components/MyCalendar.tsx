@@ -70,6 +70,35 @@ export default function MyCalendar() {
       </div>
     );
   }
+  useEffect(() => {
+    if (!isEditing) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+
+      const allowedAreas = [
+        "dropdown-barista",
+        "btn-tambah-barista",
+        "btn-hapus-barista",
+        "btn-cancel-edit",
+        "btn-simpan-jadwal",
+        "btn-close-modal",
+        "btn-cancel-modal",
+        "btn-confirm-modal",
+      ];
+
+      const isAllowed = allowedAreas.some((className) =>
+        target.closest(`.${className}`)
+      );
+
+      if (!isAllowed) {
+        setShowConfirmModal(true);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [isEditing]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -443,7 +472,25 @@ export default function MyCalendar() {
         />
       )}
 
+      {/* ✅ CONFIRM MODAL ADA DI SINI */}
       {showConfirmModal && (
+        <ConfirmModal
+          isOpen={showConfirmModal}
+          onClose={() => setShowConfirmModal(false)}
+          onConfirm={() => {
+            // Tindakan yang mau dijalankan saat confirm, misal:
+            handleConfirmCancel(); // atau saveSchedule()
+          }}
+          title={isEditing ? "Simpan atau Batalkan Edit?" : "Konfirmasi"}
+          message={
+            isEditing
+              ? "Kamu ingin menyimpan perubahan atau membatalkan edit jadwal ini?"
+              : "Apakah kamu yakin ingin melanjutkan?"
+          }
+        />
+      )}
+
+      {/* {showConfirmModal && (
         <ConfirmModal
           isOpen={showConfirmModal}
           onClose={() => setShowConfirmModal(false)}
@@ -451,7 +498,7 @@ export default function MyCalendar() {
           title="Batalkan Edit Jadwal"
           message="Batal edit jadwal? Perubahan tidak akan disimpan."
         />
-      )}
+      )} */}
 
       {/* SECTION PILIH OUTLET */}
       <div className="flex flex-col items-center w-full gap-2">
@@ -580,7 +627,7 @@ export default function MyCalendar() {
 
             {/* Tombol Aksi */}
             {userRole === "head_bar" && (
-              <div className="flex gap-4 mt-6">
+              <div className=" btn-cancel-edit flex gap-4 mt-6">
                 {isEditing && (
                   <button
                     onClick={cancelEdit}
@@ -599,7 +646,7 @@ export default function MyCalendar() {
                       setIsEditing(true);
                     }
                   }}
-                  className={`${
+                  className={`btn-simpan-jadwal ${
                     isEditing
                       ? "bg-green-600 hover:bg-green-700"
                       : "bg-blue-600 hover:bg-blue-700"
@@ -627,6 +674,11 @@ export default function MyCalendar() {
     const minBarista = shiftType === "morningShift" ? 1 : 2;
 
     const isValidShift = validateShift(shiftList, minBarista);
+
+    const availableBaristas = (index: number) => {
+      const selectedIds = shiftList.filter((_, i) => i !== index);
+      return baristaOptions.filter((b) => !selectedIds.includes(b.id));
+    };
 
     return (
       <div className="mb-6">
@@ -682,7 +734,7 @@ export default function MyCalendar() {
                       });
                     }}
                     disabled={!isEditing}
-                    className="w-full px-4 py-3 rounded-[12px] bg-[#EFF2FF] text-center text-[16px] font-medium text-[#5171E3] appearance-none border-none"
+                    className="dropdown-barista w-full px-4 py-3 rounded-[12px] bg-[#EFF2FF] text-center text-[16px] font-medium text-[#5171E3] appearance-none border-none"
                     style={{
                       fontFamily: "Inter",
                     }}
@@ -690,7 +742,7 @@ export default function MyCalendar() {
                     <option value="" className="text-[#5171E3]">
                       Pilih Barista
                     </option>
-                    {baristaOptions.map((opt) => (
+                    {availableBaristas(index).map((opt) => (
                       <option
                         key={opt.id}
                         value={opt.id}
@@ -726,7 +778,7 @@ export default function MyCalendar() {
                         [shiftType]: updated,
                       });
                     }}
-                    className="
+                    className=" btn-hapus-barista 
                     bg-[#E45252]
                     hover:bg-[#c73838]
                     text-white
@@ -753,18 +805,7 @@ export default function MyCalendar() {
                 [shiftType]: [...shiftList, ""],
               })
             }
-            className="
-          text-[#5171E3]
-          font-medium
-          py-2 px-4
-          border-2 border-[#D5DEFF]
-          rounded-[24px]
-          bg-white
-          hover:bg-[#5171E3]
-          hover:text-white
-          transition
-          duration-300
-        "
+            className={`btn-tambah-barista text-[#5171E3] font-medium py-2 px-4 border-2 border-[#D5DEFF] rounded-[24px] bg-white hover:bg-[#5171E3] hover:text-white transition duration-300`}
             style={{
               fontFamily: "Inter",
             }}

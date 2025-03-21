@@ -19,6 +19,10 @@ interface NavItemProps {
 export function Sidebar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  if (pathname === "/login") {
+    return null;
+  }
+
 
   return (
     <>

@@ -19,7 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id" className="w-full h-full">
-      <body className="w-full h-full m-0 p-0 bg-[#F9FAFB] text-gray-900">
+      <body className="w-full h-full m-0 p-0 bg-[#F9FAFB] text-white-900">
         <Header />
 
         <div className="flex w-full min-h-screen pt-[60px] md:pt-[80px]">

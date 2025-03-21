@@ -27,7 +27,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
           <h3 className="text-lg font-semibold">{title}</h3>
           <button
             onClick={onClose}
-            className="text-white hover:text-gray-200 text-2xl"
+            className="btn-close-modal text-white hover:text-gray-200 text-2xl"
           >
             &times;
           </button>
@@ -42,7 +42,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
         <div className="flex justify-end gap-4 px-6 pb-6">
           <button
             onClick={onClose}
-            className="text-[#5171E3] border border-[#5171E3] px-4 py-2 rounded-md hover:bg-[#EFF2FF] transition duration-200"
+            className="btn-cancel-modal text-[#5171E3] border border-[#5171E3] px-4 py-2 rounded-md hover:bg-[#EFF2FF] transition duration-200"
           >
             Batal
           </button>
