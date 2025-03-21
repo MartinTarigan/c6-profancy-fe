@@ -8,8 +8,9 @@ export default function TambahLogLembur() {
   const [token, setToken] = useState<string | null>(null);
 
   const [outlets, setOutlets] = useState<
-    { outletId: number; name: string; headbar: { id: string; fullName: string } }[]
+  { outletId: number; name: string; headBarName: string; headBarId: string }[]
   >([]);
+
 
   const [currentOutlet, setCurrentOutlet] = useState<any>(null);
 
@@ -73,30 +74,33 @@ export default function TambahLogLembur() {
     }));
 
     if (name === "outletId") {
-      const selectedOutlet = outlets.find((outlet) => outlet.outletId === parseInt(value));
+  const selectedOutlet = outlets.find((outlet) => outlet.outletId === parseInt(value));
 
-      if (selectedOutlet) {
-        setCurrentOutlet(selectedOutlet);
-        const headbarName = selectedOutlet.headbar?.fullName || "Tidak Ada Headbar";
+  if (selectedOutlet) {
+    setCurrentOutlet(selectedOutlet);
 
-        console.log("✅ Outlet dipilih:", selectedOutlet);
-        console.log("✅ Verifier:", headbarName);
+    // INI FIX-NYA
+    const headbarName = selectedOutlet.headBarName || "Tidak Ada Headbar";
 
-        setFormData((prev) => ({
-          ...prev,
-          outletId: value,
-          verifier: headbarName,
-        }));
-      } else {
-        console.warn("❌ Outlet tidak ditemukan untuk id:", value);
-        setCurrentOutlet(null);
-        setFormData((prev) => ({
-          ...prev,
-          outletId: value,
-          verifier: "",
-        }));
-      }
-    }
+    console.log("✅ Outlet dipilih:", selectedOutlet);
+    console.log("✅ Verifier:", headbarName);
+
+    setFormData((prev) => ({
+      ...prev,
+      outletId: value,
+      verifier: headbarName,
+    }));
+  } else {
+    console.warn("❌ Outlet tidak ditemukan untuk id:", value);
+    setCurrentOutlet(null);
+    setFormData((prev) => ({
+      ...prev,
+      outletId: value,
+      verifier: "",
+    }));
+  }
+}
+
   };
 
   // ✅ HANDLE SUBMIT
