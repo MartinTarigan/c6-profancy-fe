@@ -85,6 +85,7 @@ export default function LoginPage() {
           if (res.ok) {
             const token = result.data.token;
             localStorage.setItem("token", result.data.token);
+            localStorage.setItem("username", username);
             const jwtPayload = parseJwt(token);
             if (jwtPayload && jwtPayload.roles) {
               const cleanedRoles = jwtPayload.roles.map((role: string) => role.replace("ROLE_", ""));

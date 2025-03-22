@@ -15,10 +15,21 @@ interface UserData {
 
 export default function DaftarAkun() {
   const [users, setUsers] = useState<UserData[]>([]);
-  const [userRole, setUserRole] = useState<string | null>(null)
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [currentUsername, setCurrentUsername] = useState<string>("");
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [filterRole, setFilterRole] = useState("");
+  const [filterOutlet, setFilterOutlet] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+
   useEffect(() => {
-    const storedRole = localStorage.getItem("roles")
-    setUserRole(storedRole)
+    const storedRole = localStorage.getItem("roles");
+    const storedUsername = localStorage.getItem("username") || "";
+    setUserRole(storedRole);
+    setCurrentUsername(storedUsername);
+
     async function fetchUserData() {
       try {
         const token = localStorage.getItem("token");
@@ -57,6 +68,33 @@ export default function DaftarAkun() {
     }
     fetchUserData();
   }, []);
+
+  const displayedUsers = users
+    .filter((user) => {
+      const lowerSearch = searchTerm.toLowerCase();
+      const matchesSearch =
+        user.name.toLowerCase().includes(lowerSearch) ||
+        user.outlet.toLowerCase().includes(lowerSearch);
+      const matchesRole = filterRole ? user.role === filterRole : true;
+      const matchesOutlet = filterOutlet ? user.outlet === filterOutlet : true;
+      return matchesSearch && matchesRole && matchesOutlet;
+    })
+    .sort((a, b) => {
+      // Prioritaskan currentUsername ke atas
+      if (a.username === currentUsername && b.username !== currentUsername) return -1;
+      if (b.username === currentUsername && a.username !== currentUsername) return 1;
+      // Jika bukan current user, urutkan berdasarkan nama
+      if (sortOrder === "asc") {
+        return a.name.localeCompare(b.name);
+      } else {
+        return b.name.localeCompare(a.name);
+      }
+    });
+
+  const toggleSortOrder = () => {
+    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+  };
+
   return (
     <div className="flex flex-col">
       <div className="flex flex-col items-center mb-6">
@@ -70,24 +108,66 @@ export default function DaftarAkun() {
           </Link>
         )}
       </div>
+
       <div className="flex gap-4 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
           <input
             type="text"
             placeholder="Search by name or outlet..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
           />
         </div>
-        <Button variant="outline" className="gap-2">
+        <Button variant="outline" className="gap-2" onClick={toggleSortOrder}>
           <ArrowDownAZ className="h-5 w-5" />
-          Sort By
+          Sort By ({sortOrder === "asc" ? "A-Z" : "Z-A"})
         </Button>
-        <Button variant="outline" className="gap-2">
+        <Button
+          variant="outline"
+          className="gap-2"
+          onClick={() => setShowFilters((prev) => !prev)}
+        >
           <Filter className="h-5 w-5" />
           Filter
         </Button>
       </div>
+
+      {showFilters && (
+        <div className="flex gap-4 mb-4">
+          <select
+            value={filterRole}
+            onChange={(e) => setFilterRole(e.target.value)}
+            className="border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="">Filter by Role</option>
+            <option value="Admin">Admin</option>
+            <option value="CEO">CEO</option>
+            <option value="CIOO">CIOO</option>
+            <option value="CMO">CMO</option>
+            <option value="Head Bar">Head Bar</option>
+            <option value="Barista">Barista</option>
+            <option value="Trainee Barista">Trainee Barista</option>
+            <option value="Probation Barista">Probation Barista</option>
+          </select>
+          <select
+            value={filterOutlet}
+            onChange={(e) => setFilterOutlet(e.target.value)}
+            className="border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="">Filter by Outlet</option>
+            <option value="Tens Coffee Margonda">Tens Coffee Margonda</option>
+            <option value="Tens Coffee Kantin Vokasi UI">Tens Coffee Kantin Vokasi UI</option>
+            <option value="Tens Coffee UIN Ciputat">Tens Coffee UIN Ciputat</option>
+            <option value="Tens Coffee Pamulang">Tens Coffee Pamulang</option>
+            <option value="Tens Coffee UPN Veteran Jakarta">
+              Tens Coffee UPN Veteran Jakarta
+            </option>
+          </select>
+        </div>
+      )}
+
       <div className="overflow-x-auto">
         <table className="w-full border-collapse shadow-md rounded-lg overflow-hidden">
           <thead>
@@ -102,7 +182,7 @@ export default function DaftarAkun() {
             </tr>
           </thead>
           <tbody>
-            {users.map((user, index) => (
+            {displayedUsers.map((user, index) => (
               <tr key={index} className="border-b even:bg-primary-bg">
                 <td className="py-4 px-6">{user.username}</td>
                 <td className="py-4 px-6">{user.name}</td>
@@ -110,25 +190,35 @@ export default function DaftarAkun() {
                 <td className="py-4 px-6">{user.phone}</td>
                 <td className="py-4 px-6">{user.outlet}</td>
                 <td className="py-4 px-6">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${user.status === "Active" ? "text-green-600 bg-green-100" : "text-red-600 bg-red-100"}`}>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      user.status === "Active"
+                        ? "text-green-600 bg-green-100"
+                        : "text-red-600 bg-red-100"
+                    }`}
+                  >
                     {user.status}
                   </span>
                 </td>
                 <td className="py-4 px-6 whitespace-nowrap">
                   <div className="flex gap-2">
-                  <Link
-                    href={
-                      userRole === "Admin" ? `/account/edit/${user.username}` : `/account/edit-profile/${user.username}`
-                    }
-                  >
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="rounded-lg bg-primary-lightest text-primary border-none hover:bg-primary-lightest/80"
-                    >
-                      Edit
-                    </Button>
-                  </Link>
+                    {(userRole === "Admin" || user.username === currentUsername) && (
+                      <Link
+                        href={
+                          userRole === "Admin"
+                            ? `/account/edit/${user.username}`
+                            : `/account/edit-profile/${user.username}`
+                        }
+                      >
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="rounded-lg bg-primary-lightest text-primary border-none hover:bg-primary-lightest/80"
+                        >
+                          Edit
+                        </Button>
+                      </Link>
+                    )}
                     <Link href={`/account/${user.username}`}>
                       <Button size="sm" className="rounded-lg">
                         Detail
@@ -138,6 +228,13 @@ export default function DaftarAkun() {
                 </td>
               </tr>
             ))}
+            {displayedUsers.length === 0 && (
+              <tr>
+                <td colSpan={7} className="py-4 px-6 text-center">
+                  Tidak ada data.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

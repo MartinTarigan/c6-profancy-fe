@@ -116,9 +116,9 @@ export function Sidebar() {
             <SubNavItem href="/training/ujian" label="Ujian" isActive={pathname === "/training/ujian"} />
             <SubNavItem href="/training-materials" label="Materi" isActive={pathname === "/training/materi"} />
             <SubNavItem
-              href="/training/peer-review"
+              href="/peer-review"
               label="Peer Review"
-              isActive={pathname === "/training/peer-review"}
+              isActive={pathname === "/peer-review"}
             />
           </NavItem>
           <NavItem href="/jadwal" icon={<Calendar className="h-5 w-5" />} label="Jadwal" hasDropdown>
