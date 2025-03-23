@@ -2,6 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 
+interface Outlet {
+  outletId: number;
+  name: string;
+  headBarName: string;
+  headBarId: string;
+}
+
 export default function TambahLogLembur() {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
@@ -12,7 +19,7 @@ export default function TambahLogLembur() {
   >([]);
 
 
-  const [currentOutlet, setCurrentOutlet] = useState<any>(null);
+  const [currentOutlet, setCurrentOutlet] = useState<Outlet | null>(null);
 
   const [formData, setFormData] = useState({
     dateOvertime: "",
@@ -155,9 +162,9 @@ export default function TambahLogLembur() {
       setTimeout(() => {
         window.location.href = "/jadwal/lembur";
       }, 1500);
-    } catch (error: any) {
+    } catch (error) {
       console.error("❌ Error submit:", error);
-      setToast({ type: "Gagal", message: error.message });
+      setToast({ type: "Gagal", message: "gagal" });
     } finally {
       setLoading(false);
     }
@@ -230,7 +237,7 @@ export default function TambahLogLembur() {
 
             {currentOutlet && (
               <p className="text-sm text-gray-500 mt-1">
-                Headbar: <strong>{currentOutlet.headbar?.fullName || "Tidak Ada Headbar"}</strong>
+                Headbar: <strong>{currentOutlet.headBarName || "Tidak Ada Headbar"}</strong>
               </p>
             )}
           </div>

@@ -44,7 +44,7 @@ export default function HeadBarLeaveRequestPage() {
   const [error, setError] = useState<string | null>(null)
   const [currentUsername, setCurrentUsername] = useState<string | null>(null)
   const [currentOutletId, setCurrentOutletId] = useState<number | null>(null)
-  const [rawData, setRawData] = useState<any>(null) // For debugging
+  // const [rawData, setRawData] = useState<any>(null) // For debugging
 
   // Stats
   const [totalIzin, setTotalIzin] = useState(0)
@@ -122,7 +122,7 @@ export default function HeadBarLeaveRequestPage() {
 
         const data = await response.json()
         console.log("Raw API response:", data) // Debug log
-        setRawData(data) // Store raw data for debugging
+        // setRawData(data) // Store raw data for debugging
 
         const requests = data.data || []
 
@@ -215,7 +215,7 @@ export default function HeadBarLeaveRequestPage() {
           <Button
             className="mt-4"
             onClick={() => {
-              console.log("Raw data:", rawData)
+              // console.log("Raw data:", rawData)
               console.log("Current outlet ID:", currentOutletId)
               console.log("Filtered leave requests:", leaveRequests)
               alert("Check console for debug data")

@@ -15,6 +15,16 @@ interface UserData {
   status: "Active" | "Revoked";
 }
 
+interface UserApiResponse {
+  username?: string;
+  fullName?: string;
+  role?: string;
+  phoneNumber?: string;
+  outlet?: string;
+  status?: string;
+}
+
+
 export default function DaftarAkun() {
   const [users, setUsers] = useState<UserData[]>([]);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -60,7 +70,7 @@ export default function DaftarAkun() {
 
         const result = await response.json();
         if (result?.data) {
-          const mappedUsers: UserData[] = result.data.map((item: any) => ({
+          const mappedUsers: UserData[] = (result.data as UserApiResponse[]).map((item) => ({
             username: item.username ?? "-",
             name: item.fullName ?? "-",
             role: item.role ?? "-",
@@ -68,6 +78,7 @@ export default function DaftarAkun() {
             outlet: item.outlet ?? "-",
             status: item.status === "Revoked" ? "Revoked" : "Active",
           }));
+          
           setUsers(mappedUsers);
         }
       } catch (err) {

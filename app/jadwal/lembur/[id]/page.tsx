@@ -3,6 +3,21 @@
 import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 
+interface OvertimeLog {
+  id: string;
+  dateOvertime: string;
+  startHour: string;
+  outletId: number | null;
+  outletName: string;
+  duration: string;
+  reason: string;
+  verifier: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+
 export default function OvertimeLogDetail() {
   const router = useRouter();
   const params = useParams();
@@ -12,7 +27,7 @@ export default function OvertimeLogDetail() {
   const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
-  const [overtimeLog, setOvertimeLog] = useState<any>(null);
+  const [overtimeLog, setOvertimeLog] = useState<OvertimeLog | null>(null);
   const [outlets, setOutlets] = useState<
     { outletId: number; name: string; headBarName: string; headBarId: string }[]
   >([]);
@@ -138,9 +153,9 @@ export default function OvertimeLogDetail() {
 
       setToast({ type: "Berhasil", message: "Status berhasil diperbarui!" });
       fetchOvertimeLogDetail(token);
-    } catch (error: any) {
+    } catch (error) {
       console.error("❌ Error update status:", error);
-      setToast({ type: "Gagal", message: error.message });
+      setToast({ type: "Gagal", message: "Gagal mengambil detail log lembur" });
     } finally {
       setUpdating(false);
     }
@@ -152,16 +167,16 @@ export default function OvertimeLogDetail() {
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
-    try {
+    // try {
       const date = new Date(dateString);
       return date.toLocaleDateString("id-ID", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
       });
-    } catch (e) {
-      return dateString;
-    }
+    // } catch (e) {
+    //   return dateString;
+    // }
   };
 
   const getVerifierName = () => {
