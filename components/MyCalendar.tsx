@@ -19,7 +19,7 @@ export default function MyCalendar() {
 
   interface Outlet {
     outletId: number;
-    outletName: string; // Atau outletName: string; tergantung dari API kamu
+    name: string; // Atau outletName: string; tergantung dari API kamu
     headBarId?: number; // Optional kalau kadang null/undefined
   }
   interface User {
@@ -196,10 +196,10 @@ export default function MyCalendar() {
         console.log("User role:", userOutletName);
         if (userOutletName) {
           const matchedOutlet = data.find(
-            (o: { name: string }) => o.name === userOutletName
+            (o: { outletName: string; }) => o.outletName === userOutletName
           );
           if (matchedOutlet) {
-            setSelectedOutlet(matchedOutlet.name);
+            setSelectedOutlet(matchedOutlet.outletName);
             setOutletId(matchedOutlet.outletId); // Set the outletId for selected outlet
             console.log("✅ Outlet selected:", matchedOutlet); // Debugging selected outlet
           } else {
@@ -494,7 +494,7 @@ export default function MyCalendar() {
     const selected = outlets.find((o) => o.outletId === selectedId);
 
     setOutletId(selectedId);
-    setSelectedOutlet(selected?.outletName || "");
+    setSelectedOutlet(selected?.name || "");
     console.log("✅ Selected outlet after change:", selected); // Debugging selected outlet after change
 
     fetchBaristas(selectedId);
@@ -618,7 +618,7 @@ export default function MyCalendar() {
                 value={outlet.outletId}
                 className="text-[#5171E3]"
               >
-                {outlet.outletName}
+                {outlet.name}
               </option>
             ))}
           </select>
