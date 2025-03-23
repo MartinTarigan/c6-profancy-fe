@@ -29,7 +29,7 @@ interface LeaveRequest {
 
 interface DateRange {
   from: Date | undefined
-  to: Date | undefined
+  to?: Date | undefined
 }
 
 function parseJwt(token: string) {
@@ -401,12 +401,10 @@ export default function ReportsPage() {
                     mode="range"
                     defaultMonth={dateRange.from}
                     selected={dateRange}
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    onSelect={(value: any) => {
-                      // Type assertion to ensure TypeScript understands the structure
-                      const range = value as { from: Date | undefined; to: Date | undefined } | undefined
+                    onSelect={(range: DateRange | undefined) => {
                       setDateRange(range || { from: undefined, to: undefined })
                     }}
+                    
                     numberOfMonths={2}
                   />
                   <div className="flex items-center justify-end gap-2 p-3 border-t">

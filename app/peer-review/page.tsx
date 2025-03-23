@@ -80,8 +80,7 @@ export default function ManajemenPeerReview() {
     };
 
     fetchAssignments();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [token]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
