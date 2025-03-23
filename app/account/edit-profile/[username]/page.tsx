@@ -144,7 +144,7 @@ export default function EditProfile() {
 
     setErrors(newErrors);
     setIsValid(Object.keys(newErrors).length === 0);
-  };
+  }; 
 
   // Jalankan validasi setiap kali field berubah
   useEffect(() => {
