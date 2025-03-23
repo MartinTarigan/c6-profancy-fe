@@ -2,6 +2,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
+// Pastikan sudah terinstall & di-import Skeleton dari shadcn/ui
+import { Skeleton } from "@/components/ui/skeleton";
+
 interface AccountData {
   fullName: string;
   username: string;
@@ -19,23 +22,31 @@ interface AccountData {
 export default function DetailAkun() {
   const params = useParams();
   const username = params.username as string;
+
   const [accountData, setAccountData] = useState<AccountData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchAccountData = async () => {
       try {
-        const token = localStorage.getItem("token");
         setIsLoading(true);
-        const response = await fetch(`https://sahabattens-tenscoffeeid.up.railway.app/api/account/${username}`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const token = localStorage.getItem("token");
+
+        const response = await fetch(
+          `https://sahabattens-tenscoffeeid.up.railway.app/api/account/${username}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
         if (!response.ok) {
           throw new Error(`Error fetching account data: ${response.status}`);
         }
+
         const result = await response.json();
         setAccountData(result.data);
       } catch (err) {
@@ -45,42 +56,77 @@ export default function DetailAkun() {
         setIsLoading(false);
       }
     };
+
     if (username) {
       fetchAccountData();
     }
   }, [username]);
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-  if (error) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="text-destructive text-center">
-          <h3 className="text-xl font-semibold mb-2">Error Loading Data</h3>
-          <p>{error}</p>
-        </div>
-      </div>
-    );
-  }
-  if (!accountData) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="text-center">
-          <h3 className="text-xl font-semibold mb-2">Account Not Found</h3>
-          <p>The requested account could not be found.</p>
-        </div>
-      </div>
-    );
-  }
+
   return (
-    <div className="flex flex-col">
-      <div className="flex flex-col items-center mb-6">
-        <h1 className="text-primary text-3xl font-bold mb-6">Detail Akun</h1>
-        <div className="w-full max-w-4xl border border-gray-200 rounded-lg p-8 bg-white shadow-sm">
+    <div className="flex flex-col items-center mb-6">
+      <h1 className="text-primary text-3xl font-bold mb-6">Detail Akun</h1>
+
+      <div className="w-full max-w-4xl border border-gray-200 rounded-lg p-8 bg-white shadow-sm">
+        {/* 1. Kondisi Loading → Tampilkan Skeleton */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              {/* Skeleton untuk beberapa field di kolom kiri */}
+              <div>
+                <Skeleton className="h-4 w-24 mb-2" /> 
+                <Skeleton className="h-4 w-40" />
+              </div>
+              <div>
+                <Skeleton className="h-4 w-24 mb-2" /> 
+                <Skeleton className="h-4 w-40" />
+              </div>
+              <div>
+                <Skeleton className="h-4 w-24 mb-2" /> 
+                <Skeleton className="h-4 w-40" />
+              </div>
+              <div>
+                <Skeleton className="h-4 w-24 mb-2" /> 
+                <Skeleton className="h-4 w-40" />
+              </div>
+            </div>
+            <div className="space-y-6">
+              {/* Skeleton untuk beberapa field di kolom kanan */}
+              <div>
+                <Skeleton className="h-4 w-24 mb-2" /> 
+                <Skeleton className="h-4 w-40" />
+              </div>
+              <div>
+                <Skeleton className="h-4 w-24 mb-2" /> 
+                <Skeleton className="h-4 w-40" />
+              </div>
+              <div>
+                <Skeleton className="h-4 w-24 mb-2" /> 
+                <Skeleton className="h-4 w-40" />
+              </div>
+              <div>
+                <Skeleton className="h-4 w-24 mb-2" /> 
+                <Skeleton className="h-4 w-40" />
+              </div>
+              <div>
+                <Skeleton className="h-4 w-24 mb-2" /> 
+                <Skeleton className="h-4 w-40" />
+              </div>
+            </div>
+          </div>
+        ) : error ? (
+          /* 2. Kondisi Error → Tampilkan pesan error */
+          <div className="text-destructive text-center">
+            <h3 className="text-xl font-semibold mb-2">Error Loading Data</h3>
+            <p>{error}</p>
+          </div>
+        ) : !accountData ? (
+          /* 3. Kondisi accountData null → Tampilkan "not found" */
+          <div className="text-center">
+            <h3 className="text-xl font-semibold mb-2">Account Not Found</h3>
+            <p>The requested account could not be found.</p>
+          </div>
+        ) : (
+          /* 4. Kondisi Berhasil → Tampilkan data sebenarnya */
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-6">
               <div>
@@ -120,14 +166,20 @@ export default function DetailAkun() {
               <div>
                 <h3 className="font-medium mb-2">Status Akun</h3>
                 <div className="inline-block">
-                  <span className={`px-4 py-1 rounded-full text-sm ${accountData.status === "Active" ? "bg-green-100 text-success" : "bg-red-100 text-destructive"}`}>
+                  <span
+                    className={`px-4 py-1 rounded-full text-sm ${
+                      accountData.status === "Active"
+                        ? "bg-green-100 text-success"
+                        : "bg-red-100 text-destructive"
+                    }`}
+                  >
                     {accountData.status === "Active" ? "Active" : "Revoked"}
                   </span>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

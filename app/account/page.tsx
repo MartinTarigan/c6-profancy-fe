@@ -24,7 +24,6 @@ interface UserApiResponse {
   status?: string;
 }
 
-
 export default function DaftarAkun() {
   const [users, setUsers] = useState<UserData[]>([]);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -96,9 +95,7 @@ export default function DaftarAkun() {
   const currentUserOutlet =
     users.find((u) => u.username === currentUsername)?.outlet || "";
 
-  // Filter data:
-  // - Selalu filter berdasarkan search, filter role, dan filter outlet (jika dipilih)
-  // - Jika user yang login bukan Admin, filter juga agar hanya menampilkan user dari outlet yang sama dengan currentUserOutlet.
+  // Filter data
   const filteredUsers = users.filter((user) => {
     const lowerSearch = searchTerm.toLowerCase();
     const matchesSearch =
@@ -205,8 +202,9 @@ export default function DaftarAkun() {
               <tr className="bg-primary text-white">
                 <th className="py-4 px-6 text-left font-bold">Username</th>
                 <th className="py-4 px-6 text-left font-bold">Nama Lengkap</th>
-                <th className="py-4 px-6 text-left font-bold">Role</th>
-                <th className="py-4 px-6 text-left font-bold">No HP</th>
+                {userRole === "Admin" && (
+                  <th className="py-4 px-6 text-left font-bold">No HP</th>
+                )}
                 <th className="py-4 px-6 text-left font-bold">Outlet</th>
                 <th className="py-4 px-6 text-left font-bold">Status</th>
                 <th className="py-4 px-6 text-left font-bold">Action</th>
@@ -221,12 +219,11 @@ export default function DaftarAkun() {
                   <td className="py-4 px-6">
                     <Skeleton className="h-4 w-32" />
                   </td>
-                  <td className="py-4 px-6">
-                    <Skeleton className="h-4 w-24" />
-                  </td>
-                  <td className="py-4 px-6">
-                    <Skeleton className="h-4 w-24" />
-                  </td>
+                  {userRole === "Admin" && (
+                    <td className="py-4 px-6">
+                      <Skeleton className="h-4 w-24" />
+                    </td>
+                  )}
                   <td className="py-4 px-6">
                     <Skeleton className="h-4 w-32" />
                   </td>
@@ -246,8 +243,9 @@ export default function DaftarAkun() {
               <tr className="bg-primary text-white">
                 <th className="py-4 px-6 text-left font-bold">Username</th>
                 <th className="py-4 px-6 text-left font-bold">Nama Lengkap</th>
-                <th className="py-4 px-6 text-left font-bold">Role</th>
-                <th className="py-4 px-6 text-left font-bold">No HP</th>
+                {userRole === "Admin" && (
+                  <th className="py-4 px-6 text-left font-bold">No HP</th>
+                )}
                 <th className="py-4 px-6 text-left font-bold">Outlet</th>
                 <th className="py-4 px-6 text-left font-bold">Status</th>
                 <th className="py-4 px-6 text-left font-bold">Action</th>
@@ -258,8 +256,9 @@ export default function DaftarAkun() {
                 <tr key={index} className="border-b even:bg-primary-bg">
                   <td className="py-4 px-6">{user.username}</td>
                   <td className="py-4 px-6">{user.name}</td>
-                  <td className="py-4 px-6">{user.role}</td>
-                  <td className="py-4 px-6">{user.phone}</td>
+                  {userRole === "Admin" && (
+                    <td className="py-4 px-6">{user.phone}</td>
+                  )}
                   <td className="py-4 px-6">{user.outlet}</td>
                   <td className="py-4 px-6">
                     <span
@@ -274,10 +273,8 @@ export default function DaftarAkun() {
                   </td>
                   <td className="py-4 px-6 whitespace-nowrap">
                     <div className="flex gap-2">
-                      {(
-                        userRole === "Admin" ||
-                        user.username === currentUsername
-                      ) && (
+                      {(userRole === "Admin" ||
+                        user.username === currentUsername) && (
                         <>
                           <Link
                             href={
@@ -307,7 +304,7 @@ export default function DaftarAkun() {
               ))}
               {displayedUsers.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-4 px-6 text-center">
+                  <td colSpan={userRole === "Admin" ? 7 : 6} className="py-4 px-6 text-center">
                     Tidak ada data.
                   </td>
                 </tr>

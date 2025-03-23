@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import Toast from "@/components/Toast";
 
 type StepType = "checkUsername" | "defaultPassword" | "login" | "changePassword";
 
@@ -35,9 +36,8 @@ export default function LoginPage() {
   const [combination, setCombination] = useState<string>("");
   const [newPassword, setNewPassword] = useState<string>("");
   const [step, setStep] = useState<StepType>("checkUsername");
-  
-  // State untuk loading
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [toast, setToast] = useState<{ type: "success" | "error" | "info" | "warning"; message: string } | null>(null);
 
   // Fungsi untuk menentukan label button sesuai step
   const getButtonLabel = () => {
@@ -61,108 +61,103 @@ export default function LoginPage() {
 
     try {
       switch (step) {
-        case "checkUsername":
-          {
-            const res = await fetch(
-              "https://sahabattens-tenscoffeeid.up.railway.app/api/auth/check-username",
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username }),
-              }
-            );
-            const result = await res.json();
-            if (res.ok) {
-              if (result.data.isVerified) {
-                setStep("login");
+        case "checkUsername": {
+          const res = await fetch(
+            "https://sahabattens-tenscoffeeid.up.railway.app/api/auth/check-username",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username }),
+            }
+          );
+          const result = await res.json();
+          if (res.ok) {
+            if (result.data.isVerified) {
+              setStep("login");
+            } else {
+              setStep("defaultPassword");
+            }
+          } else {
+            setToast({ type: "error", message: result.message });
+          }
+          break;
+        }
+
+        case "defaultPassword": {
+          if (password === "newuser123") {
+            setStep("changePassword");
+            setPassword("");
+          } else {
+            setToast({ type: "error", message: "Default password tidak sesuai." });
+          }
+          break;
+        }
+
+        case "login": {
+          const res = await fetch(
+            "https://sahabattens-tenscoffeeid.up.railway.app/api/auth/login",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username, password }),
+            }
+          );
+          const result = await res.json();
+
+          if (res.ok) {
+            const token = result.data.token;
+            localStorage.setItem("token", token);
+            localStorage.setItem("username", username);
+
+            const jwtPayload = parseJwt(token);
+            if (jwtPayload && jwtPayload.roles) {
+              const cleanedRoles = jwtPayload.roles.map((role: string) =>
+                role.replace("ROLE_", "")
+              );
+              if (cleanedRoles.length === 1) {
+                localStorage.setItem("roles", cleanedRoles[0]);
               } else {
-                setStep("defaultPassword");
+                localStorage.setItem("roles", JSON.stringify(cleanedRoles));
               }
-            } else {
-              alert(result.message);
             }
+            router.push("/");
+          } else {
+            setToast({ type: "error", message: result.message });
           }
           break;
+        }
 
-        case "defaultPassword":
-          {
-            if (password === "newuser123") {
-              setStep("changePassword");
-              setPassword(""); 
-            } else {
-              alert("Default password tidak sesuai.");
+        case "changePassword": {
+          const res = await fetch(
+            `https://sahabattens-tenscoffeeid.up.railway.app/api/account/change-password?username=${username}`,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                combination,
+                newPassword,
+              }),
             }
+          );
+          const result = await res.json();
+          if (res.ok) {
+            setToast({ type: "success", message: result.message });
+            // Reset form ke default
+            setStep("checkUsername");
+            setUsername("");
+            setPassword("");
+            setCombination("");
+            setNewPassword("");
+          } else {
+            setToast({ type: "error", message: result.message });
           }
           break;
-
-        case "login":
-          {
-            const res = await fetch(
-              "https://sahabattens-tenscoffeeid.up.railway.app/api/auth/login",
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password }),
-              }
-            );
-            const result = await res.json();
-
-            if (res.ok) {
-              const token = result.data.token;
-              localStorage.setItem("token", token);
-              localStorage.setItem("username", username);
-
-              const jwtPayload = parseJwt(token);
-              if (jwtPayload && jwtPayload.roles) {
-                const cleanedRoles = jwtPayload.roles.map((role: string) =>
-                  role.replace("ROLE_", "")
-                );
-                if (cleanedRoles.length === 1) {
-                  localStorage.setItem("roles", cleanedRoles[0]);
-                } else {
-                  localStorage.setItem("roles", JSON.stringify(cleanedRoles));
-                }
-              }
-              router.push("/");
-            } else {
-              alert(result.message);
-            }
-          }
-          break;
-
-        case "changePassword":
-          {
-            const res = await fetch(
-              `https://sahabattens-tenscoffeeid.up.railway.app/api/account/change-password?username=${username}`,
-              {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  combination,
-                  newPassword,
-                }),
-              }
-            );
-            const result = await res.json();
-            if (res.ok) {
-              alert(result.message);
-              // Reset form ke default
-              setStep("checkUsername");
-              setUsername("");
-              setPassword("");
-              setCombination("");
-              setNewPassword("");
-            } else {
-              alert(result.message);
-            }
-          }
-          break;
+        }
 
         default:
           break;
       }
-    } catch (err) {
-      console.error("Error:", err);
+
     } finally {
       setIsLoading(false); // Akhiri loading
     }
@@ -170,7 +165,7 @@ export default function LoginPage() {
 
   const handleForgotPassword = () => {
     if (!username) {
-      alert("Harap masukkan username terlebih dahulu.");
+      setToast({ type: "error", message: "Harap masukkan username terlebih dahulu." });
       return;
     }
     setStep("changePassword");
@@ -178,6 +173,9 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen w-full">
+      {toast && (
+        <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} duration={3000} />
+      )}
       {/* Logo Section */}
       <div className="hidden md:flex md:w-1/2 items-center justify-center bg-white">
         <Image
@@ -232,7 +230,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-                <p className="text-sm text-blue-500">Masukkan &quot;newuser123&#34;</p>
+                <p className="text-sm text-blue-500">Masukkan &quot;newuser123&quot;</p>
               </div>
             )}
 
@@ -291,10 +289,9 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 className="w-full h-14 bg-[#3c67ff] hover:bg-[#3b5694] text-white text-lg font-medium rounded-md"
-                disabled={isLoading} // Disable saat loading
+                disabled={isLoading}
               >
                 {isLoading ? (
-                  // Spinner dan teks "Loading..."
                   <div className="flex items-center justify-center gap-2">
                     <svg
                       aria-hidden="true"
@@ -344,7 +341,6 @@ export default function LoginPage() {
             </div>
           </form>
 
-          {/* Tampilkan link "Forgot Password?" hanya jika step bukan "changePassword" */}
           {step !== "changePassword" && (
             <div className="text-center">
               <Link

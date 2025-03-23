@@ -196,10 +196,10 @@ export default function MyCalendar() {
         console.log("User role:", userOutletName);
         if (userOutletName) {
           const matchedOutlet = data.find(
-            (o: { outletName: string; }) => o.outletName === userOutletName
+            (o: { name: string; }) => o.name === userOutletName
           );
           if (matchedOutlet) {
-            setSelectedOutlet(matchedOutlet.outletName);
+            setSelectedOutlet(matchedOutlet.name);
             setOutletId(matchedOutlet.outletId); // Set the outletId for selected outlet
             console.log("✅ Outlet selected:", matchedOutlet); // Debugging selected outlet
           } else {
