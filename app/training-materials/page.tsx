@@ -24,10 +24,13 @@ export default function ManajemenMateriPelatihan() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [token, setToken] = useState<string | null>(null)
+  const [userRole, setUserRole] = useState<string>("")
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token")
     setToken(storedToken)
+    const storedRoles = localStorage.getItem("roles")
+    setUserRole(storedRoles || "")
 
     const fetchMaterials = async () => {
       try {
@@ -146,7 +149,7 @@ export default function ManajemenMateriPelatihan() {
       <div className="flex flex-col items-center mb-8">
         <h1 className="text-primary text-3xl font-bold mb-6">Manajemen Materi Pelatihan</h1>
 
-        {localStorage.getItem("roles") === "Admin" && (
+        {userRole === "Admin" && (
           <Link href="/training-materials/create">
           <Button className="rounded-full">
             <Plus className="mr-2 h-5 w-5" />
