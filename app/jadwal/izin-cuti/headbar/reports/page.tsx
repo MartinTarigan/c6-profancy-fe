@@ -24,17 +24,12 @@ interface LeaveRequest {
   status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELED"
   createdAt: string
   updatedAt: string
+  idOutlet?: number // Added to match your DTO
 }
 
-interface UserProfile {
-  id: string
-  username: string
-  fullName: string
-  role: string
-  outlet: {
-    id: string
-    name: string
-  }
+interface DateRange {
+  from: Date | undefined
+  to: Date | undefined
 }
 
 function parseJwt(token: string) {
@@ -63,11 +58,12 @@ export default function ReportsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterType, setFilterType] = useState<string>("all")
   const [filterStatus, setFilterStatus] = useState<string>("all")
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
-  const [dateRange, setDateRange] = useState<{
-    from: Date | undefined
-    to: Date | undefined
-  }>({
+  const [currentOutletId, setCurrentOutletId] = useState<number | null>(null)
+  const [outletName, setOutletName] = useState<string>("")
+  const [rawData, setRawData] = useState<any>(null) // For debugging
+
+  // Fix for the date range issue - explicitly define the type
+  const [dateRange, setDateRange] = useState<DateRange>({
     from: undefined,
     to: undefined,
   })
@@ -82,7 +78,7 @@ export default function ReportsPage() {
           return
         }
 
-        // Get user profile first to get outlet ID
+        // Get user info from JWT
         const jwtPayload = parseJwt(token)
         if (!jwtPayload || !jwtPayload.sub) {
           console.log("Invalid token, redirecting to login")
@@ -90,33 +86,13 @@ export default function ReportsPage() {
           return
         }
 
+        const currentUsername = jwtPayload.sub
+
         setIsLoading(true)
 
-        // Fetch user profile
-        const profileResponse = await fetch(`https://sahabattens-tenscoffeeid.up.railway.app/api/user/profile`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-        if (!profileResponse.ok) {
-          throw new Error(`Error fetching user profile: ${profileResponse.status}`)
-        }
-
-        const profileData = await profileResponse.json()
-        const profile = profileData.data
-        setUserProfile(profile)
-
-        if (!profile.outlet || !profile.outlet.id) {
-          throw new Error("User is not assigned to any outlet")
-        }
-
-        const outletId = profile.outlet.id
-
-        // Fetch all leave requests for the outlet
+        // Fetch ALL leave requests
         const response = await fetch(
-          `https://sahabattens-tenscoffeeid.up.railway.app/api/shift-management/leave-request/outlet/${outletId}/all`,
+          `https://sahabattens-tenscoffeeid.up.railway.app/api/shift-management/leave-request/all`,
           {
             method: "GET",
             headers: {
@@ -130,10 +106,40 @@ export default function ReportsPage() {
         }
 
         const result = await response.json()
-        const requests = result.data || []
+        console.log("Raw API response:", result) // Debug log
+        setRawData(result) // Store raw data for debugging
 
-        setAllRequests(requests)
-        setFilteredRequests(requests)
+        const allRequestsData = result.data || []
+
+        // First, try to find the outlet ID for the current user
+        if (!currentOutletId) {
+          // Get outlet ID from JWT if available
+          if (jwtPayload.outletId) {
+            setCurrentOutletId(Number.parseInt(jwtPayload.outletId))
+            console.log("Found outlet ID from JWT:", jwtPayload.outletId)
+            setOutletName(`Outlet #${jwtPayload.outletId}`)
+          } else {
+            // If not in JWT, try to get from localStorage
+            const storedOutletId = localStorage.getItem("outletId")
+            if (storedOutletId) {
+              setCurrentOutletId(Number.parseInt(storedOutletId))
+              console.log("Found outlet ID from localStorage:", storedOutletId)
+              setOutletName(`Outlet #${storedOutletId}`)
+            }
+          }
+        }
+
+        // Filter requests by outlet ID
+        let filteredByOutlet = allRequestsData
+        if (currentOutletId) {
+          filteredByOutlet = allRequestsData.filter((req: LeaveRequest) => req.idOutlet === currentOutletId)
+          console.log(`Filtered to ${filteredByOutlet.length} requests for outlet ID ${currentOutletId}`)
+        } else {
+          console.warn("No outlet ID found for filtering. Showing all requests.")
+        }
+
+        setAllRequests(filteredByOutlet)
+        setFilteredRequests(filteredByOutlet)
       } catch (err) {
         setError(err instanceof Error ? err.message : "An unknown error occurred")
         console.error("Error fetching all requests:", err)
@@ -143,7 +149,7 @@ export default function ReportsPage() {
     }
 
     fetchAllRequests()
-  }, [router])
+  }, [router, currentOutletId])
 
   // Apply filters and search
   useEffect(() => {
@@ -171,10 +177,15 @@ export default function ReportsPage() {
     // Apply date range filter
     if (dateRange.from) {
       const fromDate = new Date(dateRange.from)
+      fromDate.setHours(0, 0, 0, 0) // Start of day
+
       results = results.filter((req) => {
         const requestDate = new Date(req.requestDate)
+        requestDate.setHours(0, 0, 0, 0) // Start of day for comparison
+
         if (dateRange.to) {
           const toDate = new Date(dateRange.to)
+          toDate.setHours(23, 59, 59, 999) // End of day
           return requestDate >= fromDate && requestDate <= toDate
         }
         return requestDate >= fromDate
@@ -285,6 +296,17 @@ export default function ReportsPage() {
         <div className="text-destructive text-center">
           <h3 className="text-xl font-semibold mb-2">Error Loading Data</h3>
           <p>{error}</p>
+          <Button
+            className="mt-4"
+            onClick={() => {
+              console.log("Raw data:", rawData)
+              console.log("Current outlet ID:", currentOutletId)
+              console.log("All requests:", allRequests)
+              alert("Check console for debug data")
+            }}
+          >
+            Debug: Show Raw Data
+          </Button>
         </div>
       </div>
     )
@@ -301,7 +323,7 @@ export default function ReportsPage() {
           </Link>
           <div>
             <h1 className="text-2xl font-bold">Laporan Izin/Cuti</h1>
-            {userProfile?.outlet && <p className="text-sm text-muted-foreground">Outlet: {userProfile.outlet.name}</p>}
+            {outletName && <p className="text-sm text-muted-foreground">Outlet: {outletName}</p>}
           </div>
         </div>
 
@@ -381,8 +403,10 @@ export default function ReportsPage() {
                     mode="range"
                     defaultMonth={dateRange.from}
                     selected={dateRange}
-                    onSelect={(value) => {
-                      setDateRange(value || { from: undefined, to: undefined })
+                    onSelect={(value: any) => {
+                      // Type assertion to ensure TypeScript understands the structure
+                      const range = value as { from: Date | undefined; to: Date | undefined } | undefined
+                      setDateRange(range || { from: undefined, to: undefined })
                     }}
                     numberOfMonths={2}
                   />

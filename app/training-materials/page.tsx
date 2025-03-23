@@ -146,13 +146,16 @@ export default function ManajemenMateriPelatihan() {
       <div className="flex flex-col items-center mb-8">
         <h1 className="text-primary text-3xl font-bold mb-6">Manajemen Materi Pelatihan</h1>
 
-        <Link href="/training-materials/create">
+        {localStorage.getItem("roles") === "Admin" && (
+          <Link href="/training-materials/create">
           <Button className="rounded-full">
             <Plus className="mr-2 h-5 w-5" />
             Tambah Materi Pelatihan
           </Button>
         </Link>
+        )}
       </div>
+      
 
       {/* 
         Jika masih loading, tampilkan skeleton "cards". 

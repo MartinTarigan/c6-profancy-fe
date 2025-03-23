@@ -16,42 +16,35 @@ interface LeaveRequest {
   status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELED"
   createdAt: string
   updatedAt: string
+  idOutlet: number // Added this field to match your DTO
 }
 
-interface UserProfile {
-  id: string
-  username: string
-  fullName: string
-  role: string
-  outlet: {
-    id: string
-    name: string
+// JWT parser function from your barista page
+function parseJwt(token: string) {
+  try {
+    const base64Url = token.split(".")[1]
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join(""),
+    )
+    return JSON.parse(jsonPayload)
+  } catch (e) {
+    console.error("Failed to parse JWT:", e)
+    return null
   }
 }
-
-// function parseJwt(token: string) {
-//   try {
-//     const base64Url = token.split(".")[1]
-//     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
-//     const jsonPayload = decodeURIComponent(
-//       atob(base64)
-//         .split("")
-//         .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-//         .join(""),
-//     )
-//     return JSON.parse(jsonPayload)
-//   } catch (e) {
-//     console.error("Failed to parse JWT:", e)
-//     return null
-//   }
-// }
 
 export default function HeadBarLeaveRequestPage() {
   const router = useRouter()
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [currentUsername, setCurrentUsername] = useState<string | null>(null)
+  const [currentOutletId, setCurrentOutletId] = useState<number | null>(null)
+  const [rawData, setRawData] = useState<any>(null) // For debugging
 
   // Stats
   const [totalIzin, setTotalIzin] = useState(0)
@@ -60,74 +53,56 @@ export default function HeadBarLeaveRequestPage() {
   const [totalBaristas, setTotalBaristas] = useState(0)
   const [recentRequests, setRecentRequests] = useState<LeaveRequest[]>([])
 
-  // Fetch leave requests for approval
+  // First, get the current user info from JWT
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        console.log("Checking auth...")
-        const token = localStorage.getItem("token")
+    const token = localStorage.getItem("token")
+    if (!token) {
+      console.log("No token, redirecting to login")
+      router.push("/login")
+      return
+    }
 
+    // Parse JWT to get username and other info
+    const jwtPayload = parseJwt(token)
+    if (!jwtPayload || !jwtPayload.sub) {
+      console.log("Invalid JWT, redirecting to login")
+      router.push("/login")
+      return
+    }
+
+    setCurrentUsername(jwtPayload.sub)
+
+    // Get outlet ID from JWT if available
+    if (jwtPayload.outletId) {
+      setCurrentOutletId(Number.parseInt(jwtPayload.outletId))
+      console.log("Found outlet ID from JWT:", jwtPayload.outletId)
+    } else {
+      // If not in JWT, try to get from localStorage
+      const storedOutletId = localStorage.getItem("outletId")
+      if (storedOutletId) {
+        setCurrentOutletId(Number.parseInt(storedOutletId))
+        console.log("Found outlet ID from localStorage:", storedOutletId)
+      }
+    }
+  }, [router])
+
+  // Fetch ALL leave requests and filter by outlet
+  useEffect(() => {
+    const fetchAllLeaveRequests = async () => {
+      if (!currentUsername) return // Don't proceed if username is not available
+
+      try {
+        const token = localStorage.getItem("token")
         if (!token) {
-          console.log("No token, redirecting to login")
           router.push("/login")
           return
         }
 
-        // // Get user profile first to get outlet ID
-        // const jwtPayload = parseJwt(token)
-        // if (!jwtPayload || !jwtPayload.sub) {
-        //   console.log("Invalid token, redirecting to login")
-        //   router.push("/login")
-        //   return
-        // }
-
         setIsLoading(true)
 
-        // Tambahkan try-catch yang lebih baik pada bagian fetch user profile
-        try {
-          // Fetch user profile
-          const profileResponse = await fetch(`https://sahabattens-tenscoffeeid.up.railway.app/api/user/profile`, {
-            method: "GET",
-            // headers: {
-            //   Authorization: `Bearer ${token}`,
-            // },
-          })
-
-          if (!profileResponse.ok) {
-            // Tambahkan logging untuk debugging
-            console.error(`Profile response status: ${profileResponse.status}`)
-
-            // Jika 401, kemungkinan token expired
-            if (profileResponse.status === 401) {
-              localStorage.clear() // Clear all localStorage
-              router.push("/login")
-              return
-            }
-
-            throw new Error(`Error fetching user profile: ${profileResponse.status}`)
-          }
-
-          const profileData = await profileResponse.json()
-          const profile = profileData.data
-          setUserProfile(profile)
-
-          if (!profile || !profile.outlet || !profile.outlet.id) {
-            console.error("Invalid profile data:", profile)
-            throw new Error("User is not assigned to any outlet")
-          }
-        } 
-        catch (err) {
-          setError(err instanceof Error ? err.message : "An unknown error occurred")
-          console.error("Error fetching user profile:", err)
-          setIsLoading(false)
-          return
-        }
-
-        const outletId = userProfile?.outlet?.id
-
-        // Fetch leave requests for the outlet
-        const leaveResponse = await fetch(
-          `https://sahabattens-tenscoffeeid.up.railway.app/api/shift-management/leave-request/outlet/${outletId}`,
+        // Fetch ALL leave requests
+        const response = await fetch(
+          `https://sahabattens-tenscoffeeid.up.railway.app/api/shift-management/leave-request/all`,
           {
             method: "GET",
             headers: {
@@ -136,20 +111,46 @@ export default function HeadBarLeaveRequestPage() {
           },
         )
 
-        if (!leaveResponse.ok) {
-          throw new Error(`Error fetching leave requests: ${leaveResponse.status}`)
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.clear()
+            router.push("/login")
+            return
+          }
+          throw new Error(`Error fetching leave requests: ${response.status}`)
         }
 
-        const leaveData = await leaveResponse.json()
-        const requests = leaveData.data || []
-        setLeaveRequests(requests)
+        const data = await response.json()
+        console.log("Raw API response:", data) // Debug log
+        setRawData(data) // Store raw data for debugging
+
+        const requests = data.data || []
+
+        // First, find the headbar's outlet ID if we don't have it yet
+        if (!currentOutletId && requests.length > 0) {
+          // Try to find a request from the current user to get their outlet ID
+          const userRequest = requests.find((req: LeaveRequest) => req.userName === currentUsername)
+          if (userRequest && userRequest.idOutlet) {
+            setCurrentOutletId(userRequest.idOutlet)
+            console.log("Found outlet ID:", userRequest.idOutlet)
+          }
+        }
+
+        // Filter requests by outlet ID
+        let filteredRequests = requests
+        if (currentOutletId) {
+          filteredRequests = requests.filter((req: LeaveRequest) => req.idOutlet === currentOutletId)
+          console.log(`Filtered to ${filteredRequests.length} requests for outlet ID ${currentOutletId}`)
+        }
+
+        setLeaveRequests(filteredRequests)
 
         // Calculate stats
         let izinCount = 0
         let cutiCount = 0
         let pendingCount = 0
 
-        requests.forEach((request: LeaveRequest) => {
+        filteredRequests.forEach((request: LeaveRequest) => {
           if (request.leaveType === "IZIN") {
             izinCount++
           } else if (request.leaveType === "OFF_DAY") {
@@ -166,25 +167,16 @@ export default function HeadBarLeaveRequestPage() {
         setPendingRequests(pendingCount)
 
         // Get recent pending requests (last 5)
-        const pendingReqs = requests
+        const pendingReqs = filteredRequests
           .filter((req: LeaveRequest) => req.status === "PENDING")
           .sort((a: LeaveRequest, b: LeaveRequest) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
           .slice(0, 5)
 
         setRecentRequests(pendingReqs)
 
-        // Fetch total baristas in the outlet
-        const baristasResponse = await fetch(`https://sahabattens-tenscoffeeid.up.railway.app/api/users/baristas/outlet/${outletId}/count`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-        if (baristasResponse.ok) {
-          const baristasResult = await baristasResponse.json()
-          setTotalBaristas(baristasResult.data || 0)
-        }
+        // Count unique baristas in this outlet
+        const uniqueBaristas = new Set(filteredRequests.map((req: LeaveRequest) => req.userName))
+        setTotalBaristas(uniqueBaristas.size)
       } catch (err) {
         setError(err instanceof Error ? err.message : "An unknown error occurred")
         console.error("Error fetching data:", err)
@@ -193,8 +185,8 @@ export default function HeadBarLeaveRequestPage() {
       }
     }
 
-    fetchData()
-  }, [router, userProfile])
+    fetchAllLeaveRequests()
+  }, [currentUsername, currentOutletId, router])
 
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -220,6 +212,17 @@ export default function HeadBarLeaveRequestPage() {
         <div className="text-destructive text-center">
           <h3 className="text-xl font-semibold mb-2">Error Loading Data</h3>
           <p>{error}</p>
+          <Button
+            className="mt-4"
+            onClick={() => {
+              console.log("Raw data:", rawData)
+              console.log("Current outlet ID:", currentOutletId)
+              console.log("Filtered leave requests:", leaveRequests)
+              alert("Check console for debug data")
+            }}
+          >
+            Debug: Show Raw Data
+          </Button>
         </div>
       </div>
     )
@@ -227,7 +230,6 @@ export default function HeadBarLeaveRequestPage() {
 
   return (
     <div className="container mx-auto p-6">
-      {/* Header */}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">

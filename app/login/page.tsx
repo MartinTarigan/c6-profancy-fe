@@ -232,7 +232,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-                <p className="text-sm text-blue-500">Masukkan "newuser123"</p>
+                <p className="text-sm text-blue-500">Masukkan &quot;newuser123&#34;</p>
               </div>
             )}
 

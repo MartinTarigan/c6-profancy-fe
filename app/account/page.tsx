@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Plus, ArrowDownAZ, Filter, Search } from "lucide-react";
 import Link from "next/link";
 
-// Import komponen Skeleton
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface UserData {
@@ -20,15 +19,12 @@ export default function DaftarAkun() {
   const [users, setUsers] = useState<UserData[]>([]);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [currentUsername, setCurrentUsername] = useState<string>("");
-
   // State untuk filter, sort, dll.
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [filterRole, setFilterRole] = useState("");
   const [filterOutlet, setFilterOutlet] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-
-  // State untuk menandakan sedang loading atau tidak
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -64,23 +60,20 @@ export default function DaftarAkun() {
 
         const result = await response.json();
         if (result?.data) {
-          const mappedUsers: UserData[] = result.data.map((item: any) => {
-            return {
-              username: item.username ?? "-",
-              name: item.fullName ?? "-",
-              role: item.role ?? "-",
-              phone: item.phoneNumber ?? "-",
-              outlet: item.outlet ?? "-",
-              status: item.status === "Revoked" ? "Revoked" : "Active",
-            };
-          });
+          const mappedUsers: UserData[] = result.data.map((item: any) => ({
+            username: item.username ?? "-",
+            name: item.fullName ?? "-",
+            role: item.role ?? "-",
+            phone: item.phoneNumber ?? "-",
+            outlet: item.outlet ?? "-",
+            status: item.status === "Revoked" ? "Revoked" : "Active",
+          }));
           setUsers(mappedUsers);
         }
       } catch (err) {
         console.error("Error fetching user data:", err);
         alert("Terjadi kesalahan saat mengambil data user.");
       } finally {
-        // Pastikan setIsLoading(false) dipanggil di akhir proses (sukses/gagal)
         setIsLoading(false);
       }
     }
@@ -88,27 +81,33 @@ export default function DaftarAkun() {
     fetchUserData();
   }, []);
 
-  const displayedUsers = users
-    .filter((user) => {
-      const lowerSearch = searchTerm.toLowerCase();
-      const matchesSearch =
-        user.name.toLowerCase().includes(lowerSearch) ||
-        user.outlet.toLowerCase().includes(lowerSearch);
-      const matchesRole = filterRole ? user.role === filterRole : true;
-      const matchesOutlet = filterOutlet ? user.outlet === filterOutlet : true;
-      return matchesSearch && matchesRole && matchesOutlet;
-    })
-    .sort((a, b) => {
-      // Prioritaskan currentUsername ke atas
-      if (a.username === currentUsername && b.username !== currentUsername) return -1;
-      if (b.username === currentUsername && a.username !== currentUsername) return 1;
-      // Jika bukan current user, urutkan berdasarkan nama
-      if (sortOrder === "asc") {
-        return a.name.localeCompare(b.name);
-      } else {
-        return b.name.localeCompare(a.name);
-      }
-    });
+  // Ambil outlet user yang login (jika ada)
+  const currentUserOutlet =
+    users.find((u) => u.username === currentUsername)?.outlet || "";
+
+  // Filter data:
+  // - Selalu filter berdasarkan search, filter role, dan filter outlet (jika dipilih)
+  // - Jika user yang login bukan Admin, filter juga agar hanya menampilkan user dari outlet yang sama dengan currentUserOutlet.
+  const filteredUsers = users.filter((user) => {
+    const lowerSearch = searchTerm.toLowerCase();
+    const matchesSearch =
+      user.name.toLowerCase().includes(lowerSearch) ||
+      user.outlet.toLowerCase().includes(lowerSearch);
+    const matchesRole = filterRole ? user.role === filterRole : true;
+    const matchesOutlet = filterOutlet ? user.outlet === filterOutlet : true;
+    const matchesCurrentOutlet =
+      userRole !== "Admin" ? user.outlet === currentUserOutlet : true;
+    return matchesSearch && matchesRole && matchesOutlet && matchesCurrentOutlet;
+  });
+
+  // Sort data; prioritas diberikan pada current user agar tampil di atas
+  const displayedUsers = filteredUsers.sort((a, b) => {
+    if (a.username === currentUsername && b.username !== currentUsername) return -1;
+    if (b.username === currentUsername && a.username !== currentUsername) return 1;
+    return sortOrder === "asc"
+      ? a.name.localeCompare(b.name)
+      : b.name.localeCompare(a.name);
+  });
 
   const toggleSortOrder = () => {
     setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
@@ -118,6 +117,7 @@ export default function DaftarAkun() {
     <div className="flex flex-col">
       <div className="flex flex-col items-center mb-6">
         <h1 className="text-primary text-3xl font-bold mb-6">Daftar Akun</h1>
+        {/* Tampilkan tombol tambah akun hanya untuk Admin */}
         {userRole === "Admin" && (
           <Link href="/account/create">
             <Button className="rounded-full">
@@ -188,7 +188,6 @@ export default function DaftarAkun() {
       )}
 
       <div className="overflow-x-auto">
-        {/* Jika masih loading, tampilkan skeleton dulu */}
         {isLoading ? (
           <table className="w-full border-collapse shadow-md rounded-lg overflow-hidden">
             <thead>
@@ -203,7 +202,6 @@ export default function DaftarAkun() {
               </tr>
             </thead>
             <tbody>
-              {/* Contoh 5 baris skeleton */}
               {Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i} className="border-b even:bg-primary-bg">
                   <td className="py-4 px-6">
@@ -265,28 +263,33 @@ export default function DaftarAkun() {
                   </td>
                   <td className="py-4 px-6 whitespace-nowrap">
                     <div className="flex gap-2">
-                      {(userRole === "Admin" || user.username === currentUsername) && (
-                        <Link
-                          href={
-                            userRole === "Admin"
-                              ? `/account/edit/${user.username}`
-                              : `/account/edit-profile/${user.username}`
-                          }
-                        >
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="rounded-lg bg-primary-lightest text-primary border-none hover:bg-primary-lightest/80"
+                      {(
+                        userRole === "Admin" ||
+                        user.username === currentUsername
+                      ) && (
+                        <>
+                          <Link
+                            href={
+                              userRole === "Admin"
+                                ? `/account/edit/${user.username}`
+                                : `/account/edit-profile/${user.username}`
+                            }
                           >
-                            Edit
-                          </Button>
-                        </Link>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="rounded-lg bg-primary-lightest text-primary border-none hover:bg-primary-lightest/80"
+                            >
+                              Edit
+                            </Button>
+                          </Link>
+                          <Link href={`/account/${user.username}`}>
+                            <Button size="sm" className="rounded-lg">
+                              Detail
+                            </Button>
+                          </Link>
+                        </>
                       )}
-                      <Link href={`/account/${user.username}`}>
-                        <Button size="sm" className="rounded-lg">
-                          Detail
-                        </Button>
-                      </Link>
                     </div>
                   </td>
                 </tr>

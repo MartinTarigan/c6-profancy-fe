@@ -55,6 +55,7 @@ export default function EditLeaveRequestPage() {
   const [date, setDate] = useState<Date | undefined>(undefined)
   const [leaveType, setLeaveType] = useState<string>("")
   const [reason, setReason] = useState<string>("")
+  const [username, setUsername] = useState<string>("")
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
@@ -80,12 +81,15 @@ export default function EditLeaveRequestPage() {
         }
 
         setIsLoading(true)
-        const response = await fetch(`https://sahabattens-tenscoffeeid.up.railway.app/api/shift-management/leave-request/${id}`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
+        const response = await fetch(
+          `https://sahabattens-tenscoffeeid.up.railway.app/api/shift-management/leave-request/${id}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           },
-        })
+        )
 
         if (!response.ok) {
           throw new Error(`Error fetching leave request: ${response.status}`)
@@ -145,21 +149,31 @@ export default function EditLeaveRequestPage() {
     try {
       const token = localStorage.getItem("token")
 
+      const requestDate = date
+        ? `${date.getFullYear()}-${(date.getMonth() + 1)
+            .toString()
+            .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`
+        : null
+
       const requestBody = {
-        requestDate: date?.toISOString().split("T")[0],
+        username: username,
+        // requestDate: date?.toISOString().split("T")[0],
+        requestDate,
         leaveType: leaveType,
         reason: reason,
-        canceled: false,
       }
 
-      const response = await fetch(`https://sahabattens-tenscoffeeid.up.railway.app/api/shift-management/leave-request/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `https://sahabattens-tenscoffeeid.up.railway.app/api/shift-management/leave-request/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(requestBody),
         },
-        body: JSON.stringify(requestBody),
-      })
+      )
 
       if (!response.ok) {
         const errorData = await response.json()
@@ -190,41 +204,52 @@ export default function EditLeaveRequestPage() {
     try {
       const token = localStorage.getItem("token")
 
+      const requestDate = date
+        ? `${date.getFullYear()}-${(date.getMonth() + 1)
+            .toString()
+            .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`
+        : null
+
+      // Create a request body with the canceled field set to true
       const requestBody = {
-        requestDate: date?.toISOString().split("T")[0],
+        requestDate: requestDate,
         leaveType: leaveType,
         reason: reason,
-        canceled: true,
+        canceled: true, // This is the key field needed for cancellation
       }
 
-      const response = await fetch(`https://sahabattens-tenscoffeeid.up.railway.app/api/shift-management/leave-request/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `https://sahabattens-tenscoffeeid.up.railway.app/api/shift-management/leave-request/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(requestBody),
         },
-        body: JSON.stringify(requestBody),
-      })
+      )
 
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.message || "Gagal membatalkan permohonan")
       }
 
-      // Update local state with the response data
-      const result = await response.json()
-
-      // Update the local state to show the canceled status
+      // Update local state with the canceled status
       setLeaveRequest({
         ...leaveRequest!,
         status: "CANCELED",
       })
 
-      // Wait a moment to show the updated status before redirecting
+      // Set canEdit to false since canceled requests can't be edited
+      setCanEdit(false)
+
+      alert("Permohonan berhasil dibatalkan!")
+
+      // Wait a moment before redirecting to show the updated status
       setTimeout(() => {
-        alert("Permohonan berhasil dibatalkan!")
         router.push("/jadwal/izin-cuti/barista/list")
-      }, 500)
+      }, 1000)
     } catch (err) {
       console.error("Error saat membatalkan permohonan:", err)
       alert(err instanceof Error ? err.message : "Gagal membatalkan permohonan. Silakan coba lagi.")

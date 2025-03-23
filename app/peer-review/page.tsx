@@ -1,46 +1,51 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Plus, Search, ArrowUpDown, Filter } from "lucide-react"
-import Link from "next/link"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Plus, Search, ArrowUpDown, Filter } from "lucide-react";
+import Link from "next/link";
 
 interface PeerReviewAssignment {
-  peerReviewAssignmentId: number
-  reviewerUsername: string
-  revieweeUsername: string
-  endDateFill: string
+  peerReviewAssignmentId: number;
+  reviewerUsername: string;
+  revieweeUsername: string;
+  endDateFill: string;
 }
 
 export default function ManajemenPeerReview() {
-  const [assignments, setAssignments] = useState<PeerReviewAssignment[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [token, setToken] = useState<string | null>(null)
+  const [assignments, setAssignments] = useState<PeerReviewAssignment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
     // Get JWT token from localStorage
-    const storedToken = localStorage.getItem("token")
-    setToken(storedToken)
+    const storedToken = localStorage.getItem("token");
+    setToken(storedToken);
 
     const fetchAssignments = async () => {
       try {
-        setIsLoading(true)
+        setIsLoading(true);
 
-        if (storedToken) {
-          const response = await fetch("https://sahabattens-tenscoffeeid.up.railway.app/api/trainee/peer-review-assignment/all", {
-            headers: {
-              Authorization: `Bearer ${storedToken}`,
-            },
-          })
+        if (token) {
+          const response = await fetch(
+            "https://sahabattens-tenscoffeeid.up.railway.app/api/trainee/peer-review-assignment/all",
+            {
+              headers: {
+                Authorization: `Bearer ${storedToken}`,
+              },
+            }
+          );
 
           if (!response.ok) {
-            throw new Error(`Error fetching peer review assignments: ${response.status}`)
+            throw new Error(
+              `Error fetching peer review assignments: ${response.status}`
+            );
           }
 
-          const result = await response.json()
-          setAssignments(result.data || [])
+          const result = await response.json();
+          setAssignments(result.data || []);
         } else {
           // Sample data for demo purposes
           setAssignments([
@@ -62,45 +67,51 @@ export default function ManajemenPeerReview() {
               revieweeUsername: "andrea.cantillo",
               endDateFill: "2025-04-10T00:00:00.000+00:00",
             },
-          ])
+          ]);
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "An unknown error occurred")
-        console.error("Error fetching peer review assignments:", err)
+        setError(
+          err instanceof Error ? err.message : "An unknown error occurred"
+        );
+        console.error("Error fetching peer review assignments:", err);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchAssignments()
-  }, [])
+    fetchAssignments();
+  }, []);
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    const day = date.getDate()
-    const month = date.toLocaleString("id-ID", { month: "long" })
-    const year = date.getFullYear()
-    return `${day} ${month} ${year}`
-  }
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = date.toLocaleString("id-ID", { month: "long" });
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
+  };
 
   const isReviewCompleted = (endDateFill: string) => {
-    const endDate = new Date(endDateFill)
-    const today = new Date()
-    return today > endDate
-  }
+    const endDate = new Date(endDateFill);
+    const today = new Date();
+    return today > endDate;
+  };
 
   const filteredAssignments = assignments.filter(
     (assignment) =>
-      assignment.reviewerUsername.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      assignment.revieweeUsername.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+      assignment.reviewerUsername
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      assignment.revieweeUsername
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase())
+  );
 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -111,20 +122,23 @@ export default function ManajemenPeerReview() {
           <p>{error}</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="flex flex-col">
       <div className="flex flex-col items-center mb-8">
-        <h1 className="text-primary text-3xl font-bold mb-6">Manajemen Peer Review</h1>
-
-        <Link href="/peer-review/create">
-          <Button className="rounded-full">
-            <Plus className="mr-2 h-5 w-5" />
-            Tambah Peer Review
-          </Button>
-        </Link>
+        <h1 className="text-primary text-3xl font-bold mb-6">
+          Manajemen Peer Review
+        </h1>
+        {localStorage.getItem("roles") === "Admin" && (
+          <Link href="/peer-review/create">
+            <Button className="rounded-full">
+              <Plus className="mr-2 h-5 w-5" />
+              Tambah Peer Review
+            </Button>
+          </Link>
+        )}
       </div>
 
       <div className="flex gap-4 mb-6">
@@ -160,15 +174,24 @@ export default function ManajemenPeerReview() {
           </thead>
           <tbody>
             {filteredAssignments.map((assignment) => (
-              <tr key={assignment.peerReviewAssignmentId} className="bg-blue-50 border-b border-white">
+              <tr
+                key={assignment.peerReviewAssignmentId}
+                className="bg-blue-50 border-b border-white"
+              >
                 <td className="py-4 px-6">{assignment.reviewerUsername}</td>
                 <td className="py-4 px-6">{assignment.revieweeUsername}</td>
-                <td className="py-4 px-6">{formatDate(assignment.endDateFill)}</td>
+                <td className="py-4 px-6">
+                  {formatDate(assignment.endDateFill)}
+                </td>
                 <td className="py-4 px-6">
                   {isReviewCompleted(assignment.endDateFill) ? (
-                    <span className="px-4 py-1 rounded-full text-sm bg-red-100 text-red-500">Selesai</span>
+                    <span className="px-4 py-1 rounded-full text-sm bg-red-100 text-red-500">
+                      Selesai
+                    </span>
                   ) : (
-                    <span className="px-4 py-1 rounded-full text-sm bg-green-100 text-green-600">Running</span>
+                    <span className="px-4 py-1 rounded-full text-sm bg-green-100 text-green-600">
+                      Running
+                    </span>
                   )}
                 </td>
               </tr>
@@ -183,6 +206,5 @@ export default function ManajemenPeerReview() {
         </div>
       )}
     </div>
-  )
+  );
 }
-

@@ -12,14 +12,44 @@ interface BaristaOption {
 }
 
 export default function MyCalendar() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState("");
   const [outletId, setOutletId] = useState<number | null>(null);
-  const [selectedOutlet, setSelectedOutlet] = useState("");
-  const [outlets, setOutlets] = useState<any[]>([]);
+  const [selectedOutlet, setSelectedOutlet] = useState<string>("");
+
+  interface Outlet {
+    outletId: number;
+    outletName: string; // Atau outletName: string; tergantung dari API kamu
+    headBarId?: number; // Optional kalau kadang null/undefined
+  }
+  interface User {
+    id: string; // Sesuai field yang ada di API
+    username: string;
+    role: string;
+    outlet?: string; // Bisa `string`, `number`, atau objek, tergantung API lo
+    // Tambahin field lain yang ada di userRes.data
+  }
+
+  console.log("User info:", user);
+
+  const [outlets, setOutlets] = useState<Outlet[]>([]);
   const [baristaOptions, setBaristaOptions] = useState<BaristaOption[]>([]);
-  const [schedules, setSchedules] = useState<any>({});
-  const [backupSchedules, setBackupSchedules] = useState<any>({});
+  interface ShiftSchedule {
+    morningShift: string[];
+    eveningShift: string[];
+  }
+
+  type OutletSchedules = {
+    [dateKey: string]: ShiftSchedule;
+  };
+
+  type Schedules = {
+    [outletId: number]: OutletSchedules;
+  };
+
+  const [schedules, setSchedules] = useState<Schedules>({});
+  const [backupSchedules, setBackupSchedules] = useState<Schedules>({});
+
   // const [date, setDate] = useState<Date>(new Date());
   const [date, setDate] = useState<Date>(() => new Date());
   const [isEditing, setIsEditing] = useState(false);
@@ -45,33 +75,21 @@ export default function MyCalendar() {
   const getDoubleShiftBaristas = () => {
     const pagi = currentSchedule.morningShift.filter((id: string) => id !== "");
     const sore = currentSchedule.eveningShift.filter((id: string) => id !== "");
-    const duplicates = pagi.filter((id: any) => sore.includes(id));
+    // const duplicates = pagi.filter((id: any) => sore.includes(id));
+    const duplicates = pagi.filter((id: string) => sore.includes(id));
+
     return duplicates;
   };
 
-  const isMorningShiftValid = validateShift(currentSchedule.morningShift, 1);
-  const isEveningShiftValid = validateShift(currentSchedule.eveningShift, 2);
+  // const isMorningShiftValid = validateShift(currentSchedule.morningShift, 1);
+  // const isEveningShiftValid = validateShift(currentSchedule.eveningShift, 2);
   const doubleShiftBaristas = getDoubleShiftBaristas();
 
   {
     /* GLOBAL WARNING */
   }
-  {
-    isEditing && getDoubleShiftBaristas().length > 0 && (
-      <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded mb-4">
-        <p className="font-semibold">⚠️ Catatan:</p>
-        {getDoubleShiftBaristas().map((baristaId: Key | null | undefined) => {
-          const barista = baristaOptions.find((b) => b.id === baristaId);
-          return (
-            <p key={baristaId}>
-              Barista <strong>{barista?.fullName || baristaId}</strong>{" "}
-              seharusnya tidak diassign ke dua shift di tanggal yang sama.
-            </p>
-          );
-        })}
-      </div>
-    );
-  }
+  console.log("Selected Outlet:", selectedOutlet);
+
   useEffect(() => {
     if (!isEditing) return;
 
@@ -141,7 +159,7 @@ export default function MyCalendar() {
           setSelectedOutlet(selectedOutlet); // Set the outlet name for non-admin
           fetchAllOutlets(token, selectedOutlet); // Fetch all outlets and set selected outlet
         } else {
-          // console.error("❌ Outlet not found for the user");
+          console.log("❌ Outlet not found for the user");
         }
 
         if (
@@ -155,7 +173,7 @@ export default function MyCalendar() {
           // console.log("Non-admin, outlet associated with user:", outlet);
         }
       } catch (err) {
-        // console.error("❌ Gagal fetch user data:", err);
+        console.log("❌ Gagal fetch user data:", err);
       }
     };
 
@@ -185,13 +203,13 @@ export default function MyCalendar() {
             setOutletId(matchedOutlet.outletId); // Set the outletId for selected outlet
             console.log("✅ Outlet selected:", matchedOutlet); // Debugging selected outlet
           } else {
-            // console.error("❌ Outlet terkait dengan pengguna tidak ditemukan");
+            console.log("❌ Outlet terkait dengan pengguna tidak ditemukan");
           }
         }
 
         console.log("✅ All outlets:", data); // Debugging list of all outlets
       } catch (err) {
-        // console.error("❌ Gagal fetch all outlets:", err);
+        console.log("❌ Gagal fetch all outlets:", err);
       }
     };
 
@@ -231,7 +249,7 @@ export default function MyCalendar() {
       setBaristaOptions(data);
       console.log("✅ Baristas fetched:", data);
     } catch (error) {
-      // console.error("❌ Gagal ambil baristas:", error);
+      console.log("❌ Gagal ambil baristas:", error);
     }
   };
 
@@ -264,7 +282,7 @@ export default function MyCalendar() {
       if (!res.ok) {
         // console.log(`❌ Server responded with status ${res.status}`);
         const errText = await res.text();
-        // console.log("❌ Response body:", errText);
+        console.log("❌ Response body:", errText);
         alert("Failed to fetch shifts");
         return;
       }
@@ -275,13 +293,22 @@ export default function MyCalendar() {
       const shiftMap = buildShiftMap(data);
       setSchedules(shiftMap);
     } catch (error) {
-      // console.error("❌ Error fetching shifts:", error);
+      console.log("❌ Error fetching shifts:", error);
     }
   };
 
+  interface ShiftData {
+    outletId: number;
+    dateShift: string;
+    shiftType: number;
+    baristas: { id: string }[];
+  }
   // ✅ BUILD SHIFT MAP by outletId
-  const buildShiftMap = (data: any[]) => {
-    const shiftMap: any = {};
+  const buildShiftMap = (data: ShiftData[]) => {
+    const shiftMap: Record<
+      number,
+      Record<string, { morningShift: string[]; eveningShift: string[] }>
+    > = {};
 
     data.forEach((shift) => {
       const outletId = shift.outletId;
@@ -295,7 +322,7 @@ export default function MyCalendar() {
         };
       }
 
-      const baristaIds = shift.baristas.map((b: any) => b.id);
+      const baristaIds = shift.baristas.map((b: { id: string }) => b.id);
 
       if (shift.shiftType === 1) {
         shiftMap[outletId][dateKey].morningShift = baristaIds;
@@ -309,11 +336,16 @@ export default function MyCalendar() {
   };
 
   // ✅ UPDATE SCHEDULE LOCAL STATE
-  const updateSchedule = (newSchedule: any) => {
-    setSchedules((prev: any) => ({
+  const updateSchedule = (newSchedule: ShiftSchedule) => {
+    if (outletId === null) {
+      console.warn("❌ updateSchedule dipanggil tanpa outletId");
+      return;
+    }
+
+    setSchedules((prev: Schedules) => ({
       ...prev,
-      [outletId!]: {
-        ...prev[outletId!],
+      [outletId]: {
+        ...prev[outletId],
         [selectedDateKey]: newSchedule,
       },
     }));
@@ -504,6 +536,21 @@ export default function MyCalendar() {
         />
       )}
 
+      {isEditing && getDoubleShiftBaristas().length > 0 && (
+        <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded mb-4">
+          <p className="font-semibold">⚠️ Catatan:</p>
+          {getDoubleShiftBaristas().map((baristaId: Key | null | undefined) => {
+            const barista = baristaOptions.find((b) => b.id === baristaId);
+            return (
+              <p key={baristaId}>
+                Barista <strong>{barista?.fullName || baristaId}</strong>{" "}
+                seharusnya tidak diassign ke dua shift di tanggal yang sama.
+              </p>
+            );
+          })}
+        </div>
+      )}
+
       {/* ✅ CONFIRM MODAL ADA DI SINI */}
       {showConfirmModal && (
         <ConfirmModal
@@ -563,13 +610,15 @@ export default function MyCalendar() {
             <option value="" className="text-[#5171E3]">
               Pilih Outlet
             </option>
+            console.log("Outlets list:", outlets);
+
             {outlets.map((outlet) => (
               <option
                 key={outlet.outletId}
                 value={outlet.outletId}
                 className="text-[#5171E3]"
               >
-                {outlet.name}
+                {outlet.outletName}
               </option>
             ))}
           </select>
@@ -634,7 +683,7 @@ export default function MyCalendar() {
                 <p className="font-semibold flex items-center gap-1">
                   ⚠️ Catatan:
                 </p>
-                {doubleShiftBaristas.map((baristaId: string, idx: any) => {
+                {doubleShiftBaristas.map((baristaId: string, idx: number) => {
                   const barista = baristaOptions.find(
                     (b) => b.id === baristaId
                   );

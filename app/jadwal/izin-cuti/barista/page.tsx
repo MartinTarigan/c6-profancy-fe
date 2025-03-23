@@ -37,7 +37,6 @@ function parseJwt(token: string) {
 
 export default function BaristaLeaveRequestPage() {
   const router = useRouter()
-  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -46,8 +45,6 @@ export default function BaristaLeaveRequestPage() {
   const [totalCuti, setTotalCuti] = useState(0)
   const [pendingRequests, setPendingRequests] = useState(0)
   const [recentRequests, setRecentRequests] = useState<LeaveRequest[]>([])
-  const [username, setUsername] = useState<string>("")
-  const [fullName, setFullName] = useState<string>("")
 
   // Fetch leave requests for the current user
   useEffect(() => {
@@ -71,8 +68,6 @@ export default function BaristaLeaveRequestPage() {
 
         if (jwtPayload && jwtPayload.sub) {
           currentUsername = jwtPayload.sub
-          setUsername(currentUsername)
-          console.log("Username from JWT:", currentUsername)
         } else {
           console.log("No username in JWT, redirecting to login")
           router.push("/login")
@@ -98,25 +93,6 @@ export default function BaristaLeaveRequestPage() {
 
         const result = await response.json()
         const requests = result.data || []
-        setLeaveRequests(requests)
-
-        // Fetch user profile for full name
-        // try {
-        //   const profileResponse = await fetch(`https://sahabattens-tenscoffeeid.up.railway.app/api/user/profile`, {
-        //     headers: {
-        //       Authorization: `Bearer ${token}`,
-        //     },
-        //   })
-
-        //   if (profileResponse.ok) {
-        //     const profileData = await profileResponse.json()
-        //     if (profileData.data && profileData.data.fullName) {
-        //       setFullName(profileData.data.fullName)
-        //     }
-        //   }
-        // } catch (profileErr) {
-        //   console.error("Error fetching user profile:", profileErr)
-        // }
 
         // Calculate stats
         let izinCount = 0

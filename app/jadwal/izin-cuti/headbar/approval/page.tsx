@@ -28,17 +28,7 @@ interface LeaveRequest {
   status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELED"
   createdAt: string
   updatedAt: string
-}
-
-interface UserProfile {
-  id: string
-  username: string
-  fullName: string
-  role: string
-  outlet: {
-    id: string
-    name: string
-  }
+  idOutlet?: number // Added to match your DTO
 }
 
 function parseJwt(token: string) {
@@ -73,7 +63,9 @@ export default function ApprovalPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [actionType, setActionType] = useState<"approve" | "reject" | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [currentOutletId, setCurrentOutletId] = useState<number | null>(null)
+  const [outletName, setOutletName] = useState<string>("")
+  const [rawData, setRawData] = useState<any>(null) // For debugging
 
   useEffect(() => {
     const fetchPendingRequests = async () => {
@@ -85,7 +77,7 @@ export default function ApprovalPage() {
           return
         }
 
-        // Get user profile first to get outlet ID
+        // Get user info from JWT
         const jwtPayload = parseJwt(token)
         if (!jwtPayload || !jwtPayload.sub) {
           console.log("Invalid token, redirecting to login")
@@ -93,33 +85,13 @@ export default function ApprovalPage() {
           return
         }
 
+        const currentUsername = jwtPayload.sub
+
         setIsLoading(true)
 
-        // Fetch user profile
-        const profileResponse = await fetch(`https://sahabattens-tenscoffeeid.up.railway.app/api/user/profile`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-        if (!profileResponse.ok) {
-          throw new Error(`Error fetching user profile: ${profileResponse.status}`)
-        }
-
-        const profileData = await profileResponse.json()
-        const profile = profileData.data
-        setUserProfile(profile)
-
-        if (!profile.outlet || !profile.outlet.id) {
-          throw new Error("User is not assigned to any outlet")
-        }
-
-        const outletId = profile.outlet.id
-
-        // Fetch pending leave requests for the outlet
+        // Fetch ALL leave requests and filter for pending ones
         const response = await fetch(
-          `https://sahabattens-tenscoffeeid.up.railway.app/api/shift-management/leave-request/outlet/${outletId}/pending`,
+          `https://sahabattens-tenscoffeeid.up.railway.app/api/shift-management/leave-request/all`,
           {
             method: "GET",
             headers: {
@@ -129,18 +101,51 @@ export default function ApprovalPage() {
         )
 
         if (!response.ok) {
-          throw new Error(`Error fetching pending requests: ${response.status}`)
+          throw new Error(`Error fetching requests: ${response.status}`)
         }
 
         const result = await response.json()
-        const requests = result.data || []
+        console.log("Raw API response:", result) // Debug log
+        setRawData(result) // Store raw data for debugging
 
-        setPendingRequests(requests)
-        setFilteredRequests(requests)
+        const allRequests = result.data || []
+
+        // First, try to find the outlet ID for the current user
+        if (!currentOutletId) {
+          // Get outlet ID from JWT if available
+          if (jwtPayload.outletId) {
+            setCurrentOutletId(Number.parseInt(jwtPayload.outletId))
+            console.log("Found outlet ID from JWT:", jwtPayload.outletId)
+            setOutletName(`Outlet #${jwtPayload.outletId}`)
+          } else {
+            // If not in JWT, try to get from localStorage
+            const storedOutletId = localStorage.getItem("outletId")
+            if (storedOutletId) {
+              setCurrentOutletId(Number.parseInt(storedOutletId))
+              console.log("Found outlet ID from localStorage:", storedOutletId)
+              setOutletName(`Outlet #${storedOutletId}`)
+            }
+          }
+        }
+
+        // Filter requests by outlet ID and pending status
+        let filteredByOutlet = allRequests
+        if (currentOutletId) {
+          filteredByOutlet = allRequests.filter((req: LeaveRequest) => req.idOutlet === currentOutletId)
+          console.log(`Filtered to ${filteredByOutlet.length} requests for outlet ID ${currentOutletId}`)
+        } else {
+          console.warn("No outlet ID found for filtering. Showing all requests.")
+        }
+
+        // Filter for pending requests only
+        const pendingReqs = filteredByOutlet.filter((req: LeaveRequest) => req.status === "PENDING")
+
+        setPendingRequests(pendingReqs)
+        setFilteredRequests(pendingReqs)
 
         // If there's a request ID in the URL, select that request
         if (requestId) {
-          const selectedReq = requests.find((req: LeaveRequest) => req.id === requestId) || null
+          const selectedReq = pendingReqs.find((req: LeaveRequest) => req.id === requestId) || null
           if (selectedReq) {
             setSelectedRequest(selectedReq)
             setIsDialogOpen(true)
@@ -156,7 +161,7 @@ export default function ApprovalPage() {
     }
 
     fetchPendingRequests()
-  }, [router, requestId])
+  }, [router, requestId, currentOutletId])
 
   // Apply filters and search
   useEffect(() => {
@@ -210,14 +215,19 @@ export default function ApprovalPage() {
     try {
       const token = localStorage.getItem("token")
 
+      // Use the correct endpoint from your controller
       const response = await fetch(
-        `https://sahabattens-tenscoffeeid.up.railway.app/api/shift-management/leave-request/${selectedRequest.id}/${actionType}`,
+        `https://sahabattens-tenscoffeeid.up.railway.app/api/shift-management/leave-request/${selectedRequest.id}/status`,
         {
           method: "PUT",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
+          body: JSON.stringify({
+            status: actionType === "approve" ? "APPROVED" : "REJECTED",
+            notes: "", // Add notes if your API requires it
+          }),
         },
       )
 
@@ -257,6 +267,17 @@ export default function ApprovalPage() {
         <div className="text-destructive text-center">
           <h3 className="text-xl font-semibold mb-2">Error Loading Data</h3>
           <p>{error}</p>
+          <Button
+            className="mt-4"
+            onClick={() => {
+              console.log("Raw data:", rawData)
+              console.log("Current outlet ID:", currentOutletId)
+              console.log("Pending requests:", pendingRequests)
+              alert("Check console for debug data")
+            }}
+          >
+            Debug: Show Raw Data
+          </Button>
         </div>
       </div>
     )
@@ -273,7 +294,7 @@ export default function ApprovalPage() {
           </Link>
           <div>
             <h1 className="text-2xl font-bold">Approval Permohonan Izin/Cuti</h1>
-            {userProfile?.outlet && <p className="text-sm text-muted-foreground">Outlet: {userProfile.outlet.name}</p>}
+            {outletName && <p className="text-sm text-muted-foreground">Outlet: {outletName}</p>}
           </div>
         </div>
 
