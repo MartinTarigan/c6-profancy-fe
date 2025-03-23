@@ -31,15 +31,10 @@ export default function TambahMateriPelatihan() {
     type: "success" | "error" | "info" | "warning";
     message: string;
   } | null>(null);
-  const [userRole, setUserRole] = useState<string>("");
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     setToken(storedToken);
-    const storedRole = localStorage.getItem("roles");
-    if (storedRole) {
-      setUserRole(storedRole);
-    }
   }, []);
 
   const handleInputChange = (

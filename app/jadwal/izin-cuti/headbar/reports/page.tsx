@@ -60,7 +60,7 @@ export default function ReportsPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all")
   const [currentOutletId, setCurrentOutletId] = useState<number | null>(null)
   const [outletName, setOutletName] = useState<string>("")
-  const [rawData, setRawData] = useState<any>(null) // For debugging
+  // const [rawData, setRawData] = useState<any>(null) // For debugging
 
   // Fix for the date range issue - explicitly define the type
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -86,8 +86,6 @@ export default function ReportsPage() {
           return
         }
 
-        const currentUsername = jwtPayload.sub
-
         setIsLoading(true)
 
         // Fetch ALL leave requests
@@ -107,7 +105,7 @@ export default function ReportsPage() {
 
         const result = await response.json()
         console.log("Raw API response:", result) // Debug log
-        setRawData(result) // Store raw data for debugging
+        // setRawData(result) // Store raw data for debugging
 
         const allRequestsData = result.data || []
 
@@ -299,7 +297,7 @@ export default function ReportsPage() {
           <Button
             className="mt-4"
             onClick={() => {
-              console.log("Raw data:", rawData)
+              // console.log("Raw data:", rawData)
               console.log("Current outlet ID:", currentOutletId)
               console.log("All requests:", allRequests)
               alert("Check console for debug data")
@@ -403,6 +401,7 @@ export default function ReportsPage() {
                     mode="range"
                     defaultMonth={dateRange.from}
                     selected={dateRange}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     onSelect={(value: any) => {
                       // Type assertion to ensure TypeScript understands the structure
                       const range = value as { from: Date | undefined; to: Date | undefined } | undefined

@@ -10,7 +10,7 @@ export default function Home() {
     if (!token) {
       router.push("/login");
     }
-  }, []);
+  }, [router]);
   return (
     <div className="grid grid-cols-2">
       <General />

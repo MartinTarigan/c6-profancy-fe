@@ -65,7 +65,6 @@ export default function ApprovalPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [currentOutletId, setCurrentOutletId] = useState<number | null>(null)
   const [outletName, setOutletName] = useState<string>("")
-  const [rawData, setRawData] = useState<any>(null) // For debugging
 
   useEffect(() => {
     const fetchPendingRequests = async () => {
@@ -84,8 +83,6 @@ export default function ApprovalPage() {
           router.push("/login")
           return
         }
-
-        const currentUsername = jwtPayload.sub
 
         setIsLoading(true)
 
@@ -106,7 +103,6 @@ export default function ApprovalPage() {
 
         const result = await response.json()
         console.log("Raw API response:", result) // Debug log
-        setRawData(result) // Store raw data for debugging
 
         const allRequests = result.data || []
 
@@ -270,7 +266,6 @@ export default function ApprovalPage() {
           <Button
             className="mt-4"
             onClick={() => {
-              console.log("Raw data:", rawData)
               console.log("Current outlet ID:", currentOutletId)
               console.log("Pending requests:", pendingRequests)
               alert("Check console for debug data")

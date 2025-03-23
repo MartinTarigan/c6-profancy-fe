@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -5,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CalendarIcon, ArrowLeft } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
@@ -148,6 +149,7 @@ export default function EditProfile() {
   // Jalankan validasi setiap kali field berubah
   useEffect(() => {
     validateForm();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fullName, phoneNumber, address, dateOfBirth, gender]);
 
   // Submit update ke server

@@ -227,6 +227,7 @@ export default function MyCalendar() {
     const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
     fetchShiftsByRange(outletId, startDate, endDate);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [outletId]);
 
   // ✅ FETCH BARISTAS
@@ -610,7 +611,6 @@ export default function MyCalendar() {
             <option value="" className="text-[#5171E3]">
               Pilih Outlet
             </option>
-            console.log("Outlets list:", outlets);
 
             {outlets.map((outlet) => (
               <option

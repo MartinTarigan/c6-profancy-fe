@@ -55,7 +55,7 @@ export default function EditLeaveRequestPage() {
   const [date, setDate] = useState<Date | undefined>(undefined)
   const [leaveType, setLeaveType] = useState<string>("")
   const [reason, setReason] = useState<string>("")
-  const [username, setUsername] = useState<string>("")
+  // const [username, setUsername] = useState<string>("")
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
@@ -156,7 +156,7 @@ export default function EditLeaveRequestPage() {
         : null
 
       const requestBody = {
-        username: username,
+        // username: username,
         // requestDate: date?.toISOString().split("T")[0],
         requestDate,
         leaveType: leaveType,

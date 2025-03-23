@@ -5,7 +5,6 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Calendar } from "lucide-react"
 import Link from "next/link"
 
 interface AccountData {
@@ -99,8 +98,6 @@ export default function EditAkun() {
           status,
         }),
       })
-
-      const result = await response.json()
 
       if (response.ok) {
         router.push(`/account/${username}`)
