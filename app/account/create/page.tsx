@@ -124,7 +124,7 @@ export default function TambahAkunBaru() {
                     <option value="">Pilih Role</option>
                     <option value="Admin">Admin</option>
                     <option value="CEO">CEO</option>
-                    <option value="CIO">CIO</option>
+                    <option value="CIOO">CIOO</option>
                     <option value="CMO">CMO</option>
                     <option value="Head Bar">Head Bar</option>
                     <option value="Barista">Barista</option>
