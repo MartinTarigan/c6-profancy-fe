@@ -54,7 +54,7 @@ export default function TambahAkunBaru() {
     }
     if (isSubmitting) return;
     setIsSubmitting(true);
-    const noOutletNeeded = ["Admin", "CEO", "CIO", "CMO"];
+    const noOutletNeeded = ["Admin", "CEO", "CIOO", "CMO"];
     const outletName = noOutletNeeded.includes(role) ? "" : outlet;
     const today = new Date();
     if (birthdate && (birthdate < new Date(1900, 0, 1) || birthdate > today)) {
