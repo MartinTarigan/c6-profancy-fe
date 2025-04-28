@@ -38,7 +38,7 @@ export default function ManajemenMateriPelatihan() {
 
         if (storedToken) {
           const response = await fetch(
-            "https://sahabattens-tenscoffeeid.up.railway.app/api/training-materials",
+            "http://localhost:8080/api/training-materials",
             {
               headers: {
                 Authorization: `Bearer ${storedToken}`,

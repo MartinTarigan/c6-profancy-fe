@@ -11,6 +11,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
+import LoadingIndicator from "@/components/LoadingIndicator";
 
 interface AccountData {
   fullName: string;
@@ -72,7 +73,7 @@ export default function EditProfile() {
       try {
         setIsLoading(true);
         const token = localStorage.getItem("token");
-        const response = await fetch(`https://sahabattens-tenscoffeeid.up.railway.app/api/account/${originalUsername}`, {
+        const response = await fetch(`http://localhost:8080/api/account/${originalUsername}`, {
           method: "GET",
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -169,7 +170,7 @@ export default function EditProfile() {
         payload.password = newPassword;
       }
       const response = await fetch(
-        `https://sahabattens-tenscoffeeid.up.railway.app/api/account/update-personal?username=${originalUsername}`,
+        `http://localhost:8080/api/account/update-personal?username=${originalUsername}`,
         {
           method: "PUT",
           headers: {
@@ -231,11 +232,7 @@ export default function EditProfile() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary" />
-      </div>
-    );
+    return <LoadingIndicator />;
   }
   if (error) {
     return (

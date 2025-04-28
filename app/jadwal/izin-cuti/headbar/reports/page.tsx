@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import { format } from "date-fns"
 import { id } from "date-fns/locale"
+import LoadingIndicator from "@/components/LoadingIndicator"
 
 interface LeaveRequest {
   id: string
@@ -90,7 +91,7 @@ export default function ReportsPage() {
 
         // Fetch ALL leave requests
         const response = await fetch(
-          `https://sahabattens-tenscoffeeid.up.railway.app/api/shift-management/leave-request/all`,
+          `http://localhost:8080/api/shift-management/leave-request/all`,
           {
             method: "GET",
             headers: {
@@ -281,11 +282,7 @@ export default function ReportsPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    )
+    return <LoadingIndicator />;
   }
 
   if (error) {

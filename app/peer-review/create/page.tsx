@@ -5,10 +5,18 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, CalendarIcon } from "lucide-react"
+import { ArrowLeft, CalendarIcon, ChevronsUpDown, Check } from "lucide-react"
 import { format } from "date-fns"
 import Link from "next/link"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import { cn } from "@/lib/utils"
 
 export default function TambahPeerReview() {
   const router = useRouter()
@@ -28,18 +36,24 @@ export default function TambahPeerReview() {
     const fetchData = async () => {
       try {
         setIsLoading(true)
-        const reviewersResponse = await fetch("https://sahabattens-tenscoffeeid.up.railway.app/api/trainee/peer-review-assignment/reviewers", {
-          headers: { Authorization: `Bearer ${storedToken}` },
-        })
+        const reviewersResponse = await fetch(
+          "http://localhost:8080/api/trainee/peer-review-assignment/reviewers",
+          {
+            headers: { Authorization: `Bearer ${storedToken}` },
+          }
+        )
         if (!reviewersResponse.ok) {
           throw new Error(`Error fetching reviewers: ${reviewersResponse.status}`)
         }
         const reviewersData = await reviewersResponse.json()
         setReviewers(reviewersData.data || [])
 
-        const revieweesResponse = await fetch("https://sahabattens-tenscoffeeid.up.railway.app/api/trainee/peer-review-assignment/reviewees", {
-          headers: { Authorization: `Bearer ${storedToken}` },
-        })
+        const revieweesResponse = await fetch(
+          "http://localhost:8080/api/trainee/peer-review-assignment/reviewees",
+          {
+            headers: { Authorization: `Bearer ${storedToken}` },
+          }
+        )
         if (!revieweesResponse.ok) {
           throw new Error(`Error fetching reviewees: ${revieweesResponse.status}`)
         }
@@ -55,7 +69,7 @@ export default function TambahPeerReview() {
     if (storedToken) {
       fetchData()
     } else {
-      // For demo purposes if token not available.
+      // Untuk demo jika token tidak tersedia.
       setReviewers([
         "skinny.pete",
         "badger",
@@ -70,7 +84,6 @@ export default function TambahPeerReview() {
     }
   }, [])
 
-  // Render a loading state until data is fetched
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -79,27 +92,31 @@ export default function TambahPeerReview() {
     )
   }
 
+  // Form dianggap valid jika semua field yang diperlukan telah terisi.
+  const isFormValid =
+    selectedReviewer !== "" && selectedReviewee !== "" && deadline !== undefined && token !== null
+
   const handleSubmit = async () => {
-    if (!selectedReviewer) return
-    if (!selectedReviewee) return
-    if (!deadline) return
-    if (!token) return
+    if (!isFormValid) return
 
     try {
       setIsSubmitting(true)
-      const formattedDate = format(deadline, "yyyy-MM-dd")
-      const response = await fetch("https://sahabattens-tenscoffeeid.up.railway.app/api/trainee/peer-review-assignment/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          reviewerUsername: selectedReviewer,
-          revieweeUsername: selectedReviewee,
-          endDateFill: formattedDate,
-        }),
-      })
+      const formattedDate = format(deadline as Date, "yyyy-MM-dd")
+      const response = await fetch(
+        "http://localhost:8080/api/trainee/peer-review-assignment/create",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            reviewerUsername: selectedReviewer,
+            revieweeUsername: selectedReviewee,
+            endDateFill: formattedDate,
+          }),
+        }
+      )
       const result = await response.json()
       if (response.ok) {
         router.push("/peer-review")
@@ -111,6 +128,62 @@ export default function TambahPeerReview() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  // Komponen Combobox untuk reviewer dan reviewee
+  function Combobox({
+    options,
+    value,
+    onValueChange,
+    placeholder,
+  }: {
+    options: string[]
+    value: string
+    onValueChange: (val: string) => void
+    placeholder: string
+  }) {
+    const [open, setOpen] = useState(false)
+
+    return (
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between"
+          >
+            {value ? value : placeholder}
+            <ChevronsUpDown className="opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-full p-0">
+          <Command>
+            <CommandInput placeholder={placeholder} className="h-9" />
+            <CommandList>
+              {options.length === 0 && <CommandEmpty>No option found.</CommandEmpty>}
+              <CommandGroup>
+                {options.map((option) => (
+                  <CommandItem
+                    key={option}
+                    value={option}
+                    onSelect={(currentValue) => {
+                      onValueChange(currentValue === value ? "" : currentValue)
+                      setOpen(false)
+                    }}
+                  >
+                    {option}
+                    <Check
+                      className={cn("ml-auto", value === option ? "opacity-100" : "opacity-0")}
+                    />
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    )
   }
 
   return (
@@ -126,42 +199,33 @@ export default function TambahPeerReview() {
         <h1 className="text-primary text-3xl font-bold mb-6">Tambah Peer Review</h1>
         <div className="w-full max-w-2xl border border-gray-200 rounded-lg p-8 bg-white shadow-sm">
           <div className="space-y-6">
+            {/* Combobox Reviewer */}
             <div className="space-y-2">
               <label htmlFor="reviewer" className="block font-medium">
                 Reviewer
               </label>
-              <Select value={selectedReviewer} onValueChange={setSelectedReviewer}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select reviewer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {reviewers.map((reviewer) => (
-                    <SelectItem key={reviewer} value={reviewer}>
-                      {reviewer}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Combobox
+                options={reviewers}
+                value={selectedReviewer}
+                onValueChange={setSelectedReviewer}
+                placeholder="Select reviewer"
+              />
             </div>
 
+            {/* Combobox Reviewee */}
             <div className="space-y-2">
               <label htmlFor="reviewee" className="block font-medium">
                 Reviewee
               </label>
-              <Select value={selectedReviewee} onValueChange={setSelectedReviewee}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select reviewee" />
-                </SelectTrigger>
-                <SelectContent>
-                  {reviewees.map((reviewee) => (
-                    <SelectItem key={reviewee} value={reviewee}>
-                      {reviewee}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Combobox
+                options={reviewees}
+                value={selectedReviewee}
+                onValueChange={setSelectedReviewee}
+                placeholder="Select reviewee"
+              />
             </div>
 
+            {/* Calendar for Deadline */}
             <div className="space-y-2">
               <label htmlFor="deadline" className="block font-medium">
                 Deadline Peer Review
@@ -196,7 +260,7 @@ export default function TambahPeerReview() {
                 Batal
               </Button>
             </Link>
-            <Button className="w-40" onClick={handleSubmit} disabled={isSubmitting}>
+            <Button className="w-40" onClick={handleSubmit} disabled={!isFormValid || isSubmitting}>
               {isSubmitting ? "Menyimpan..." : "Simpan Peer Review"}
             </Button>
           </div>

@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import LoadingIndicator from "@/components/LoadingIndicator"
 
 interface LeaveRequest {
   id: string
@@ -109,7 +110,7 @@ export default function LeaveRequestListPage() {
     try {
       const token = localStorage.getItem("token")
 
-      const response = await fetch(`https://sahabattens-tenscoffeeid.up.railway.app/api/shift-management/leave-request/${id}`, {
+      const response = await fetch(`http://localhost:8080/api/shift-management/leave-request/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -172,11 +173,7 @@ export default function LeaveRequestListPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    )
+    return <LoadingIndicator />;
   }
 
   if (error) {

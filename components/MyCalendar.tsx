@@ -134,7 +134,7 @@ export default function MyCalendar() {
 
       try {
         const res = await fetch(
-          `https://sahabattens-tenscoffeeid.up.railway.app/api/account/${userId}`,
+          `http://localhost:8080/api/account/${userId}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -180,7 +180,7 @@ export default function MyCalendar() {
     const fetchAllOutlets = async (token: string, userOutletName?: string) => {
       try {
         const res = await fetch(
-          `https://sahabattens-tenscoffeeid.up.railway.app/api/outlets`,
+          `http://localhost:8080/api/outlets`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -237,7 +237,7 @@ export default function MyCalendar() {
       if (!token) return;
 
       const res = await fetch(
-        `https://sahabattens-tenscoffeeid.up.railway.app/api/baristas?outletId=${outletId}`,
+        `http://localhost:8080/api/baristas?outletId=${outletId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -271,7 +271,7 @@ export default function MyCalendar() {
       const formattedEndDate = endDate.toISOString().split("T")[0];
 
       const res = await fetch(
-        `https://sahabattens-tenscoffeeid.up.railway.app/api/shift/${outletId}?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
+        `http://localhost:8080/api/shift/${outletId}?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -426,7 +426,7 @@ export default function MyCalendar() {
 
       for (const shift of shifts) {
         const res = await fetch(
-          "https://sahabattens-tenscoffeeid.up.railway.app/api/shift/create",
+          "http://localhost:8080/api/shift/create",
           {
             method: "POST",
             headers: {

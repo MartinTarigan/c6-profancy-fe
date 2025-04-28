@@ -52,7 +52,7 @@ export default function DaftarAkun() {
         }
 
         const response = await fetch(
-          "https://sahabattens-tenscoffeeid.up.railway.app/api/account/viewall",
+          "http://localhost:8080/api/account/viewall",
           {
             method: "GET",
             headers: {
@@ -246,6 +246,7 @@ export default function DaftarAkun() {
                 {userRole === "Admin" && (
                   <th className="py-4 px-6 text-left font-bold">No HP</th>
                 )}
+                <th className="py-4 px-6 text-left font-bold">Role</th>
                 <th className="py-4 px-6 text-left font-bold">Outlet</th>
                 <th className="py-4 px-6 text-left font-bold">Status</th>
                 <th className="py-4 px-6 text-left font-bold">Action</th>
@@ -259,6 +260,7 @@ export default function DaftarAkun() {
                   {userRole === "Admin" && (
                     <td className="py-4 px-6">{user.phone}</td>
                   )}
+                  <td className="py-4 px-6">{user.role}</td>
                   <td className="py-4 px-6">{user.outlet}</td>
                   <td className="py-4 px-6">
                     <span

@@ -18,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import LoadingIndicator from "@/components/LoadingIndicator"
 
 interface LeaveRequest {
   id: string
@@ -88,7 +89,7 @@ export default function ApprovalPage() {
 
         // Fetch ALL leave requests and filter for pending ones
         const response = await fetch(
-          `https://sahabattens-tenscoffeeid.up.railway.app/api/shift-management/leave-request/all`,
+          `http://localhost:8080/api/shift-management/leave-request/all`,
           {
             method: "GET",
             headers: {
@@ -213,7 +214,7 @@ export default function ApprovalPage() {
 
       // Use the correct endpoint from your controller
       const response = await fetch(
-        `https://sahabattens-tenscoffeeid.up.railway.app/api/shift-management/leave-request/${selectedRequest.id}/status`,
+        `http://localhost:8080/api/shift-management/leave-request/${selectedRequest.id}/status`,
         {
           method: "PUT",
           headers: {
@@ -250,11 +251,7 @@ export default function ApprovalPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    )
+    return <LoadingIndicator />;
   }
 
   if (error) {

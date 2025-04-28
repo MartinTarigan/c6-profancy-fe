@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import LoadingIndicator from "@/components/LoadingIndicator";
 
 interface OvertimeLog {
   id: string;
@@ -17,7 +19,6 @@ interface OvertimeLog {
   updatedAt: string;
 }
 
-
 export default function OvertimeLogDetail() {
   const router = useRouter();
   const params = useParams();
@@ -27,7 +28,7 @@ export default function OvertimeLogDetail() {
   const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
-  const [overtimeLog, setOvertimeLog] = useState<OvertimeLog | null>(null);
+  const [, setOvertimeLog] = useState<OvertimeLog | null>(null);
   const [outlets, setOutlets] = useState<
     { outletId: number; name: string; headBarName: string; headBarId: string }[]
   >([]);
@@ -59,7 +60,7 @@ export default function OvertimeLogDetail() {
 
   const fetchOutlets = async (storedToken: string) => {
     try {
-      const res = await fetch("https://sahabattens-tenscoffeeid.up.railway.app/api/outlets", {
+      const res = await fetch("http://localhost:8080/api/outlets", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${storedToken}`,
@@ -84,7 +85,7 @@ export default function OvertimeLogDetail() {
     }
 
     try {
-      const res = await fetch(`https://sahabattens-tenscoffeeid.up.railway.app/api/overtime-logs/${params.id}`, {
+      const res = await fetch(`http://localhost:8080/api/overtime-logs/${params.id}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${storedToken}`,
@@ -114,69 +115,55 @@ export default function OvertimeLogDetail() {
     }
   };
 
-  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFormData((prev) => ({
-      ...prev,
-      status: e.target.value,
-    }));
+  const handleCancel = () => {
+    router.push("/jadwal/lembur");
   };
 
-  const handleUpdateStatus = async () => {
+  const handleRevoke = async () => {
     if (!token) {
       setToast({ type: "Gagal", message: "Token tidak valid. Silakan login ulang!" });
       return;
     }
 
     setUpdating(true);
-
     try {
-      const res = await fetch(`https://sahabattens-tenscoffeeid.up.railway.app/api/overtime-logs/${params.id}/status`, {
+      const res = await fetch(`http://localhost:8080/api/overtime-logs/${params.id}/status`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ status: formData.status }),
+        body: JSON.stringify({ status: "CANCELLED" }),
       });
 
       if (!res.ok) {
         const contentType = res.headers.get("content-type");
-
         if (contentType && contentType.includes("application/json")) {
           const data = await res.json();
-          throw new Error(data.message || "Gagal memperbarui status");
+          throw new Error(data.message || "Gagal membatalkan permohonan lembur");
         } else {
           const text = await res.text();
-          throw new Error(text || "Gagal memperbarui status");
+          throw new Error(text || "Gagal membatalkan permohonan lembur");
         }
       }
-
-      setToast({ type: "Berhasil", message: "Status berhasil diperbarui!" });
+      setToast({ type: "Berhasil", message: "Permohonan lembur berhasil dibatalkan!" });
       fetchOvertimeLogDetail(token);
     } catch (error) {
-      console.error("❌ Error update status:", error);
-      setToast({ type: "Gagal", message: "Gagal mengambil detail log lembur" });
+      console.error("❌ Error revoking overtime log:", error);
+      setToast({ type: "Gagal", message: "Gagal membatalkan permohonan lembur" });
     } finally {
       setUpdating(false);
     }
   };
 
-  const handleCancel = () => {
-    router.push("/jadwal/lembur");
-  };
-
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
-    // try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
-    // } catch (e) {
-    //   return dateString;
-    // }
+    const date = new Date(dateString);
+    return date.toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
   };
 
   const getVerifierName = () => {
@@ -223,11 +210,7 @@ export default function OvertimeLogDetail() {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#4169E1]"></div>
-      </div>
-    );
+    return <LoadingIndicator />;
   }
 
   return (
@@ -311,85 +294,49 @@ export default function OvertimeLogDetail() {
 
           <div>
             <label htmlFor="status" className="block mb-2 font-medium">Status</label>
-            {overtimeLog?.status === "PENDING" ? (
-              <div className="space-y-2">
-                <select
-                  id="status"
-                  name="status"
-                  value={formData.status}
-                  onChange={handleStatusChange}
-                  className="w-full border border-gray-300 rounded p-2"
-                >
-                  <option value="ONGOING">Ongoing</option>
-                  <option value="CANCELLED">Cancelled</option>
-                </select>
-                <button
-                  type="button"
-                  onClick={handleUpdateStatus}
-                  disabled={updating || formData.status === overtimeLog?.status}
-                  className="mt-2 bg-[#4169E1] hover:bg-[#3a5ecc] text-white rounded py-2 px-4 disabled:bg-gray-400"
-                >
-                  {updating ? "Memperbarui..." : "Perbarui Status"}
-                </button>
-              </div>
-            ) : (
-              <input
-                type="text"
-                value={getStatusDisplay(formData.status)}
-                readOnly
-                className={`w-full border border-gray-300 rounded p-2 bg-gray-100 ${getStatusClass(formData.status)}`}
-              />
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-            <div>
-              <label className="block mb-2 text-sm text-gray-500">Tanggal Dibuat</label>
-              <input
-                type="text"
-                value={formatDate(overtimeLog?.createdAt || "")}
-                readOnly
-                className="w-full border border-gray-300 rounded p-2 bg-gray-100 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block mb-2 text-sm text-gray-500">Terakhir Diperbarui</label>
-              <input
-                type="text"
-                value={formatDate(overtimeLog?.updatedAt || "")}
-                readOnly
-                className="w-full border border-gray-300 rounded p-2 bg-gray-100 text-sm"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-center gap-4 pt-4">
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="w-40 border border-[#4169E1] text-[#4169E1] hover:bg-blue-50 rounded py-2"
-            >
-              Kembali
-            </button>
+            <input
+              type="text"
+              value={getStatusDisplay(formData.status)}
+              readOnly
+              className={`w-full border border-gray-300 rounded p-2 bg-gray-100 ${getStatusClass(formData.status)}`}
+            />
           </div>
         </div>
 
-        {toast && (
-          <div
-            className={`mt-4 p-4 rounded ${
-              toast.type === "Berhasil" ? "bg-green-500" : "bg-red-500"
-            } text-white`}
+        <div className="flex justify-center gap-4 pt-4">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="w-40 border border-[#4169E1] text-[#4169E1] hover:bg-blue-50 rounded py-2"
           >
-            {toast.message}
-            <button
-              onClick={() => setToast(null)}
-              className="float-right font-bold"
-            >
-              X
-            </button>
-          </div>
+            Kembali
+          </button>
+          {formData.status !== "CANCELLED" && (
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleRevoke}
+            disabled={updating}
+            className="w-40"
+          >
+            {updating ? "Memproses..." : "Batalkan Permohonan"}
+          </Button>
         )}
+        </div>
       </div>
+
+      {toast && (
+        <div
+          className={`mt-4 p-4 rounded ${
+            toast.type === "Berhasil" ? "bg-green-500" : "bg-red-500"
+          } text-white`}
+        >
+          {toast.message}
+          <button onClick={() => setToast(null)} className="float-right font-bold">
+            X
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, ArrowUpDown, Filter } from "lucide-react";
 import Link from "next/link";
+import LoadingIndicator from "@/components/LoadingIndicator";
 
 interface PeerReviewAssignment {
   peerReviewAssignmentId: number;
@@ -30,7 +31,7 @@ export default function ManajemenPeerReview() {
 
         if (token) {
           const response = await fetch(
-            "https://sahabattens-tenscoffeeid.up.railway.app/api/trainee/peer-review-assignment/all",
+            "http://localhost:8080/api/trainee/peer-review-assignment/all",
             {
               headers: {
                 Authorization: `Bearer ${storedToken}`,
@@ -107,11 +108,7 @@ export default function ManajemenPeerReview() {
   );
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingIndicator />;
   }
 
   if (error) {

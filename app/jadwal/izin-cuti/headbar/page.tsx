@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { FileText, Clock, Users, CheckSquare, FileBarChart } from "lucide-react"
 import Link from "next/link"
+import LoadingIndicator from "@/components/LoadingIndicator"
 
 interface LeaveRequest {
   id: string
@@ -102,7 +103,7 @@ export default function HeadBarLeaveRequestPage() {
 
         // Fetch ALL leave requests
         const response = await fetch(
-          `https://sahabattens-tenscoffeeid.up.railway.app/api/shift-management/leave-request/all`,
+          `http://localhost:8080/api/shift-management/leave-request/all`,
           {
             method: "GET",
             headers: {
@@ -199,11 +200,7 @@ export default function HeadBarLeaveRequestPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    )
+    return <LoadingIndicator />;
   }
 
   if (error) {

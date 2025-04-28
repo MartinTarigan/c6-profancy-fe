@@ -74,7 +74,7 @@ export default function TambahAkunBaru() {
       status: status,
     };
     try {
-      const response = await fetch("https://sahabattens-tenscoffeeid.up.railway.app/api/account/create", {
+      const response = await fetch("http://localhost:8080/api/account/create", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(requestBody),

@@ -17,6 +17,7 @@ import { format } from "date-fns"
 import Link from "next/link"
 import { id as localeId } from "date-fns/locale"
 import { Badge } from "@/components/ui/badge"
+import LoadingIndicator from "@/components/LoadingIndicator"
 
 interface LeaveRequest {
   id: string
@@ -82,7 +83,7 @@ export default function EditLeaveRequestPage() {
 
         setIsLoading(true)
         const response = await fetch(
-          `https://sahabattens-tenscoffeeid.up.railway.app/api/shift-management/leave-request/${id}`,
+          `http://localhost:8080/api/shift-management/leave-request/${id}`,
           {
             method: "GET",
             headers: {
@@ -164,7 +165,7 @@ export default function EditLeaveRequestPage() {
       }
 
       const response = await fetch(
-        `https://sahabattens-tenscoffeeid.up.railway.app/api/shift-management/leave-request/${id}`,
+        `http://localhost:8080/api/shift-management/leave-request/${id}`,
         {
           method: "PUT",
           headers: {
@@ -219,7 +220,7 @@ export default function EditLeaveRequestPage() {
       }
 
       const response = await fetch(
-        `https://sahabattens-tenscoffeeid.up.railway.app/api/shift-management/leave-request/${id}`,
+        `http://localhost:8080/api/shift-management/leave-request/${id}`,
         {
           method: "PUT",
           headers: {
@@ -309,11 +310,7 @@ export default function EditLeaveRequestPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    )
+    return <LoadingIndicator />;
   }
 
   if (error) {

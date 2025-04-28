@@ -49,7 +49,7 @@ export default function TambahLogLembur() {
   // FETCH OUTLETS
   const fetchOutlets = async (storedToken: string) => {
     try {
-      const res = await fetch("https://sahabattens-tenscoffeeid.up.railway.app/api/outlets", {
+      const res = await fetch("http://localhost:8080/api/outlets", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${storedToken}`,
@@ -136,7 +136,7 @@ export default function TambahLogLembur() {
       console.log("🟢 Payload dikirim:", payload);
       console.log("🟢 Current Outlet:", currentOutlet);
 
-      const res = await fetch(`https://sahabattens-tenscoffeeid.up.railway.app/api/overtime-logs`, {
+      const res = await fetch(`http://localhost:8080/api/overtime-logs`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

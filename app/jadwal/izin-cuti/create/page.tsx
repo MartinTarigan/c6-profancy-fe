@@ -79,7 +79,7 @@ export default function CreateLeaveRequestPage() {
     const fetchUserProfile = async () => {
       try {
         const response = await fetch(
-          `https://sahabattens-tenscoffeeid.up.railway.app/api/user/profile`,
+          `http://localhost:8080/api/user/profile`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

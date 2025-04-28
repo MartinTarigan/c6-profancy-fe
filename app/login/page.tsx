@@ -7,24 +7,50 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Toast from "@/components/Toast";
+import {
+  Eye,
+  EyeOff,
+} from "lucide-react";
 
 type StepType = "checkUsername" | "defaultPassword" | "login" | "changePassword";
 
 function parseJwt(token: string) {
   try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = decodeURIComponent(
       atob(base64)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
     );
     return JSON.parse(jsonPayload);
   } catch (e) {
     console.error("Failed to parse JWT:", e);
     return null;
   }
+}
+
+// Komponen PasswordInput yang menambahkan tombol untuk menampilkan/menyembunyikan password
+function PasswordInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  const [show, setShow] = useState(false);
+
+  return (
+    <div className="relative">
+      <Input
+        {...props}
+        type={show ? "text" : "password"}
+        className={`w-full h-14 px-4 border border-[#d9d9d9] rounded-md ${props.className || ""}`}
+      />
+      <button
+        type="button"
+        onClick={() => setShow(!show)}
+        className="absolute inset-y-0 right-0 flex items-center pr-3"
+      >
+        {show ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
+      </button>
+    </div>
+  );
 }
 
 export default function LoginPage() {
@@ -63,7 +89,7 @@ export default function LoginPage() {
       switch (step) {
         case "checkUsername": {
           const res = await fetch(
-            "https://sahabattens-tenscoffeeid.up.railway.app/api/auth/check-username",
+            "http://localhost:8080/api/auth/check-username",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -95,7 +121,7 @@ export default function LoginPage() {
 
         case "login": {
           const res = await fetch(
-            "https://sahabattens-tenscoffeeid.up.railway.app/api/auth/login",
+            "http://localhost:8080/api/auth/login",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -129,7 +155,7 @@ export default function LoginPage() {
 
         case "changePassword": {
           const res = await fetch(
-            `https://sahabattens-tenscoffeeid.up.railway.app/api/account/change-password?username=${username}`,
+            `http://localhost:8080/api/account/change-password?username=${username}`,
             {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
@@ -157,7 +183,6 @@ export default function LoginPage() {
         default:
           break;
       }
-
     } finally {
       setIsLoading(false); // Akhiri loading
     }
@@ -221,12 +246,10 @@ export default function LoginPage() {
                 <label htmlFor="password" className="block text-[#3b5694] text-lg mb-2">
                   Default Password
                 </label>
-                <Input
+                <PasswordInput
                   id="password"
                   name="password"
-                  type="password"
                   required
-                  className="w-full h-14 px-4 border border-[#d9d9d9] rounded-md"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -239,12 +262,10 @@ export default function LoginPage() {
                 <label htmlFor="password" className="block text-[#3b5694] text-lg mb-2">
                   Password
                 </label>
-                <Input
+                <PasswordInput
                   id="password"
                   name="password"
-                  type="password"
                   required
-                  className="w-full h-14 px-4 border border-[#d9d9d9] rounded-md"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -272,12 +293,10 @@ export default function LoginPage() {
                   <label htmlFor="newPassword" className="block text-[#3b5694] text-lg mb-2">
                     Password Baru
                   </label>
-                  <Input
+                  <PasswordInput
                     id="newPassword"
                     name="newPassword"
-                    type="password"
                     required
-                    className="w-full h-14 px-4 border border-[#d9d9d9] rounded-md"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                   />
@@ -300,35 +319,11 @@ export default function LoginPage() {
                       fill="none"
                     >
                       <path
-                        d="M100 50.5908C100 78.2054 77.6142 100.591 50 
-                          100.591C22.3858 100.591 0 78.2054 0 
-                          50.5908C0 22.9762 22.3858 0.59082 50 
-                          0.59082C77.6142 0.59082 100 22.9762 100 
-                          50.5908ZM9.08197 50.5908C9.08197 73.0309 
-                          27.5599 91.5088 50 91.5088C72.4401 
-                          91.5088 90.918 73.0309 90.918 
-                          50.5908C90.918 28.1507 72.4401 
-                          9.67277 50 9.67277C27.5599 9.67277 
-                          9.08197 28.1507 9.08197 50.5908Z"
+                        d="M100 50.5908C100 78.2054 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2054 0 50.5908C0 22.9762 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9762 100 50.5908ZM9.08197 50.5908C9.08197 73.0309 27.5599 91.5088 50 91.5088C72.4401 91.5088 90.918 73.0309 90.918 50.5908C90.918 28.1507 72.4401 9.67277 50 9.67277C27.5599 9.67277 9.08197 28.1507 9.08197 50.5908Z"
                         fill="#E5E7EB"
                       />
                       <path
-                        d="M93.9676 39.0409C96.393 
-                          38.4038 97.8624 35.9116 
-                          96.9809 33.5534C95.1308 28.8225 
-                          92.6032 24.3692 89.4994 20.348 
-                          C85.9254 15.1192 80.8826 10.7236 
-                          74.9414 7.41289C68.9999 4.10227 
-                          62.3412 2.0428 55.4638 1.3813C52.8455 
-                          1.13836 50.6021 3.0001 50.2203 
-                          5.61795C49.8385 8.2358 51.6857 
-                          10.5072 54.2679 10.848C59.74 
-                          11.5064 64.95 13.1015 69.5551 
-                          16.036C74.1602 18.9706 77.9873 
-                          23.1245 80.7609 28.1084C82.5887 
-                          31.433 84.0066 35.0459 85.0009 
-                          38.8162C85.5852 40.8863 87.5422 
-                          42.2796 89.9676 41.6425Z"
+                        d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 96.9809 33.5534C95.1308 28.8225 92.6032 24.3692 89.4994 20.348C85.9254 15.1192 80.8826 10.7236 74.9414 7.41289C68.9999 4.10227 62.3412 2.0428 55.4638 1.3813C52.8455 1.13836 50.6021 3.0001 50.2203 5.61795C49.8385 8.2358 51.6857 10.5072 54.2679 10.848C59.74 11.5064 64.95 13.1015 69.5551 16.036C74.1602 18.9706 77.9873 23.1245 80.7609 28.1084C82.5887 31.433 84.0066 35.0459 85.0009 38.8162C85.5852 40.8863 87.5422 42.2796 89.9676 41.6425Z"
                         fill="currentColor"
                       />
                     </svg>
