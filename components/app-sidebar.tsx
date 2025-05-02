@@ -77,7 +77,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: BookOpen,
       isActive: true,
       items: [
-        { title: "Ujian", url: "/training/ujian" },
+        { title: "Ujian", url: "/assessment" },
         { title: "Materi", url: "/training-materials" },
         { title: "Peer Review", url: "/peer-review" },
       ],

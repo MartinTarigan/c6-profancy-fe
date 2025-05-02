@@ -25,6 +25,8 @@ export default function ManajemenMateriPelatihan() {
   const [error, setError] = useState<string | null>(null)
   const [token, setToken] = useState<string | null>(null)
   const [userRole, setUserRole] = useState<string>("")
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token")
@@ -33,6 +35,16 @@ export default function ManajemenMateriPelatihan() {
     setUserRole(storedRoles || "")
 
     const fetchMaterials = async () => {
+
+      if (
+        !storedToken ||
+        !["Admin", "ProbationBarista"].includes(storedRoles)
+      ) {
+        setMaterials([]);  
+        setIsLoading(false);
+        return;
+      }
+      
       try {
         setIsLoading(true)
 
@@ -53,7 +65,6 @@ export default function ManajemenMateriPelatihan() {
           const result = await response.json()
           setMaterials(result.data)
         } else {
-          // Sample data for demo purposes (jika token tidak ditemukan)
           setMaterials([
             {
               id: 1,
@@ -114,22 +125,38 @@ export default function ManajemenMateriPelatihan() {
 
   const handleDelete = async (id: number) => {
     if (!token) {
-      // Misal: toast.error("Authentication token not found. Please login again.")
-      return
+      setToast({ type: "error", message: "Token tidak ditemukan. Silakan login ulang." });
+      return;
     }
-
-    if (!confirm("Are you sure you want to delete this material?")) {
-      return
-    }
+    if (!confirm("Yakin ingin menghapus materi ini?")) return;
 
     try {
-      // Contoh penghapusan tanpa API (langsung hapus di state)
-      setMaterials(materials.filter((material) => material.id !== id))
-      // toast.success("Materi pelatihan berhasil dihapus")
+      const res = await fetch(`http://localhost:8080/api/training-materials/${id}/delete`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const result = await res.json();
+      if (res.ok) {
+        setMaterials((prev) => prev.filter((m) => m.id !== id));
+        setToast({ type: "success", message: "Materi berhasil dihapus" });
+      } else {
+        setToast({ type: "error", message: result.message || "Gagal menghapus materi" });
+      }
     } catch (err) {
-      console.error("Error deleting training material:", err)
-      // toast.error("An error occurred while deleting training material")
+      console.error(err);
+      setToast({ type: "error", message: "Terjadi kesalahan saat menghapus materi" });
     }
+  };
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="text-destructive text-center">
+          <h3 className="text-xl font-semibold mb-2">Error Loading Data</h3>
+          <p>{error}</p>
+        </div>
+      </div>
+    );
   }
 
   // Jika terjadi error
@@ -265,20 +292,23 @@ export default function ManajemenMateriPelatihan() {
                         <Button size="sm" variant="outline" className="text-primary">
                           Detail
                         </Button>
-                      </Link>
-                      <Link href={`/training/materi/edit/${material.id}`}>
-                        <Button size="sm" variant="outline" className="text-primary">
-                          Edit
-                        </Button>
-                      </Link>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-destructive border-destructive hover:bg-destructive/10"
-                        onClick={() => handleDelete(material.id)}
-                      >
-                        Hapus
-                      </Button>
+                        </Link>
+                        {userRole === "Admin" && (
+    <>
+      <Link href={`/training-materials/edit/${material.id}`}>
+        <Button size="sm" variant="outline" className="text-primary">
+          Edit
+        </Button>
+      </Link>
+      <Button
+        size="sm"
+        variant="outline"
+        className="text-destructive border-destructive hover:bg-destructive/10"
+        onClick={() => handleDelete(material.id)}
+      >
+        Hapus
+      </Button>
+    </>)}
                     </div>
                   </div>
                 </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, ArrowUpDown, Filter } from "lucide-react";
 import Link from "next/link";
@@ -13,105 +13,83 @@ interface PeerReviewAssignment {
   endDateFill: string;
 }
 
+interface GroupedAssignment {
+  revieweeUsername: string;
+  endDateFill: string;
+  count: number;
+}
+
 export default function ManajemenPeerReview() {
   const [assignments, setAssignments] = useState<PeerReviewAssignment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [token, setToken] = useState<string | null>(null);
+
+  const roles = typeof window !== "undefined" ? localStorage.getItem("roles") : null;
+  const username = typeof window !== "undefined" ? localStorage.getItem("username") : null;
+  const isAdmin = roles === "Admin";
 
   useEffect(() => {
-    // Get JWT token from localStorage
-    const storedToken = localStorage.getItem("token");
-    setToken(storedToken);
-
     const fetchAssignments = async () => {
       try {
         setIsLoading(true);
-
-        if (token) {
-          const response = await fetch(
-            "http://localhost:8080/api/trainee/peer-review-assignment/all",
-            {
-              headers: {
-                Authorization: `Bearer ${storedToken}`,
-              },
-            }
-          );
-
-          if (!response.ok) {
-            throw new Error(
-              `Error fetching peer review assignments: ${response.status}`
-            );
-          }
-
-          const result = await response.json();
-          setAssignments(result.data || []);
-        } else {
-          // Sample data for demo purposes
-          setAssignments([
-            {
-              peerReviewAssignmentId: 1,
-              reviewerUsername: "gustavo.fring",
-              revieweeUsername: "jesse.pinkman",
-              endDateFill: "2025-03-27T00:00:00.000+00:00",
-            },
-            {
-              peerReviewAssignmentId: 2,
-              reviewerUsername: "mike.ehrmantraut",
-              revieweeUsername: "todd.alquist",
-              endDateFill: "2025-02-20T00:00:00.000+00:00",
-            },
-            {
-              peerReviewAssignmentId: 3,
-              reviewerUsername: "saul.goodman",
-              revieweeUsername: "andrea.cantillo",
-              endDateFill: "2025-04-10T00:00:00.000+00:00",
-            },
-          ]);
-        }
+        const url = isAdmin
+          ? "http://localhost:8080/api/trainee/peer-review-assignment/all"
+          : `http://localhost:8080/api/trainee/peer-review-assignment/by-reviewer/${username}`;
+        const token = localStorage.getItem("token");
+        const res = await fetch(url, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!res.ok) throw new Error(`Error ${res.status}`);
+        const json = await res.json();
+        setAssignments(json.data || []);
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "An unknown error occurred"
-        );
-        console.error("Error fetching peer review assignments:", err);
+        setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchAssignments();
-  }, [token]);
+  }, [isAdmin, username]);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const day = date.getDate();
-    const month = date.toLocaleString("id-ID", { month: "long" });
-    const year = date.getFullYear();
-    return `${day} ${month} ${year}`;
+  const formatDate = (iso: string) => {
+    const d = new Date(iso);
+    return `${String(d.getDate()).padStart(2, "0")}/${
+      String(d.getMonth() + 1).padStart(2, "0")
+    }/${d.getFullYear()}`;
   };
 
-  const isReviewCompleted = (endDateFill: string) => {
-    const endDate = new Date(endDateFill);
-    const today = new Date();
-    return today > endDate;
-  };
+  const isCompleted = (iso: string) => new Date() > new Date(iso);
 
-  const filteredAssignments = assignments.filter(
-    (assignment) =>
-      assignment.reviewerUsername
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      assignment.revieweeUsername
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase())
+  // hanya untuk admin: hitung jumlah assignee per (reviewee + deadline)
+  const grouped = useMemo<GroupedAssignment[]>(() => {
+    const map: Record<string, GroupedAssignment> = {};
+    assignments.forEach((a) => {
+      const key = `${a.revieweeUsername}|${a.endDateFill}`;
+      if (!map[key]) {
+        map[key] = {
+          revieweeUsername: a.revieweeUsername,
+          endDateFill: a.endDateFill,
+          count: 1,
+        };
+      } else {
+        map[key].count++;
+      }
+    });
+    return Object.values(map);
+  }, [assignments]);
+
+  // data yang akan di-render
+  const displayData = isAdmin ? grouped : assignments;
+
+  // filter by nama
+  const filtered = displayData.filter((item) =>
+    item.revieweeUsername.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (isLoading) {
-    return <LoadingIndicator />;
-  }
-
-  if (error) {
+  if (isLoading) return <LoadingIndicator />;
+  if (error)
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <div className="text-destructive text-center">
@@ -120,7 +98,6 @@ export default function ManajemenPeerReview() {
         </div>
       </div>
     );
-  }
 
   return (
     <div className="flex flex-col">
@@ -128,7 +105,7 @@ export default function ManajemenPeerReview() {
         <h1 className="text-primary text-3xl font-bold mb-6">
           Manajemen Peer Review
         </h1>
-        {localStorage.getItem("roles") === "Admin" && (
+        {isAdmin && (
           <Link href="/peer-review/create">
             <Button className="rounded-full">
               <Plus className="mr-2 h-5 w-5" />
@@ -163,25 +140,34 @@ export default function ManajemenPeerReview() {
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-primary text-white">
-              <th className="py-4 px-6 text-left">Reviewer</th>
-              <th className="py-4 px-6 text-left">Reviewee</th>
+              <th className="py-4 px-6 text-left">Barista yang dinilai</th>
               <th className="py-4 px-6 text-left">Deadline Pengisian</th>
+              {isAdmin && (
+                <th className="py-4 px-6 text-left">Jumlah Assignee</th>
+              )}
               <th className="py-4 px-6 text-left">Status</th>
+              <th className="py-4 px-6 text-left">Action</th>
             </tr>
           </thead>
           <tbody>
-            {filteredAssignments.map((assignment) => (
+            {filtered.map((item) => (
               <tr
-                key={assignment.peerReviewAssignmentId}
+                key={
+                  isAdmin
+                    ? `${item.revieweeUsername}-${item.endDateFill}`
+                    : item.peerReviewAssignmentId
+                }
                 className="bg-blue-50 border-b border-white"
               >
-                <td className="py-4 px-6">{assignment.reviewerUsername}</td>
-                <td className="py-4 px-6">{assignment.revieweeUsername}</td>
+                <td className="py-4 px-6">{item.revieweeUsername}</td>
+                <td className="py-4 px-6">{formatDate(item.endDateFill)}</td>
+                {isAdmin && (
+                  <td className="py-4 px-6">
+                    {(item as GroupedAssignment).count} orang
+                  </td>
+                )}
                 <td className="py-4 px-6">
-                  {formatDate(assignment.endDateFill)}
-                </td>
-                <td className="py-4 px-6">
-                  {isReviewCompleted(assignment.endDateFill) ? (
+                  {isCompleted(item.endDateFill) ? (
                     <span className="px-4 py-1 rounded-full text-sm bg-red-100 text-red-500">
                       Selesai
                     </span>
@@ -191,13 +177,32 @@ export default function ManajemenPeerReview() {
                     </span>
                   )}
                 </td>
+                <td className="py-4 px-6">
+                  {isAdmin ? (
+                    <Link
+                      href={`/peer-review/update/${item.revieweeUsername}?endDate=${encodeURIComponent(
+                        item.endDateFill
+                      )}`}
+                    >
+                      <Button variant="outline" className="rounded-full">
+                        Update
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Link
+                      href={`/peer-review/kerjakan/${(item as PeerReviewAssignment).peerReviewAssignmentId}`}
+                    >
+                      <Button className="rounded-full">Kerjakan</Button>
+                    </Link>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      {filteredAssignments.length === 0 && (
+      {filtered.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-500">No peer review assignments found.</p>
         </div>
