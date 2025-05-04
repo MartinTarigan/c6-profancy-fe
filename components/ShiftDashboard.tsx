@@ -650,7 +650,7 @@ export default function ShiftDashboard() {
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                           <Clock className="h-5 w-5 text-[#3C67FF]" />
-                          Today's Shift
+                          Your Shift for Today
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
