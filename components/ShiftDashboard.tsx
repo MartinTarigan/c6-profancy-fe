@@ -224,7 +224,7 @@ export default function ShiftDashboard() {
     calculateActiveOvertimeHours();
   }, [overtimeLogs]);
 
-  // Funchttps://sahabattensbe-production-0c07.up.railway.app-production-0c07.up.railway.appive overtime hours (excluding CANCELLED logs)
+  // Function to calculate active overtime hours (excluding CANCELLED logs)
   const calculateActiveOvertimeHours = (logs = overtimeLogs) => {
     // Filter out CANCELLED overtime logs
     const activeLogs = logs.filter((log) => log.status !== "CANCELLED");
@@ -298,8 +298,7 @@ export default function ShiftDashboard() {
       let monthName;
 
       if (period === "current") {
-        //sahabattensbe-production-0c07.up.railway.app
-        https: monthName = format(currentDate, "MMMM yyyy", { locale: id });
+        monthName = format(currentDate, "MMMM yyyy", { locale: id });
       } else if (period === "previous") {
         const previousMonth = new Date(
           currentDate.getFullYear(),
@@ -440,7 +439,32 @@ export default function ShiftDashboard() {
         shift.baristas.some((barista) => barista.id === userId)
       );
 
-      userShifts.sort(
+      // Group shifts by date and keep only the one with the highest ID for each date
+      const shiftsByDate = userShifts.reduce(
+        (
+          acc: Record<string, ShiftScheduleResponseDto>,
+          shift: ShiftScheduleResponseDto
+        ) => {
+          const dateKey = shift.dateShift;
+
+          // If we don't have a shift for this date yet, or if this shift has a higher ID than the one we have
+          if (
+            !acc[dateKey] ||
+            shift.shiftScheduleId > acc[dateKey].shiftScheduleId
+          ) {
+            acc[dateKey] = shift;
+          }
+
+          return acc;
+        },
+        {}
+      );
+
+      // Convert back to array
+      const latestShifts = Object.values(shiftsByDate);
+
+      // Sort by date
+      latestShifts.sort(
         (a: ShiftScheduleResponseDto, b: ShiftScheduleResponseDto) => {
           return (
             new Date(a.dateShift).getTime() - new Date(b.dateShift).getTime()
@@ -448,7 +472,8 @@ export default function ShiftDashboard() {
         }
       );
 
-      setUpcomingShifts(userShifts.slice(0, 5));
+      // console.log("Latest shifts after filtering:", latestShifts);
+      setUpcomingShifts(latestShifts.slice(0, 5));
     } catch (err) {
       console.error("Error fetching upcoming shifts:", err);
     }
@@ -625,7 +650,7 @@ export default function ShiftDashboard() {
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                           <Clock className="h-5 w-5 text-[#3C67FF]" />
-                          Todays Shift
+                          Today's Shift
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
