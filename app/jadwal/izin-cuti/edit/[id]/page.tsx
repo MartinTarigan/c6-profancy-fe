@@ -92,7 +92,7 @@ export default function EditLeaveRequestPage() {
 
         setIsLoading(true);
         const response = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app-production-0c07.up.railway.app-production-0c07.up.railway.app-production-0c07.up.railway.app-production-0c07.up.railway.app-production-0c07.up.railway.app/api/shift-management/leave-request/${id}`,
+          `https://sahabattensbe-production-0c07.up.railway.app/api/shift-management/leave-request/${id}`,
           {
             method: "GET",
             headers: {
@@ -176,7 +176,7 @@ export default function EditLeaveRequestPage() {
       };
 
       const response = await fetch(
-        `https://sahabattensbe-production-0c07.up.railway.app-production-0c07.up.railway.app/api/shift-management/leave-request/${id}`,
+        `https://sahabattensbe-production-0c07.up.railway.app/api/shift-management/leave-request/${id}`,
         {
           method: "PUT",
           headers: {

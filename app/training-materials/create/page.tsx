@@ -102,7 +102,7 @@ export default function TambahMateriPelatihan() {
       setIsSubmitting(true);
 
       const response = await fetch(
-        "https://sahabattensbe-production-0c07.up.railway.app-production-0c07.up.railway.app/api/training-materials/create",
+        "https://sahabattensbe-production-0c07.up.railway.app/api/training-materials/create",
         {
           method: "POST",
           headers: {

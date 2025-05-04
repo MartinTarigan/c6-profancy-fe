@@ -106,7 +106,7 @@ export default function EditMateriPelatihan() {
     setIsSubmitting(true);
     try {
       const res = await fetch(
-        `https://sahabattensbe-production-0c07.up.railway.app-production-0c07.up.railway.app/api/training-materials/${id}/update`,
+        `https://sahabattensbe-production-0c07.up.railway.app/api/training-materials/${id}/update`,
         {
           method: "PUT",
           headers: {

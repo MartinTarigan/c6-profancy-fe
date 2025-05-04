@@ -105,7 +105,7 @@ export default function ApprovalPage() {
 
         // Fetch ALL leave requests and filter for pending ones
         const response = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app-production-0c07.up.railway.app/api/shift-management/leave-request/all`,
+          `https://sahabattensbe-production-0c07.up.railway.app/api/shift-management/leave-request/all`,
           {
             method: "GET",
             headers: {
