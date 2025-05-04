@@ -54,7 +54,7 @@ export default function EditAkun() {
         setIsLoading(true);
         const token = localStorage.getItem("token");
         const response = await fetch(
-          `http://localhost:8080/api/account/${username}`,
+          `https://sahabattensbe-production-0c07.up.railway.app/api/account/${username}`,
           {
             method: "GET",
             headers: {
@@ -93,7 +93,7 @@ export default function EditAkun() {
       setIsSaving(true);
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:8080/api/account/update-role-status?username=${username}`,
+        `https://sahabattensbe-production-0c07.up.railway.app/api/account/update-role-status?username=${username}`,
         {
           method: "PUT",
           headers: {
@@ -126,7 +126,7 @@ export default function EditAkun() {
       setIsRevoking(true);
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:8080/api/account/update-role-status?username=${username}`,
+        `https://sahabattensbe-production-0c07.up.railway.app/api/account/update-role-status?username=${username}`,
         {
           method: "PUT",
           headers: {

@@ -7,6 +7,17 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import LoadingIndicator from "@/components/LoadingIndicator";
 
+interface Option {
+  id: string;
+  text: string;
+}
+
+interface Question {
+  id: string;
+  question: string;
+  type: "MULTIPLE_CHOICE" | "ESSAY";
+  options: Option[];
+}
 
 interface Assessment {
   id: number;
@@ -25,21 +36,9 @@ interface SubmissionSummary {
   essayReviewed: boolean;
   username: string;
 }
-interface Option {
-  id: string;
-  text: string;
-  }
-  
-  interface Question {
-  id: string;
-  question: string;
-  type: "MULTIPLE_CHOICE" | "ESSAY";
-  options: Option[];
-  }
 
 export default function DetailAssessment() {
   const params = useParams();
-  // const router = useRouter();
   const assessmentId = params.id as string;
 
   const [assessment, setAssessment] = useState<Assessment | null>(null);
@@ -47,7 +46,6 @@ export default function DetailAssessment() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [submissionsError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAssessmentData = async () => {
@@ -55,47 +53,25 @@ export default function DetailAssessment() {
         setIsLoading(true);
         const token = localStorage.getItem("token");
         const username = localStorage.getItem("username");
+        if (!username) throw new Error("Username tidak ditemukan. Silakan login kembali.");
 
-        if (!username) {
-          throw new Error("Username not found. Please login again.");
-        }
+        // Fetch assessment
+        const assessmentRes = await fetch("https://sahabattensbe-production-0c07.up.railway.app/api/assessments", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!assessmentRes.ok) throw new Error(`Error fetching assessment: ${assessmentRes.status}`);
+        const assessmentsData: Assessment[] = await assessmentRes.json();
+        const found = assessmentsData.find(a => a.id === parseInt(assessmentId, 10));
+        if (!found) throw new Error("Assessment tidak ditemukan");
+        setAssessment(found);
 
-        // Fetch assessment data
-        const assessmentRes = await fetch(
-          "http://localhost:8080/api/assessments",
-          {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-          }
-        );
-
-        if (!assessmentRes.ok) {
-          throw new Error(`Error fetching assessment: ${assessmentRes.status}`);
-        }
-
-        const assessmentsData = await assessmentRes.json();
-        const foundAssessment = assessmentsData.find(
-          (a: Assessment) => a.id === parseInt(assessmentId)
-        );
-
-        if (!foundAssessment) {
-          throw new Error("Assessment tidak ditemukan");
-        }
-
-        setAssessment(foundAssessment);
-
-        // Fetch submission summaries
+        // Fetch submissions
         setIsLoadingSubmissions(true);
         const submissionsRes = await fetch(
-          `http://localhost:8080/api/trainee/assessment/${assessmentId}/summaries`,
-          {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-          }
+          `https://sahabattensbe-production-0c07.up.railway.app/api/trainee/assessment/${assessmentId}/summaries`,
+          { headers: token ? { Authorization: `Bearer ${token}` } : {} }
         );
-
-        if (!submissionsRes.ok) {
-          throw new Error(`Error fetching submissions: ${submissionsRes.status}`);
-        }
-
+        if (!submissionsRes.ok) throw new Error(`Error fetching submissions: ${submissionsRes.status}`);
         const submissionsData = await submissionsRes.json();
         setSubmissions(submissionsData.data || []);
       } catch (err) {
@@ -151,6 +127,7 @@ export default function DetailAssessment() {
 
   return (
     <div className="flex flex-col">
+      {/* Back Link */}
       <div className="mb-6">
         <Link
           href="/assessment"
@@ -161,19 +138,17 @@ export default function DetailAssessment() {
         </Link>
       </div>
 
+      {/* Header */}
       <div className="flex flex-col items-center mb-8">
-        <h1 className="text-primary text-3xl font-bold mb-2">
-          Detail Assessment
-        </h1>
+        <h1 className="text-primary text-3xl font-bold mb-2">Detail Assessment</h1>
         <p className="text-gray-500">
-          {assessment.template} - Deadline: {formatDate(assessment.deadline)}
+          {assessment.template} — Deadline: {formatDate(assessment.deadline)}
         </p>
       </div>
 
-      {/* Assessment Details */}
+      {/* Assessment Info */}
       <div className="w-full max-w-4xl mx-auto border border-gray-200 rounded-lg p-8 bg-white shadow-sm mb-8">
         <h2 className="text-xl font-semibold mb-4">Informasi Assessment</h2>
-        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
             <h3 className="font-medium mb-2">Template</h3>
@@ -185,29 +160,29 @@ export default function DetailAssessment() {
           </div>
           <div>
             <h3 className="font-medium mb-2">Jumlah Peserta</h3>
-            <p>{assessment.assignedUsers?.length || 0} Peserta</p>
+            <p>{assessment.assignedUsers.length} Peserta</p>
           </div>
           <div>
             <h3 className="font-medium mb-2">Jumlah Pertanyaan</h3>
-            <p>{assessment.questions?.length || 0} Pertanyaan</p>
+            <p>{assessment.questions.length} Pertanyaan</p>
           </div>
         </div>
 
         <h3 className="font-medium mb-2">Daftar Pertanyaan</h3>
         <div className="space-y-4 mb-6">
-          {assessment.questions?.map((q, index) => (
+          {assessment.questions.map((q, i) => (
             <div key={q.id} className="border-b pb-3">
               <p className="font-medium">
-                {index + 1}. {q.question}
+                {i + 1}. {q.question}
               </p>
               <p className="text-sm text-gray-500">
                 Tipe: {q.type === "MULTIPLE_CHOICE" ? "Pilihan Ganda" : "Esai"}
               </p>
               {q.type === "MULTIPLE_CHOICE" && (
                 <div className="mt-2 pl-4">
-                  {q.options.map((opt, i) => (
+                  {q.options.map((opt, j) => (
                     <p key={opt.id} className="text-sm">
-                      {String.fromCharCode(65 + i)}. {opt.text}
+                      {String.fromCharCode(65 + j)}. {opt.text}
                     </p>
                   ))}
                 </div>
@@ -218,9 +193,9 @@ export default function DetailAssessment() {
 
         <h3 className="font-medium mb-2">Daftar Peserta</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          {assessment.assignedUsers?.map((user) => (
-            <div key={user.id} className="text-sm">
-              {user.fullName || user.id}
+          {assessment.assignedUsers.map(u => (
+            <div key={u.id} className="text-sm">
+              {u.fullName}
             </div>
           ))}
         </div>
@@ -229,15 +204,11 @@ export default function DetailAssessment() {
       {/* Submissions Table */}
       <div className="w-full max-w-4xl mx-auto">
         <h2 className="text-xl font-semibold mb-4">Daftar Submisi</h2>
-        
+
         {isLoadingSubmissions ? (
           <div className="text-center py-8">
             <LoadingIndicator />
             <p className="mt-4 text-gray-500">Memuat data submisi...</p>
-          </div>
-        ) : submissionsError ? (
-          <div className="text-destructive text-center py-8">
-            <p>{submissionsError}</p>
           </div>
         ) : submissions.length === 0 ? (
           <div className="text-center py-8 border rounded-lg">
@@ -258,35 +229,40 @@ export default function DetailAssessment() {
                 </tr>
               </thead>
               <tbody>
-                {submissions.map((submission) => (
-                  <tr key={submission.submissionId} className="bg-blue-50 border-b border-white">
-                    <td className="py-3 px-4">{submission.username}</td>
-                    <td className="py-3 px-4">{formatDate(submission.submittedAt)}</td>
-                    <td className="py-3 px-4">{submission.mcScore.toFixed(1)}</td>
-                    <td className="py-3 px-4">{submission.essayScore.toFixed(1)}</td>
-                    <td className="py-3 px-4">{submission.totalScore.toFixed(1)}</td>
-                    <td className="py-3 px-4">
-                      {submission.essayReviewed ? (
-                        <span className="text-green-600">Sudah Dinilai</span>
-                      ) : (
-                        <span className="text-amber-600">Belum Dinilai</span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4">
-  <Link
-    href={`/assessment/review/${submission.submissionId}`
-      + `?assessmentId=${assessmentId}`
-      + `&username=${encodeURIComponent(submission.username)}`
-    }
-  >
-    <Button variant="outline" size="sm">
-      Review
-    </Button>
-  </Link>
-</td>
+                {submissions.map(sub => {
+                  // kondisi: MC = 0 & belum dinilai → tidak perlu review esai
+                  const skipEssayReview = !sub.essayReviewed && sub.mcScore === 0;
 
-                  </tr>
-                ))}
+                  return (
+                    <tr key={sub.submissionId} className="bg-blue-50 border-b border-white">
+                      <td className="py-3 px-4">{sub.username}</td>
+                      <td className="py-3 px-4">{formatDate(sub.submittedAt)}</td>
+                      <td className="py-3 px-4">{sub.mcScore.toFixed(1)}</td>
+                      <td className="py-3 px-4">{sub.essayScore.toFixed(1)}</td>
+                      <td className="py-3 px-4">{sub.totalScore.toFixed(1)}</td>
+                      <td className="py-3 px-4">
+                        {skipEssayReview ? (
+                          <span className="text-red-600">Penilaian Esai Tidak Diperlukan</span>
+                        ) : sub.essayReviewed ? (
+                          <span className="text-green-600">Sudah Dinilai</span>
+                        ) : (
+                          <span className="text-amber-600">Belum Dinilai</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4">
+                        <Link
+                          href={`/assessment/review/${sub.submissionId}`
+                            + `?assessmentId=${assessmentId}`
+                            + `&username=${encodeURIComponent(sub.username)}`}
+                        >
+                          <Button variant="outline" size="sm" disabled={skipEssayReview}>
+                            Review
+                          </Button>
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

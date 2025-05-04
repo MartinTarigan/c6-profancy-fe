@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import type React from "react";
+import { useState, useEffect } from "react";
 
 interface Outlet {
   outletId: number;
@@ -11,14 +12,15 @@ interface Outlet {
 
 export default function TambahLogLembur() {
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
+  const [toast, setToast] = useState<{ type: string; message: string } | null>(
+    null
+  );
   const [token, setToken] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string>(
+    "00000000-0000-0000-0000-000000000000"
+  );
 
-  const [outlets, setOutlets] = useState<
-  { outletId: number; name: string; headBarName: string; headBarId: string }[]
-  >([]);
-
-
+  const [outlets, setOutlets] = useState<Outlet[]>([]);
   const [currentOutlet, setCurrentOutlet] = useState<Outlet | null>(null);
 
   const [formData, setFormData] = useState({
@@ -38,23 +40,59 @@ export default function TambahLogLembur() {
     console.log("🟢 Token ditemukan:", storedToken);
 
     if (!storedToken) {
-      setToast({ type: "Gagal", message: "Token tidak ditemukan. Silakan login ulang!" });
+      setToast({
+        type: "Gagal",
+        message: "Token tidak ditemukan. Silakan login ulang!",
+      });
       return;
     }
 
     setToken(storedToken);
+
+    // Extract userId from token
+    try {
+      const tokenPayload = parseJwt(storedToken);
+      console.log("Token payload:", tokenPayload);
+
+      // Look for common ID fields in the token payload
+      if (tokenPayload && tokenPayload.id) {
+        console.log("Setting userId from token id:", tokenPayload.id);
+        setUserId(tokenPayload.id);
+      } else if (tokenPayload && tokenPayload.userId) {
+        console.log("Setting userId from token userId:", tokenPayload.userId);
+        setUserId(tokenPayload.userId);
+      } else if (tokenPayload && tokenPayload.sub) {
+        console.log("Setting userId from token sub:", tokenPayload.sub);
+        setUserId(tokenPayload.sub);
+      } else if (tokenPayload && tokenPayload.user_id) {
+        console.log("Setting userId from token user_id:", tokenPayload.user_id);
+        setUserId(tokenPayload.user_id);
+      } else {
+        console.error("User ID not found in token payload");
+        setToast({
+          type: "Gagal",
+          message: "User ID tidak ditemukan dalam token. Silakan login ulang!",
+        });
+      }
+    } catch (err) {
+      console.error("Error parsing JWT token:", err);
+    }
+
     fetchOutlets(storedToken);
   }, []);
 
   // FETCH OUTLETS
   const fetchOutlets = async (storedToken: string) => {
     try {
-      const res = await fetch("http://localhost:8080/api/outlets", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${storedToken}`,
-        },
-      });
+      const res = await fetch(
+        "https://sahabattensbe-production-0c07.up.railway.app/api/outlets",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${storedToken}`,
+          },
+        }
+      );
 
       if (!res.ok) throw new Error("Gagal mengambil data outlet");
 
@@ -69,9 +107,30 @@ export default function TambahLogLembur() {
     }
   };
 
+  // Function to parse JWT token
+  const parseJwt = (token: string) => {
+    try {
+      // Split the token and get the payload part (second part)
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      );
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      console.error("Failed to parse JWT token:", e);
+      return null;
+    }
+  };
+
   // ✅ HANDLE FORM CHANGE
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
 
@@ -81,33 +140,42 @@ export default function TambahLogLembur() {
     }));
 
     if (name === "outletId") {
-  const selectedOutlet = outlets.find((outlet) => outlet.outletId === parseInt(value));
+      const selectedOutlet = outlets.find(
+        (outlet) => outlet.outletId === Number.parseInt(value)
+      );
 
-  if (selectedOutlet) {
-    setCurrentOutlet(selectedOutlet);
+      if (selectedOutlet) {
+        setCurrentOutlet(selectedOutlet);
 
-    // INI FIX-NYA
-    const headbarName = selectedOutlet.headBarName || "Tidak Ada Headbar";
+        // INI FIX-NYA - Using headBarName directly from the outlet object
+        const headbarName = selectedOutlet.headBarName || "Tidak Ada Headbar";
 
-    console.log("✅ Outlet dipilih:", selectedOutlet);
-    console.log("✅ Verifier:", headbarName);
+        console.log("✅ Outlet dipilih:", selectedOutlet);
+        console.log("✅ Verifier:", headbarName);
 
+        setFormData((prev) => ({
+          ...prev,
+          outletId: value,
+          verifier: headbarName,
+        }));
+      } else {
+        console.warn("❌ Outlet tidak ditemukan untuk id:", value);
+        setCurrentOutlet(null);
+        setFormData((prev) => ({
+          ...prev,
+          outletId: value,
+          verifier: "",
+        }));
+      }
+    }
+  };
+
+  // Handle status change
+  const handleStatusChange = (status: string) => {
     setFormData((prev) => ({
       ...prev,
-      outletId: value,
-      verifier: headbarName,
+      status,
     }));
-  } else {
-    console.warn("❌ Outlet tidak ditemukan untuk id:", value);
-    setCurrentOutlet(null);
-    setFormData((prev) => ({
-      ...prev,
-      outletId: value,
-      verifier: "",
-    }));
-  }
-}
-
   };
 
   // ✅ HANDLE SUBMIT
@@ -115,7 +183,10 @@ export default function TambahLogLembur() {
     e.preventDefault();
 
     if (!token) {
-      setToast({ type: "Gagal", message: "Token tidak valid. Silakan login ulang!" });
+      setToast({
+        type: "Gagal",
+        message: "Token tidak valid. Silakan login ulang!",
+      });
       return;
     }
 
@@ -124,8 +195,8 @@ export default function TambahLogLembur() {
     try {
       const payload = {
         baristaId: 1, // Ubah sesuai kebutuhan
-        userId: "00000000-0000-0000-0000-000000000000", // Ubah sesuai kebutuhan
-        outletId: parseInt(formData.outletId),
+        userId: userId, // Use the userId from state instead of hardcoded value
+        outletId: Number.parseInt(formData.outletId),
         dateOvertime: formData.dateOvertime,
         startHour: formData.startHour,
         duration: formData.duration.padStart(2, "0") + ":00",
@@ -136,14 +207,17 @@ export default function TambahLogLembur() {
       console.log("🟢 Payload dikirim:", payload);
       console.log("🟢 Current Outlet:", currentOutlet);
 
-      const res = await fetch(`http://localhost:8080/api/overtime-logs`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        `https://sahabattensbe-production-0c07.up.railway.app/api/overtime-logs`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (!res.ok) {
         const contentType = res.headers.get("content-type");
@@ -157,14 +231,24 @@ export default function TambahLogLembur() {
         }
       }
 
-      setToast({ type: "Berhasil", message: "Log lembur berhasil ditambahkan!" });
+      setToast({
+        type: "Berhasil",
+        message: "Log lembur berhasil ditambahkan!",
+      });
 
       setTimeout(() => {
         window.location.href = "/jadwal/lembur";
       }, 1500);
-    } catch (error) {
-      console.error("❌ Error submit:", error);
-      setToast({ type: "Gagal", message: "gagal" });
+    } catch (error: unknown) {
+      console.error("Error submit:", error);
+
+      // Check if the error is an instance of Error
+      if (error instanceof Error) {
+        setToast({ type: "Gagal", message: error.message });
+      } else {
+        // In case the error is not an instance of Error, handle it gracefully
+        setToast({ type: "Gagal", message: "An unknown error occurred" });
+      }
     } finally {
       setLoading(false);
     }
@@ -237,7 +321,10 @@ export default function TambahLogLembur() {
 
             {currentOutlet && (
               <p className="text-sm text-gray-500 mt-1">
-                Headbar: <strong>{currentOutlet.headBarName || "Tidak Ada Headbar"}</strong>
+                Headbar:{" "}
+                <strong>
+                  {currentOutlet.headBarName || "Tidak Ada Headbar"}
+                </strong>
               </p>
             )}
           </div>
@@ -293,22 +380,33 @@ export default function TambahLogLembur() {
             />
           </div>
 
-          {/* Status */}
+          {/* Status - Changed from dropdown to buttons */}
           <div>
-            <label htmlFor="status" className="block mb-2 font-medium">
-              Status
-            </label>
-            <select
-              id="status"
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded p-2"
-            >
-              <option value="ONGOING">Ongoing</option>
-              <option value="CANCELLED">Cancelled</option>
-            </select>
+            <label className="block mb-2 font-medium">Status</label>
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() => handleStatusChange("ONGOING")}
+                className={`px-4 py-2 rounded-md ${
+                  formData.status === "ONGOING"
+                    ? "bg-[#4169E1] text-white"
+                    : "bg-white border border-gray-300 text-gray-700"
+                }`}
+              >
+                Ongoing
+              </button>
+              <button
+                type="button"
+                onClick={() => handleStatusChange("CANCELLED")}
+                className={`px-4 py-2 rounded-md ${
+                  formData.status === "CANCELLED"
+                    ? "bg-red-500 text-white"
+                    : "bg-white border border-gray-300 text-gray-700"
+                }`}
+              >
+                Cancelled
+              </button>
+            </div>
           </div>
 
           {/* Action Buttons */}

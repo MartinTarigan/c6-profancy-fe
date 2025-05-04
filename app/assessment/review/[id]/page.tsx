@@ -87,7 +87,7 @@ export default function ReviewSubmission() {
       };
 
       const response = await fetch(
-        "http://localhost:8080/api/trainee/assessment/review-essay",
+        "https://sahabattensbe-production-0c07.up.railway.app/api/trainee/assessment/review-essay",
         {
           method: "POST",
           headers: {
@@ -124,7 +124,7 @@ export default function ReviewSubmission() {
 
         // 1. Jawaban user
         const ansRes = await fetch(
-          `http://localhost:8080/api/trainee/answers/${submissionId}`,
+          `https://sahabattensbe-production-0c07.up.railway.app/api/trainee/answers/${submissionId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (!ansRes.ok) throw new Error("Gagal fetch submission answers");
@@ -143,7 +143,7 @@ export default function ReviewSubmission() {
 
         // 2. Summary submisi
         const sumRes = await fetch(
-          `http://localhost:8080/api/trainee/assessment/${aid}/summaries`,
+          `https://sahabattensbe-production-0c07.up.railway.app/api/trainee/assessment/${aid}/summaries`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (!sumRes.ok) throw new Error("Error fetching submission summaries");
@@ -156,7 +156,7 @@ export default function ReviewSubmission() {
 
         // 3. Jawaban benar
         const corrRes = await fetch(
-          `http://localhost:8080/api/trainee/answers/correct/${aid}`,
+          `https://sahabattensbe-production-0c07.up.railway.app/api/trainee/answers/correct/${aid}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (!corrRes.ok) throw new Error("Error fetching correct answers");
@@ -164,7 +164,7 @@ export default function ReviewSubmission() {
         setCorrectAnswers(corrJson.data);
 
         // 4. Data assessment
-        const assRes = await fetch("http://localhost:8080/api/assessments", {
+        const assRes = await fetch("https://sahabattensbe-production-0c07.up.railway.app/api/assessments", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!assRes.ok) throw new Error("Error fetching assessment");

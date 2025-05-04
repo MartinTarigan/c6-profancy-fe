@@ -54,8 +54,8 @@ export default function ManajemenAssessment() {
         // Ubah kondisi untuk mengizinkan akses bagi CEO, CIOO, dan CMO
         const isManagement = ["Admin", "CEO", "CIOO", "CMO"].includes(role || "");
         const url = isManagement 
-          ? "http://localhost:8080/api/assessments"
-          : `http://localhost:8080/api/assessments/access/${username}`;
+          ? "https://sahabattensbe-production-0c07.up.railway.app/api/assessments"
+          : `https://sahabattensbe-production-0c07.up.railway.app/api/assessments/access/${username}`;
         
         const res = await fetch(url, {
           headers: token

@@ -31,19 +31,39 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import LoadingIndicator from "@/components/LoadingIndicator";
 
-interface LeaveRequest {
-  id: string;
-  userName: string;
-  requestDate: string;
-  leaveType: "OFF_DAY" | "IZIN";
+interface OvertimeLog {
+  id: number;
+  baristaId: number;
+  userId: string;
+  outletId: number;
+  dateOvertime: string;
+  startHour: string;
+  duration: string;
   reason: string;
-  status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELED";
+  status: "PENDING" | "APPROVED" | "REJECTED" | "ONGOING" | "CANCELLED";
+  statusDisplay: string;
+  verifier: string;
+  outletName: string;
+  baristaName: string;
   createdAt: string;
   updatedAt: string;
-  idOutlet?: number; // Added to match your DTO
 }
 
+interface Outlet {
+  outletId: number;
+  name: string;
+}
+
+interface User {
+  id: string;
+  username: string;
+  role: string;
+  outlet?: string;
+}
+
+// Fungsi untuk parse JWT
 function parseJwt(token: string) {
   try {
     const base64Url = token.split(".")[1];
@@ -61,18 +81,18 @@ function parseJwt(token: string) {
   }
 }
 
-export default function ApprovalPage() {
+export default function HeadBarOvertimeApprovalPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestId = searchParams.get("id");
 
-  const [pendingRequests, setPendingRequests] = useState<LeaveRequest[]>([]);
-  const [filteredRequests, setFilteredRequests] = useState<LeaveRequest[]>([]);
+  const [overtimeLogs, setOvertimeLogs] = useState<OvertimeLog[]>([]);
+  const [filteredRequests, setFilteredRequests] = useState<OvertimeLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState<string>("all");
-  const [selectedRequest, setSelectedRequest] = useState<LeaveRequest | null>(
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [selectedRequest, setSelectedRequest] = useState<OvertimeLog | null>(
     null
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -82,30 +102,96 @@ export default function ApprovalPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentOutletId, setCurrentOutletId] = useState<number | null>(null);
   const [outletName, setOutletName] = useState<string>("");
+  const [, setOutlets] = useState<Outlet[]>([]);
+  const [, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const fetchPendingRequests = async () => {
+    const fetchUserData = async () => {
+      const userId = localStorage.getItem("username");
+      const token = localStorage.getItem("token");
+
+      if (!userId || !token) {
+        alert("User tidak ditemukan atau belum login");
+        router.push("/login");
+        return;
+      }
+
       try {
-        const token = localStorage.getItem("token");
+        const res = await fetch(
+          `https://sahabattensbe-production-0c07.up.railway.app/api/account/${userId}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-        if (!token) {
-          router.push("/login");
-          return;
+        if (!res.ok) {
+          throw new Error(`Failed to fetch user data: ${res.status}`);
         }
 
-        // Get user info from JWT
-        const jwtPayload = parseJwt(token);
-        if (!jwtPayload || !jwtPayload.sub) {
-          console.log("Invalid token, redirecting to login");
-          router.push("/login");
-          return;
+        const userRes = await res.json();
+        console.log("User data response:", userRes);
+        setUser(userRes.data);
+        const outlet = userRes.data.outlet;
+        if (outlet) {
+          fetchAllOutlets(token, outlet);
+        } else {
+          console.log("❌ Outlet not found for the user");
+          setError("Outlet tidak ditemukan untuk user ini.");
+          setIsLoading(false);
+        }
+      } catch (err) {
+        console.log("❌ Gagal fetch user data:", err);
+        setError("Gagal memuat data user.");
+        setIsLoading(false);
+      }
+    };
+
+    const fetchAllOutlets = async (token: string, userOutletName: string) => {
+      try {
+        const res = await fetch(
+          `https://sahabattensbe-production-0c07.up.railway.app/api/outlets`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error(`Failed to fetch outlets: ${res.status}`);
         }
 
-        setIsLoading(true);
+        const data = await res.json();
+        console.log("Outlets data response:", data);
+        setOutlets(data);
 
-        // Fetch ALL leave requests and filter for pending ones
+        const matchedOutlet = data.find(
+          (o: Outlet) => o.name === userOutletName
+        );
+        if (matchedOutlet) {
+          setOutletName(matchedOutlet.name);
+          setCurrentOutletId(matchedOutlet.outletId);
+          fetchOvertimeLogs(token, matchedOutlet.outletId);
+        } else {
+          console.log("❌ Outlet terkait dengan pengguna tidak ditemukan");
+          setError("Outlet terkait dengan pengguna tidak ditemukan.");
+          setIsLoading(false);
+        }
+      } catch (err) {
+        console.log("❌ Gagal fetch all outlets:", err);
+        setError("Gagal memuat data outlet.");
+        setIsLoading(false);
+      }
+    };
+
+    const fetchOvertimeLogs = async (token: string, outletId: number) => {
+      try {
         const response = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app-production-0c07.up.railway.app/api/shift-management/leave-request/all`,
+          "https://sahabattensbe-production-0c07.up.railway.app/api/overtime-logs?status=PENDING",
           {
             method: "GET",
             headers: {
@@ -115,101 +201,73 @@ export default function ApprovalPage() {
         );
 
         if (!response.ok) {
-          throw new Error(`Error fetching requests: ${response.status}`);
+          throw new Error(`Error fetching overtime logs: ${response.status}`);
         }
 
-        const result = await response.json();
-        console.log("Raw API response:", result); // Debug log
+        const logs = await response.json();
+        console.log("Fetched overtime logs:", logs);
 
-        const allRequests = result.data || [];
+        const statusDisplayMap: Record<OvertimeLog["status"], string> = {
+          PENDING: "Menunggu Konfirmasi",
+          APPROVED: "Diterima",
+          REJECTED: "Ditolak",
+          ONGOING: "Sedang Berlangsung",
+          CANCELLED: "Dibatalkan",
+        };
 
-        // First, try to find the outlet ID for the current user
-        if (!currentOutletId) {
-          // Get outlet ID from JWT if available
-          if (jwtPayload.outletId) {
-            setCurrentOutletId(Number.parseInt(jwtPayload.outletId));
-            console.log("Found outlet ID from JWT:", jwtPayload.outletId);
-            setOutletName(`Outlet #${jwtPayload.outletId}`);
-          } else {
-            // If not in JWT, try to get from localStorage
-            const storedOutletId = localStorage.getItem("outletId");
-            if (storedOutletId) {
-              setCurrentOutletId(Number.parseInt(storedOutletId));
-              console.log("Found outlet ID from localStorage:", storedOutletId);
-              setOutletName(`Outlet #${storedOutletId}`);
-            }
-          }
-        }
+        const filteredLogs = logs
+          .filter(
+            (log: OvertimeLog) =>
+              log.outletId === outletId && log.status === "PENDING"
+          )
+          .map((log: OvertimeLog) => ({
+            ...log,
+            statusDisplay: statusDisplayMap[log.status] || log.status,
+          }));
 
-        // Filter requests by outlet ID and pending status
-        let filteredByOutlet = allRequests;
-        if (currentOutletId) {
-          filteredByOutlet = allRequests.filter(
-            (req: LeaveRequest) => req.idOutlet === currentOutletId
-          );
-          console.log(
-            `Filtered to ${filteredByOutlet.length} requests for outlet ID ${currentOutletId}`
-          );
-        } else {
-          console.warn(
-            "No outlet ID found for filtering. Showing all requests."
-          );
-        }
+        setOvertimeLogs(filteredLogs);
+        setFilteredRequests(filteredLogs);
 
-        // Filter for pending requests only
-        const pendingReqs = filteredByOutlet.filter(
-          (req: LeaveRequest) => req.status === "PENDING"
-        );
-
-        setPendingRequests(pendingReqs);
-        setFilteredRequests(pendingReqs);
-
-        // If there's a request ID in the URL, select that request
         if (requestId) {
           const selectedReq =
-            pendingReqs.find((req: LeaveRequest) => req.id === requestId) ||
-            null;
+            filteredLogs.find(
+              (log: OvertimeLog) => log.id === Number(requestId)
+            ) || null;
           if (selectedReq) {
             setSelectedRequest(selectedReq);
             setIsDialogOpen(true);
-            setActionType("approve"); // Default to approve dialog
+            setActionType("approve");
           }
         }
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "An unknown error occurred"
-        );
-        console.error("Error fetching pending requests:", err);
+        console.error("Error fetching overtime logs:", err);
+        setError("Terjadi kesalahan saat memuat data lembur.");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchPendingRequests();
-  }, [router, requestId, currentOutletId]);
+    fetchUserData();
+  }, [router, requestId]);
 
-  // Apply filters and search
   useEffect(() => {
-    let results = pendingRequests;
+    let results = overtimeLogs;
 
-    // Apply search term
     if (searchTerm) {
       results = results.filter(
         (req) =>
-          req.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          req.baristaName.toLowerCase().includes(searchTerm.toLowerCase()) ||
           req.reason.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    // Apply type filter
-    if (filterType !== "all") {
-      results = results.filter((req) => req.leaveType === filterType);
+    if (filterStatus !== "all") {
+      results = results.filter((req) => req.status === filterStatus);
     }
 
     setFilteredRequests(results);
-  }, [searchTerm, filterType, pendingRequests]);
+  }, [searchTerm, filterStatus, overtimeLogs]);
 
-  // Format date for display
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = {
       year: "numeric",
@@ -220,13 +278,21 @@ export default function ApprovalPage() {
     return new Date(dateString).toLocaleDateString("id-ID", options);
   };
 
-  const handleApprove = async (request: LeaveRequest) => {
+  const formatTime = (timeString: string) => {
+    const parsedTime = new Date(`1970-01-01T${timeString}`);
+    return parsedTime.toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const handleApprove = async (request: OvertimeLog) => {
     setSelectedRequest(request);
     setActionType("approve");
     setIsDialogOpen(true);
   };
 
-  const handleReject = async (request: LeaveRequest) => {
+  const handleReject = async (request: OvertimeLog) => {
     setSelectedRequest(request);
     setActionType("reject");
     setIsDialogOpen(true);
@@ -239,35 +305,52 @@ export default function ApprovalPage() {
 
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("User tidak ditemukan atau belum login");
+      }
 
-      // Use the correct endpoint from your controller
+      const jwtPayload = parseJwt(token);
+      const verifier = jwtPayload?.sub || "HeadBar";
+
       const response = await fetch(
-        `https://sahabattensbe-production-0c07.up.railway.app/api/shift-management/leave-request/${selectedRequest.id}/status`,
+        `https://sahabattensbe-production-0c07.up.railway.app/api/overtime-logs/${selectedRequest.id}/approve`,
         {
           method: "PUT",
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             status: actionType === "approve" ? "APPROVED" : "REJECTED",
-            notes: "", // Add notes if your API requires it
+            verifier: verifier,
           }),
         }
       );
 
       if (!response.ok) {
-        throw new Error(`Error ${actionType}ing request: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(
+          `Gagal ${
+            actionType === "approve" ? "menyetujui" : "menolak"
+          } permohonan: ${response.status} - ${errorText}`
+        );
       }
 
-      // Remove the request from the list
-      setPendingRequests((prev) =>
+      setOvertimeLogs((prev) =>
         prev.filter((req) => req.id !== selectedRequest.id)
       );
-
+      setFilteredRequests((prev) =>
+        prev.filter((req) => req.id !== selectedRequest.id)
+      );
       setIsDialogOpen(false);
       setSelectedRequest(null);
       setActionType(null);
+
+      alert(
+        `Permohonan berhasil ${
+          actionType === "approve" ? "disetujui" : "ditolak"
+        }`
+      );
     } catch (err) {
       console.error(`Error ${actionType}ing request:`, err);
       alert(
@@ -283,11 +366,7 @@ export default function ApprovalPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingIndicator />;
   }
 
   if (error) {
@@ -300,7 +379,7 @@ export default function ApprovalPage() {
             className="mt-4"
             onClick={() => {
               console.log("Current outlet ID:", currentOutletId);
-              console.log("Pending requests:", pendingRequests);
+              console.log("Pending requests:", overtimeLogs);
               alert("Check console for debug data");
             }}
           >
@@ -315,15 +394,13 @@ export default function ApprovalPage() {
     <div className="container mx-auto p-6">
       <div className="flex flex-col">
         <div className="flex items-center gap-4 mb-6">
-          <Link href="/jadwal/izin-cuti/headbar">
+          <Link href="/jadwal/lembur/headbar">
             <Button variant="outline" size="icon">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold">
-              Approval Permohonan Izin/Cuti
-            </h1>
+            <h1 className="text-2xl font-bold">Approval Permohonan Lembur</h1>
             {outletName && (
               <p className="text-sm text-muted-foreground">
                 Outlet: {outletName}
@@ -334,7 +411,7 @@ export default function ApprovalPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Permohonan Menunggu Persetujuan</CardTitle>
+            <CardTitle>Permohonan Lembur Menunggu Persetujuan</CardTitle>
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -346,17 +423,16 @@ export default function ApprovalPage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Select value={filterType} onValueChange={setFilterType}>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
                 <SelectTrigger className="w-[180px]">
                   <div className="flex items-center gap-2">
                     <Filter className="h-4 w-4" />
-                    <SelectValue placeholder="Filter jenis" />
+                    <SelectValue placeholder="Filter status" />
                   </div>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Semua Jenis</SelectItem>
-                  <SelectItem value="IZIN">Izin</SelectItem>
-                  <SelectItem value="OFF_DAY">Cuti</SelectItem>
+                  <SelectItem value="all">Semua Status</SelectItem>
+                  <SelectItem value="PENDING">Menunggu</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -364,7 +440,7 @@ export default function ApprovalPage() {
           <CardContent>
             {filteredRequests.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                Tidak ada permohonan yang menunggu persetujuan
+                Tidak ada permohonan lembur yang menunggu persetujuan
               </div>
             ) : (
               <Table>
@@ -372,7 +448,8 @@ export default function ApprovalPage() {
                   <TableRow>
                     <TableHead>Tanggal</TableHead>
                     <TableHead>Nama</TableHead>
-                    <TableHead>Jenis</TableHead>
+                    <TableHead>Waktu</TableHead>
+                    <TableHead>Durasi</TableHead>
                     <TableHead>Alasan</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Aksi</TableHead>
@@ -381,13 +458,12 @@ export default function ApprovalPage() {
                 <TableBody>
                   {filteredRequests.map((request) => (
                     <TableRow key={request.id}>
-                      <TableCell>{formatDate(request.requestDate)}</TableCell>
+                      <TableCell>{formatDate(request.dateOvertime)}</TableCell>
                       <TableCell className="font-medium">
-                        {request.userName}
+                        {request.baristaName}
                       </TableCell>
-                      <TableCell>
-                        {request.leaveType === "IZIN" ? "Izin" : "Cuti"}
-                      </TableCell>
+                      <TableCell>{formatTime(request.startHour)}</TableCell>
+                      <TableCell>{formatTime(request.duration)}</TableCell>
                       <TableCell className="max-w-[300px] truncate">
                         {request.reason}
                       </TableCell>
@@ -396,7 +472,7 @@ export default function ApprovalPage() {
                           variant="outline"
                           className="bg-yellow-100 text-yellow-800 border-yellow-300"
                         >
-                          Menunggu
+                          {request.statusDisplay}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -430,7 +506,6 @@ export default function ApprovalPage() {
         </Card>
       </div>
 
-      {/* Confirmation Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -441,8 +516,8 @@ export default function ApprovalPage() {
             </DialogTitle>
             <DialogDescription>
               {actionType === "approve"
-                ? "Apakah Anda yakin ingin menyetujui permohonan ini?"
-                : "Apakah Anda yakin ingin menolak permohonan ini?"}
+                ? "Apakah Anda yakin ingin menyetujui permohonan lembur ini?"
+                : "Apakah Anda yakin ingin menolak permohonan lembur ini?"}
             </DialogDescription>
           </DialogHeader>
 
@@ -450,16 +525,14 @@ export default function ApprovalPage() {
             <div className="py-4">
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div className="font-semibold">Nama:</div>
-                <div>{selectedRequest.userName}</div>
-
+                <div>{selectedRequest.baristaName}</div>
                 <div className="font-semibold">Tanggal:</div>
-                <div>{formatDate(selectedRequest.requestDate)}</div>
-
-                <div className="font-semibold">Jenis:</div>
+                <div>{formatDate(selectedRequest.dateOvertime)}</div>
+                <div className="font-semibold">Waktu:</div>
                 <div>
-                  {selectedRequest.leaveType === "IZIN" ? "Izin" : "Cuti"}
+                  {formatTime(selectedRequest.startHour)} -{" "}
+                  {formatTime(selectedRequest.duration)}
                 </div>
-
                 <div className="font-semibold">Alasan:</div>
                 <div>{selectedRequest.reason}</div>
               </div>

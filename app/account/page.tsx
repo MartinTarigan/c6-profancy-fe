@@ -52,7 +52,7 @@ export default function DaftarAkun() {
         }
 
         const response = await fetch(
-          "http://localhost:8080/api/account/viewall",
+          "https://sahabattensbe-production-0c07.up.railway.app/api/account/viewall",
           {
             method: "GET",
             headers: {

@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, Clock, Plus, Eye } from "lucide-react";
 import Link from "next/link";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface LeaveRequest {
   id: string;
@@ -17,6 +16,23 @@ interface LeaveRequest {
   status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELED";
   createdAt: string;
   updatedAt: string;
+}
+
+function parseJwt(token: string) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.error("Failed to parse JWT:", e);
+    return null;
+  }
 }
 
 export default function BaristaLeaveRequestPage() {
@@ -34,6 +50,7 @@ export default function BaristaLeaveRequestPage() {
   useEffect(() => {
     const fetchLeaveRequests = async () => {
       try {
+        // For testing - add this to debug login issues
         console.log("Checking auth...");
         const token = localStorage.getItem("token");
 
@@ -61,13 +78,13 @@ export default function BaristaLeaveRequestPage() {
 
         // Fetch user's leave requests using username
         const response = await fetch(
-          `http://localhost:8080/api/shift-management/leave-request/user/username/${currentUsername}`,
+          `https://sahabattensbe-production-0c07.up.railway.app/api/shift-management/leave-request/user/username/${currentUsername}`,
           {
             method: "GET",
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          },
+          }
         );
 
         if (!response.ok) {
@@ -100,11 +117,14 @@ export default function BaristaLeaveRequestPage() {
 
         // Get recent requests (last 5)
         const sortedRequests = [...requests].sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         setRecentRequests(sortedRequests.slice(0, 5));
       } catch (err) {
-        setError(err instanceof Error ? err.message : "An unknown error occurred");
+        setError(
+          err instanceof Error ? err.message : "An unknown error occurred"
+        );
         console.error("Error fetching leave requests:", err);
       } finally {
         setIsLoading(false);
@@ -124,66 +144,10 @@ export default function BaristaLeaveRequestPage() {
     return new Date(dateString).toLocaleDateString("id-ID", options);
   };
 
-  // Helper function to parse JWT
-  function parseJwt(token: string) {
-    try {
-      const base64Url = token.split(".")[1];
-      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split("")
-          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-          .join(""),
-      );
-      return JSON.parse(jsonPayload);
-    } catch (e) {
-      console.error("Failed to parse JWT:", e);
-      return null;
-    }
-  }
-
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6">
-        {/* Skeleton for Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <Skeleton className="h-6 w-32 mb-2" />
-                    <Skeleton className="h-12 w-16 mb-2" />
-                    <Skeleton className="h-4 w-24" />
-                  </div>
-                  <Skeleton className="h-6 w-6" />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        {/* Skeleton for Main Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardContent className="p-6">
-              <Skeleton className="h-6 w-40 mb-4" />
-              <Skeleton className="h-4 w-60 mb-2" />
-              <Skeleton className="h-4 w-32 mb-2" />
-              <Skeleton className="h-4 w-48 mb-2" />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <Skeleton className="h-6 w-40 mb-4" />
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="mb-4">
-                  <Skeleton className="h-4 w-full mb-1" />
-                  <Skeleton className="h-4 w-3/4" />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -201,6 +165,8 @@ export default function BaristaLeaveRequestPage() {
 
   return (
     <div className="container mx-auto p-6">
+      {/* Header */}
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
@@ -209,7 +175,9 @@ export default function BaristaLeaveRequestPage() {
               <div>
                 <h3 className="text-lg font-medium">Total Izin</h3>
                 <p className="text-4xl font-bold mt-2">{totalIzin}</p>
-                <p className="text-sm text-muted-foreground mt-1">Permohonan izin</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Permohonan izin
+                </p>
               </div>
               <FileText className="h-6 w-6 text-gray-400" />
             </div>
@@ -222,7 +190,9 @@ export default function BaristaLeaveRequestPage() {
               <div>
                 <h3 className="text-lg font-medium">Total Cuti</h3>
                 <p className="text-4xl font-bold mt-2">{totalCuti}</p>
-                <p className="text-sm text-muted-foreground mt-1">Permohonan cuti</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Permohonan cuti
+                </p>
               </div>
               <FileText className="h-6 w-6 text-gray-400" />
             </div>
@@ -235,7 +205,9 @@ export default function BaristaLeaveRequestPage() {
               <div>
                 <h3 className="text-lg font-medium">Pending Requests</h3>
                 <p className="text-4xl font-bold mt-2">{pendingRequests}</p>
-                <p className="text-sm text-muted-foreground mt-1">Menunggu persetujuan</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Menunggu persetujuan
+                </p>
               </div>
               <Clock className="h-6 w-6 text-gray-400" />
             </div>
@@ -249,10 +221,15 @@ export default function BaristaLeaveRequestPage() {
         <Card>
           <CardContent className="p-6">
             <h2 className="text-xl font-bold mb-1">Menu Cepat</h2>
-            <p className="text-sm text-muted-foreground mb-6">Akses cepat ke fitur utama</p>
+            <p className="text-sm text-muted-foreground mb-6">
+              Akses cepat ke fitur utama
+            </p>
 
             <div className="space-y-4">
-              <Link href="/jadwal/izin-cuti/barista/list" className="w-full block">
+              <Link
+                href="/jadwal/izin-cuti/barista/list"
+                className="w-full block"
+              >
                 <Button className="w-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center gap-2">
                   <Eye size={18} />
                   <span>Lihat Permohonan Saya</span>
@@ -273,18 +250,26 @@ export default function BaristaLeaveRequestPage() {
         <Card>
           <CardContent className="p-6">
             <h2 className="text-xl font-bold mb-1">Permohonan Terbaru</h2>
-            <p className="text-sm text-muted-foreground mb-6">Permohonan yang baru diajukan</p>
+            <p className="text-sm text-muted-foreground mb-6">
+              Permohonan yang baru diajukan
+            </p>
 
             {recentRequests.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">Tidak ada permohonan terbaru</div>
+              <div className="text-center py-8 text-muted-foreground">
+                Tidak ada permohonan terbaru
+              </div>
             ) : (
               <div className="space-y-4">
                 {recentRequests.map((request) => (
                   <div key={request.id} className="border-b pb-4 last:border-0">
                     <div className="flex justify-between">
                       <div>
-                        <p className="font-medium">{request.leaveType === "IZIN" ? "Izin" : "Cuti"}</p>
-                        <p className="text-sm text-muted-foreground">{formatDate(request.requestDate)}</p>
+                        <p className="font-medium">
+                          {request.leaveType === "IZIN" ? "Izin" : "Cuti"}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatDate(request.requestDate)}
+                        </p>
                       </div>
                       <div>
                         <span

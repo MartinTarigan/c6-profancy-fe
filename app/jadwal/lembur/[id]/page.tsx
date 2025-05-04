@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import LoadingIndicator from "@/components/LoadingIndicator";
@@ -25,8 +25,12 @@ export default function OvertimeLogDetail() {
 
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
-  const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
+  const [toast, setToast] = useState<{ type: string; message: string } | null>(
+    null
+  );
   const [token, setToken] = useState<string | null>(null);
+  const [, setUserRoles] = useState<string[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const [, setOvertimeLog] = useState<OvertimeLog | null>(null);
   const [outlets, setOutlets] = useState<
@@ -44,28 +48,70 @@ export default function OvertimeLogDetail() {
     status: "",
   });
 
+  // Function to parse JWT token
+  const parseJwt = (token: string) => {
+    try {
+      // Split the token and get the payload part (second part)
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      );
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      console.error("Failed to parse JWT token:", e);
+      return null;
+    }
+  };
+
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
 
     if (!storedToken) {
-      setToast({ type: "Gagal", message: "Token tidak ditemukan. Silakan login ulang!" });
+      setToast({
+        type: "Gagal",
+        message: "Token tidak ditemukan. Silakan login ulang!",
+      });
       setLoading(false);
       return;
     }
 
     setToken(storedToken);
+
+    // Parse token to get user roles
+    try {
+      const tokenPayload = parseJwt(storedToken);
+      if (tokenPayload && tokenPayload.roles) {
+        const roles = tokenPayload.roles || [];
+        setUserRoles(roles);
+
+        // Check if user is admin
+        const adminCheck = roles.includes("ROLE_Admin");
+        setIsAdmin(adminCheck);
+        console.log("Is admin user:", adminCheck);
+      }
+    } catch (err) {
+      console.error("Error parsing JWT token:", err);
+    }
+
     fetchOvertimeLogDetail(storedToken);
     fetchOutlets(storedToken);
   }, [params?.id]);
 
   const fetchOutlets = async (storedToken: string) => {
     try {
-      const res = await fetch("http://localhost:8080/api/outlets", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${storedToken}`,
-        },
-      });
+      const res = await fetch(
+        "https://sahabattensbe-production-0c07.up.railway.app/api/outlets",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${storedToken}`,
+          },
+        }
+      );
 
       if (!res.ok) throw new Error("Gagal mengambil data outlet");
 
@@ -85,12 +131,15 @@ export default function OvertimeLogDetail() {
     }
 
     try {
-      const res = await fetch(`http://localhost:8080/api/overtime-logs/${params.id}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${storedToken}`,
-        },
-      });
+      const res = await fetch(
+        `https://sahabattensbe-production-0c07.up.railway.app/api/overtime-logs/${params.id}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${storedToken}`,
+          },
+        }
+      );
 
       if (!res.ok) throw new Error("Gagal mengambil detail log lembur");
 
@@ -121,36 +170,50 @@ export default function OvertimeLogDetail() {
 
   const handleRevoke = async () => {
     if (!token) {
-      setToast({ type: "Gagal", message: "Token tidak valid. Silakan login ulang!" });
+      setToast({
+        type: "Gagal",
+        message: "Token tidak valid. Silakan login ulang!",
+      });
       return;
     }
 
     setUpdating(true);
     try {
-      const res = await fetch(`http://localhost:8080/api/overtime-logs/${params.id}/status`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status: "CANCELLED" }),
-      });
+      const res = await fetch(
+        `https://sahabattensbe-production-0c07.up.railway.app/api/overtime-logs/${params.id}/status`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: "CANCELLED" }),
+        }
+      );
 
       if (!res.ok) {
         const contentType = res.headers.get("content-type");
         if (contentType && contentType.includes("application/json")) {
           const data = await res.json();
-          throw new Error(data.message || "Gagal membatalkan permohonan lembur");
+          throw new Error(
+            data.message || "Gagal membatalkan permohonan lembur"
+          );
         } else {
           const text = await res.text();
           throw new Error(text || "Gagal membatalkan permohonan lembur");
         }
       }
-      setToast({ type: "Berhasil", message: "Permohonan lembur berhasil dibatalkan!" });
+      setToast({
+        type: "Berhasil",
+        message: "Permohonan lembur berhasil dibatalkan!",
+      });
       fetchOvertimeLogDetail(token);
     } catch (error) {
       console.error("❌ Error revoking overtime log:", error);
-      setToast({ type: "Gagal", message: "Gagal membatalkan permohonan lembur" });
+      setToast({
+        type: "Gagal",
+        message: "Gagal membatalkan permohonan lembur",
+      });
     } finally {
       setUpdating(false);
     }
@@ -171,7 +234,9 @@ export default function OvertimeLogDetail() {
       return formData.verifier;
     }
 
-    const outlet = outlets.find((o) => o.outletId === parseInt(formData.outletId));
+    const outlet = outlets.find(
+      (o) => o.outletId === Number.parseInt(formData.outletId)
+    );
     return outlet?.headBarName || "-";
   };
 
@@ -209,6 +274,17 @@ export default function OvertimeLogDetail() {
     }
   };
 
+  // Check if user can cancel the overtime request
+  const canCancelRequest = () => {
+    // Admin users cannot cancel requests
+    if (isAdmin) {
+      return false;
+    }
+
+    // Only show cancel button if status is not already cancelled
+    return formData.status !== "CANCELLED";
+  };
+
   if (loading) {
     return <LoadingIndicator />;
   }
@@ -216,13 +292,18 @@ export default function OvertimeLogDetail() {
   return (
     <div className="py-10 px-4">
       <h1 className="text-3xl font-bold text-center text-[#4169E1] mb-10">
-        Detail Log Lembur <span className={getStatusClass(formData.status)}>({getStatusDisplay(formData.status)})</span>
+        Detail Log Lembur{" "}
+        <span className={getStatusClass(formData.status)}>
+          ({getStatusDisplay(formData.status)})
+        </span>
       </h1>
 
       <div className="max-w-3xl mx-auto bg-white border rounded-lg p-8 shadow space-y-6">
         <div className="space-y-6">
           <div>
-            <label htmlFor="dateOvertime" className="block mb-2 font-medium">Tanggal Lembur</label>
+            <label htmlFor="dateOvertime" className="block mb-2 font-medium">
+              Tanggal Lembur
+            </label>
             <input
               id="dateOvertime"
               name="dateOvertime"
@@ -234,7 +315,9 @@ export default function OvertimeLogDetail() {
           </div>
 
           <div>
-            <label htmlFor="startHour" className="block mb-2 font-medium">Jam Mulai</label>
+            <label htmlFor="startHour" className="block mb-2 font-medium">
+              Jam Mulai
+            </label>
             <input
               id="startHour"
               name="startHour"
@@ -246,7 +329,9 @@ export default function OvertimeLogDetail() {
           </div>
 
           <div>
-            <label htmlFor="outletName" className="block mb-2 font-medium">Outlet</label>
+            <label htmlFor="outletName" className="block mb-2 font-medium">
+              Outlet
+            </label>
             <input
               id="outletName"
               name="outletName"
@@ -258,7 +343,9 @@ export default function OvertimeLogDetail() {
           </div>
 
           <div>
-            <label htmlFor="duration" className="block mb-2 font-medium">Durasi (Jam)</label>
+            <label htmlFor="duration" className="block mb-2 font-medium">
+              Durasi (Jam)
+            </label>
             <input
               id="duration"
               name="duration"
@@ -270,7 +357,9 @@ export default function OvertimeLogDetail() {
           </div>
 
           <div>
-            <label htmlFor="reason" className="block mb-2 font-medium">Alasan Lembur</label>
+            <label htmlFor="reason" className="block mb-2 font-medium">
+              Alasan Lembur
+            </label>
             <textarea
               id="reason"
               name="reason"
@@ -282,7 +371,9 @@ export default function OvertimeLogDetail() {
           </div>
 
           <div>
-            <label htmlFor="verifier" className="block mb-2 font-medium">Verifikator</label>
+            <label htmlFor="verifier" className="block mb-2 font-medium">
+              Verifikator
+            </label>
             <input
               id="verifier"
               name="verifier"
@@ -293,12 +384,16 @@ export default function OvertimeLogDetail() {
           </div>
 
           <div>
-            <label htmlFor="status" className="block mb-2 font-medium">Status</label>
+            <label htmlFor="status" className="block mb-2 font-medium">
+              Status
+            </label>
             <input
               type="text"
               value={getStatusDisplay(formData.status)}
               readOnly
-              className={`w-full border border-gray-300 rounded p-2 bg-gray-100 ${getStatusClass(formData.status)}`}
+              className={`w-full border border-gray-300 rounded p-2 bg-gray-100 ${getStatusClass(
+                formData.status
+              )}`}
             />
           </div>
         </div>
@@ -311,17 +406,17 @@ export default function OvertimeLogDetail() {
           >
             Kembali
           </button>
-          {formData.status !== "CANCELLED" && (
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={handleRevoke}
-            disabled={updating}
-            className="w-40"
-          >
-            {updating ? "Memproses..." : "Batalkan Permohonan"}
-          </Button>
-        )}
+          {canCancelRequest() && (
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleRevoke}
+              disabled={updating}
+              className="w-40"
+            >
+              {updating ? "Memproses..." : "Batalkan Permohonan"}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -332,7 +427,10 @@ export default function OvertimeLogDetail() {
           } text-white`}
         >
           {toast.message}
-          <button onClick={() => setToast(null)} className="float-right font-bold">
+          <button
+            onClick={() => setToast(null)}
+            className="float-right font-bold"
+          >
             X
           </button>
         </div>

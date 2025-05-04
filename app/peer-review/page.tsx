@@ -34,8 +34,8 @@ export default function ManajemenPeerReview() {
       try {
         setIsLoading(true);
         const url = isAdmin
-          ? "http://localhost:8080/api/trainee/peer-review-assignment/all"
-          : `http://localhost:8080/api/trainee/peer-review-assignment/by-reviewer/${username}`;
+          ? "https://sahabattensbe-production-0c07.up.railway.app/api/trainee/peer-review-assignment/all"
+          : `https://sahabattensbe-production-0c07.up.railway.app/api/trainee/peer-review-assignment/by-reviewer/${username}`;
         const token = localStorage.getItem("token");
         const res = await fetch(url, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -155,7 +155,7 @@ export default function ManajemenPeerReview() {
                 key={
                   isAdmin
                     ? `${item.revieweeUsername}-${item.endDateFill}`
-                    : item.peerReviewAssignmentId
+                    : ""
                 }
                 className="bg-blue-50 border-b border-white"
               >

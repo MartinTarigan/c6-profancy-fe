@@ -6,9 +6,11 @@ import { SidebarProvider, SidebarTrigger } from "./ui/sidebar";
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const noLayoutPages = ["/login"];
-  const showLayout = !noLayoutPages.includes(pathname);
+  const isAssessmentPage = pathname.startsWith("/assessment/kerjakan");
 
-  if (!showLayout) return <>{children}</>;
+  if (noLayoutPages.includes(pathname) || isAssessmentPage) {
+    return <>{children}</>;
+  }
 
   return (
     <SidebarProvider>

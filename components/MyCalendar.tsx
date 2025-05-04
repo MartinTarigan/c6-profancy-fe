@@ -134,7 +134,7 @@ export default function MyCalendar() {
 
       try {
         const res = await fetch(
-          `http://localhost:8080/api/account/${userId}`,
+          `https://sahabattensbe-production-0c07.up.railway.app-production-0c07.up.railway.app/api/account/${userId}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -180,7 +180,7 @@ export default function MyCalendar() {
     const fetchAllOutlets = async (token: string, userOutletName?: string) => {
       try {
         const res = await fetch(
-          `http://localhost:8080/api/outlets`,
+          `https://sahabattensbe-production-0c07.up.railway.app/api/outlets`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -196,7 +196,7 @@ export default function MyCalendar() {
         console.log("User role:", userOutletName);
         if (userOutletName) {
           const matchedOutlet = data.find(
-            (o: { name: string; }) => o.name === userOutletName
+            (o: { name: string }) => o.name === userOutletName
           );
           if (matchedOutlet) {
             setSelectedOutlet(matchedOutlet.name);
@@ -227,7 +227,7 @@ export default function MyCalendar() {
     const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
     fetchShiftsByRange(outletId, startDate, endDate);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [outletId]);
 
   // ✅ FETCH BARISTAS
@@ -237,7 +237,7 @@ export default function MyCalendar() {
       if (!token) return;
 
       const res = await fetch(
-        `http://localhost:8080/api/baristas?outletId=${outletId}`,
+        `https://sahabattensbe-production-0c07.up.railway.app/api/baristas?outletId=${outletId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -271,7 +271,7 @@ export default function MyCalendar() {
       const formattedEndDate = endDate.toISOString().split("T")[0];
 
       const res = await fetch(
-        `http://localhost:8080/api/shift/${outletId}?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
+        `https://sahabattensbe-production-0c07.up.railway.app/api/shift/${outletId}?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -426,7 +426,7 @@ export default function MyCalendar() {
 
       for (const shift of shifts) {
         const res = await fetch(
-          "http://localhost:8080/api/shift/create",
+          "https://sahabattensbe-production-0c07.up.railway.app/api/shift/create",
           {
             method: "POST",
             headers: {

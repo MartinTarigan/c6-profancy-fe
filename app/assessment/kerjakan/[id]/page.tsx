@@ -3,10 +3,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Timer } from "lucide-react";
 import Link from "next/link";
 import LoadingIndicator from "@/components/LoadingIndicator";
 import Toast from "@/components/Toast";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface Option {
   id: string;
@@ -49,6 +50,12 @@ export default function KerjakanAssessment() {
     message: string;
   } | null>(null);
 
+  const [isModalOpen, setModalOpen] = useState(false);
+
+  // --- TIMER STATE ---
+  const TOTAL_SECONDS = 1 * 20;
+  const [timeLeft, setTimeLeft] = useState(TOTAL_SECONDS);
+
   useEffect(() => {
     const fetchAssessment = async () => {
       try {
@@ -57,32 +64,24 @@ export default function KerjakanAssessment() {
         const username = localStorage.getItem("username");
 
         const res = await fetch(
-          `http://localhost:8080/api/assessments/access/${username}`,
+          `https://sahabattensbe-production-0c07.up.railway.app/api/assessments/access/${username}`,
           {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
           }
         );
 
-        if (!res.ok) {
-          throw new Error(`Error fetching assessment: ${res.status}`);
-        }
+        if (!res.ok) throw new Error(`Error fetching assessment: ${res.status}`);
 
         const data: Assessment[] = await res.json();
         const found = data.find(a => a.id === parseInt(assessmentId, 10));
-        if (!found) {
-          throw new Error("Assessment tidak ditemukan");
-        }
+        if (!found) throw new Error("Assessment tidak ditemukan");
 
         setAssessment(found);
 
-        // Inisialisasi jawaban
+        // init jawaban
         const init: { [k: string]: QuestionAnswer } = {};
         found.questions.forEach(q => {
-          init[q.id] = {
-            questionId: q.id,
-            selectedOptionId: undefined,
-            essayAnswer: "",
-          };
+          init[q.id] = { questionId: q.id, selectedOptionId: undefined, essayAnswer: "" };
         });
         setAnswers(init);
       } catch (err) {
@@ -91,31 +90,48 @@ export default function KerjakanAssessment() {
         setIsLoading(false);
       }
     };
-
     fetchAssessment();
   }, [assessmentId]);
+
+  useEffect(() => {
+    if (isLoading || error) return;
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleSubmit(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, error, answers]);
+
+  // format MM:SS
+  const formatTime = (sec: number) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  };
 
   const handleMultipleChoiceChange = (questionId: string, optionId: string) => {
     setAnswers(prev => ({
       ...prev,
-      [questionId]: {
-        ...prev[questionId],
-        selectedOptionId: optionId,
-      },
+      [questionId]: { ...prev[questionId], selectedOptionId: optionId },
     }));
   };
 
   const handleEssayChange = (questionId: string, value: string) => {
     setAnswers(prev => ({
       ...prev,
-      [questionId]: {
-        ...prev[questionId],
-        essayAnswer: value,
-      },
+      [questionId]: { ...prev[questionId], essayAnswer: value },
     }));
   };
 
-  const handleSubmit = async () => {
+  // submit (skipValidation=true => MC kosong jadi "-1")
+  const handleSubmit = async (skipValidation = false) => {
     if (!assessment) return;
     setIsSubmitting(true);
 
@@ -128,27 +144,33 @@ export default function KerjakanAssessment() {
         return;
       }
 
-      // Validasi
-      const missing = assessment.questions.filter(q => {
-        return q.type === "MULTIPLE_CHOICE"
-          ? !answers[q.id]?.selectedOptionId
-          : !answers[q.id]?.essayAnswer?.trim();
-      });
-      if (missing.length > 0) {
-        setToast({
-          type: "warning",
-          message: `Ada ${missing.length} pertanyaan yang belum dijawab.`,
-        });
-        setIsSubmitting(false);
-        return;
+      if (!skipValidation) {
+        const missing = assessment.questions.filter(q =>
+          q.type === "MULTIPLE_CHOICE"
+            ? !answers[q.id]?.selectedOptionId
+            : !answers[q.id]?.essayAnswer?.trim()
+        );
+        if (missing.length > 0) {
+          setToast({
+            type: "warning",
+            message: `Ada ${missing.length} pertanyaan yang belum dijawab.`,
+          });
+          setIsSubmitting(false);
+          return;
+        }
       }
 
-      // Siapkan payload
-      const formatted = Object.values(answers).map(ans => ({
-        questionId: ans.questionId,
-        selectedOptionId: ans.selectedOptionId, // langsung id string
-        essayAnswer: ans.essayAnswer,
-      }));
+      const formatted = assessment.questions.map(q => {
+        const ans = answers[q.id] || { questionId: q.id, selectedOptionId: undefined, essayAnswer: "" };
+        return {
+          questionId: ans.questionId,
+          selectedOptionId:
+            q.type === "MULTIPLE_CHOICE"
+              ? ans.selectedOptionId ?? "-1"
+              : undefined,
+          essayAnswer: ans.essayAnswer,
+        };
+      });
 
       const payload = {
         username,
@@ -157,7 +179,7 @@ export default function KerjakanAssessment() {
       };
 
       const res = await fetch(
-        "http://localhost:8080/api/trainee/assessment/submit",
+        "https://sahabattensbe-production-0c07.up.railway.app/api/trainee/assessment/submit",
         {
           method: "POST",
           headers: {
@@ -180,7 +202,6 @@ export default function KerjakanAssessment() {
         type: "error",
         message: err instanceof Error ? err.message : "Terjadi kesalahan",
       });
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -209,7 +230,31 @@ export default function KerjakanAssessment() {
     );
 
   return (
+    <>
+      <ConfirmModal
+        isOpen={isModalOpen}
+        onClose={() => setModalOpen(false)}
+        onConfirm={() => handleSubmit(true)}
+        title="Keluar Ujian"
+        message="Apakah Anda yakin ingin keluar dari ujian? Jika keluar maka ujian Anda akan diberikan nilai 0."
+      />
     <div className="flex flex-col">
+      {/* TIMER FIXED POJOK KANAN ATAS */}
+      <div className="fixed top-4 right-4 z-50 flex items-center bg-white/90 backdrop-blur-sm p-2 rounded-lg shadow">
+        <Timer
+          className={`h-6 w-6 ${
+            timeLeft <= 10 ? "text-red-500 animate-pulse" : "text-blue-500"
+          }`}
+        />
+        <span
+          className={`ml-2 text-lg font-medium ${
+            timeLeft <= 10 ? "text-red-500 animate-pulse" : "text-blue-500"
+          }`}
+        >
+          {formatTime(timeLeft)}
+        </span>
+      </div>
+
       {toast && (
         <Toast
           type={toast.type}
@@ -219,15 +264,15 @@ export default function KerjakanAssessment() {
         />
       )}
 
-      <div className="mb-6">
-        <Link
-          href="/assessment"
-          className="inline-flex items-center text-primary hover:text-primary/80"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Kembali
-        </Link>
-      </div>
+<div className="mb-6">
+          <button
+            onClick={() => setModalOpen(true)}
+            className="inline-flex items-center text-primary hover:text-primary/80"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Kembali
+          </button>
+        </div>
 
       <div className="flex flex-col items-center mb-8">
         <h1 className="text-primary text-3xl font-bold mb-2">
@@ -244,8 +289,6 @@ export default function KerjakanAssessment() {
       </div>
 
       <div className="w-full max-w-4xl mx-auto border border-gray-200 rounded-lg p-8 bg-white shadow-sm">
-        {/* Info hasil assessment… (biarkan sama seperti sebelumnya) */}
-
         {assessment.questions.map((q, idx) => (
           <div key={q.id} className="mb-8 border-b pb-6">
             <h3 className="text-lg font-medium mb-4">
@@ -290,7 +333,7 @@ export default function KerjakanAssessment() {
 
         <div className="flex justify-center mt-8">
           <Button
-            onClick={handleSubmit}
+            onClick={() => handleSubmit(false)}
             disabled={isSubmitting}
             className="px-8 py-2 text-lg"
           >
@@ -299,6 +342,7 @@ export default function KerjakanAssessment() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

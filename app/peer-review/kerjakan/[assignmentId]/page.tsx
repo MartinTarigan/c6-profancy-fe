@@ -10,6 +10,11 @@ interface Question {
   text: string;
 }
 
+interface SubmissionPayload {
+  assignmentId: number;
+  [questionKey: string]: number;
+}
+
 export default function KerjakanPeerReview() {
   const { assignmentId } = useParams();
   const router = useRouter();
@@ -17,19 +22,20 @@ export default function KerjakanPeerReview() {
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [token, setToken] = useState<string | null>(null)
 
   // opsi skala statis
   const scaleOptions = [0, 1, 1.5, 2, 2.5, 3, 3.5, 4];
 
   useEffect(() => {
     const fetchQuestions = async () => {
-    const storedToken = localStorage.getItem("token")
-    setToken(storedToken)
+      const storedToken = localStorage.getItem("token");
       try {
-        const res = await fetch("http://localhost:8080/api/peer-review/questions",{
-          headers: { Authorization: `Bearer ${storedToken}` },
-        });
+        const res = await fetch(
+          "https://sahabattensbe-production-0c07.up.railway.app/api/peer-review/questions",
+          {
+            headers: { Authorization: `Bearer ${storedToken}` },
+          }
+        );
         if (!res.ok) throw new Error(`Error ${res.status}`);
         const data: Question[] = await res.json();
         setQuestions(data);
@@ -47,21 +53,25 @@ export default function KerjakanPeerReview() {
   };
 
   const handleSubmit = async () => {
-    const storedToken = localStorage.getItem("token")
-    setToken(storedToken)
-    const payload: any = {
+    const storedToken = localStorage.getItem("token");
+    const payload: SubmissionPayload = {
       assignmentId: Number(assignmentId),
     };
     questions.forEach((q) => {
       payload[`q${q.questionNumber}`] = answers[q.questionNumber] ?? 0;
     });
-
     try {
-      const res = await fetch("http://localhost:8080/api/peer-review/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${storedToken}` },
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        "https://sahabattensbe-production-0c07.up.railway.app/api/peer-review/submit",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${storedToken}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
       if (!res.ok) throw new Error(`Submit failed: ${res.status}`);
       // setelah sukses bisa redirect
       router.push("/peer-review");
@@ -84,9 +94,9 @@ export default function KerjakanPeerReview() {
 
       <div className="p-4 border rounded-lg mb-8 bg-blue-50">
         <p>
-          Hasil Peer Review memiliki peran penting dalam menentukan kelulusan masa
-          percobaan (probation) untuk karyawan baru. Terdapat tiga kategori hasil
-          evaluasi sebagai berikut:
+          Hasil Peer Review memiliki peran penting dalam menentukan kelulusan
+          masa percobaan (probation) untuk karyawan baru. Terdapat tiga kategori
+          hasil evaluasi sebagai berikut:
         </p>
         <ol className="list-decimal list-inside ml-4 mt-2 text-sm">
           <li>Tidak Lulus (Skor rata-rata &lt; 2)</li>
@@ -94,8 +104,8 @@ export default function KerjakanPeerReview() {
           <li>Lulus (Skor rata-rata ≥ 3.5)</li>
         </ol>
         <p className="text-sm mt-2">
-          Catatan: Setiap karyawan wajib mengisi; buka link ini jika ingin menilai
-          karyawan lain.
+          Catatan: Setiap karyawan wajib mengisi; buka link ini jika ingin
+          menilai karyawan lain.
         </p>
       </div>
 
@@ -106,10 +116,7 @@ export default function KerjakanPeerReview() {
           </p>
           <div className="grid grid-cols-8 gap-2">
             {scaleOptions.map((opt) => (
-              <label
-                key={opt}
-                className="flex flex-col items-center text-sm"
-              >
+              <label key={opt} className="flex flex-col items-center text-sm">
                 <input
                   type="radio"
                   name={`q${q.questionNumber}`}

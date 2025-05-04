@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Toast from "@/components/Toast";
-import {
-  Eye,
-  EyeOff,
-} from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 
-type StepType = "checkUsername" | "defaultPassword" | "login" | "changePassword";
+type StepType =
+  | "checkUsername"
+  | "defaultPassword"
+  | "login"
+  | "changePassword";
 
 function parseJwt(token: string) {
   try {
@@ -40,14 +41,20 @@ function PasswordInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
       <Input
         {...props}
         type={show ? "text" : "password"}
-        className={`w-full h-14 px-4 border border-[#d9d9d9] rounded-md ${props.className || ""}`}
+        className={`w-full h-14 px-4 border border-[#d9d9d9] rounded-md ${
+          props.className || ""
+        }`}
       />
       <button
         type="button"
         onClick={() => setShow(!show)}
         className="absolute inset-y-0 right-0 flex items-center pr-3"
       >
-        {show ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
+        {show ? (
+          <EyeOff className="w-5 h-5 text-gray-500" />
+        ) : (
+          <Eye className="w-5 h-5 text-gray-500" />
+        )}
       </button>
     </div>
   );
@@ -63,7 +70,10 @@ export default function LoginPage() {
   const [newPassword, setNewPassword] = useState<string>("");
   const [step, setStep] = useState<StepType>("checkUsername");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [toast, setToast] = useState<{ type: "success" | "error" | "info" | "warning"; message: string } | null>(null);
+  const [toast, setToast] = useState<{
+    type: "success" | "error" | "info" | "warning";
+    message: string;
+  } | null>(null);
 
   // Fungsi untuk menentukan label button sesuai step
   const getButtonLabel = () => {
@@ -89,7 +99,7 @@ export default function LoginPage() {
       switch (step) {
         case "checkUsername": {
           const res = await fetch(
-            "http://localhost:8080/api/auth/check-username",
+            "https://sahabattensbe-production-0c07.up.railway.app/api/auth/check-username",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -114,14 +124,17 @@ export default function LoginPage() {
             setStep("changePassword");
             setPassword("");
           } else {
-            setToast({ type: "error", message: "Default password tidak sesuai." });
+            setToast({
+              type: "error",
+              message: "Default password tidak sesuai.",
+            });
           }
           break;
         }
 
         case "login": {
           const res = await fetch(
-            "http://localhost:8080/api/auth/login",
+            "https://sahabattensbe-production-0c07.up.railway.app/api/auth/login",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -155,7 +168,7 @@ export default function LoginPage() {
 
         case "changePassword": {
           const res = await fetch(
-            `http://localhost:8080/api/account/change-password?username=${username}`,
+            `https://sahabattensbe-production-0c07.up.railway.app/api/account/change-password?username=${username}`,
             {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
@@ -190,7 +203,10 @@ export default function LoginPage() {
 
   const handleForgotPassword = () => {
     if (!username) {
-      setToast({ type: "error", message: "Harap masukkan username terlebih dahulu." });
+      setToast({
+        type: "error",
+        message: "Harap masukkan username terlebih dahulu.",
+      });
       return;
     }
     setStep("changePassword");
@@ -199,7 +215,12 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen w-full">
       {toast && (
-        <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} duration={3000} />
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+          duration={3000}
+        />
       )}
       {/* Logo Section */}
       <div className="hidden md:flex md:w-1/2 items-center justify-center bg-white">
@@ -217,14 +238,19 @@ export default function LoginPage() {
       <div className="w-full md:w-1/2 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-[#3c67ff]">Barista Management System</h2>
+            <h2 className="text-3xl font-bold text-[#3c67ff]">
+              Barista Management System
+            </h2>
           </div>
 
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             {/* Field Username selalu tampil.
                 Jika step "checkUsername", username di-enable. Jika tidak, di-disable */}
             <div>
-              <label htmlFor="username" className="block text-[#3b5694] text-lg mb-2">
+              <label
+                htmlFor="username"
+                className="block text-[#3b5694] text-lg mb-2"
+              >
                 Username
               </label>
               <Input
@@ -243,7 +269,10 @@ export default function LoginPage() {
             {/* Field tambahan sesuai step */}
             {step === "defaultPassword" && (
               <div>
-                <label htmlFor="password" className="block text-[#3b5694] text-lg mb-2">
+                <label
+                  htmlFor="password"
+                  className="block text-[#3b5694] text-lg mb-2"
+                >
                   Default Password
                 </label>
                 <PasswordInput
@@ -253,13 +282,18 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-                <p className="text-sm text-blue-500">Masukkan &quot;newuser123&quot;</p>
+                <p className="text-sm text-blue-500">
+                  Masukkan &quot;newuser123&quot;
+                </p>
               </div>
             )}
 
             {step === "login" && (
               <div>
-                <label htmlFor="password" className="block text-[#3b5694] text-lg mb-2">
+                <label
+                  htmlFor="password"
+                  className="block text-[#3b5694] text-lg mb-2"
+                >
                   Password
                 </label>
                 <PasswordInput
@@ -275,7 +309,10 @@ export default function LoginPage() {
             {step === "changePassword" && (
               <>
                 <div>
-                  <label htmlFor="combination" className="block text-[#3b5694] text-lg mb-2">
+                  <label
+                    htmlFor="combination"
+                    className="block text-[#3b5694] text-lg mb-2"
+                  >
                     Kombinasi (username@noHP)
                   </label>
                   <Input
@@ -290,7 +327,10 @@ export default function LoginPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="newPassword" className="block text-[#3b5694] text-lg mb-2">
+                  <label
+                    htmlFor="newPassword"
+                    className="block text-[#3b5694] text-lg mb-2"
+                  >
                     Password Baru
                   </label>
                   <PasswordInput

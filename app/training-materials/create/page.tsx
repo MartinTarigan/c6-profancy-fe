@@ -102,7 +102,7 @@ export default function TambahMateriPelatihan() {
       setIsSubmitting(true);
 
       const response = await fetch(
-        "http://localhost:8080/api/training-materials/create",
+        "https://sahabattensbe-production-0c07.up.railway.app-production-0c07.up.railway.app/api/training-materials/create",
         {
           method: "POST",
           headers: {
@@ -161,7 +161,6 @@ export default function TambahMateriPelatihan() {
           Back
         </Link>
       </div>
-
 
       <div className="w-full max-w-4xl border border-gray-200 rounded-lg p-8 bg-white shadow-sm">
         <form onSubmit={handleSubmit}>
