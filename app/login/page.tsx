@@ -133,14 +133,11 @@ export default function LoginPage() {
         }
 
         case "login": {
-          const res = await fetch(
-            "https://sahabattensbe-production-0c07.up.railway.app/api/auth/login",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ username, password }),
-            }
-          );
+          const res = await fetch("https://sahabattensbe-production-0c07.up.railway.app/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+          });
           const result = await res.json();
 
           if (res.ok) {

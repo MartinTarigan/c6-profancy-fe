@@ -26,6 +26,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   // State untuk menampung URL dinamis "Izin/Cuti"
   const [izinCutiUrl, setIzinCutiUrl] = React.useState("");
+  const [lemburUrl, setLemburUrl] = React.useState("");
+  const [shiftiUrl, setShiftUrl] = React.useState("");
 
   React.useEffect(() => {
     const storedName = localStorage.getItem("username") ?? "";
@@ -49,6 +51,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     } else {
       setIzinCutiUrl("/jadwal/izin-cuti/barista");
     }
+
+    if (storedRoles.includes("Admin")) {
+      setShiftUrl("/jadwal/shift/admin");
+    } else {
+      setShiftUrl("/jadwal/shift");
+    }
+
+    if (storedRoles.includes("HeadBar")) {
+      setLemburUrl("/jadwal/lembur/headbar");
+    } else {
+      setLemburUrl("/jadwal/lembur");
+    }
   }, []);
 
   const handleIzinCutiClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -67,6 +81,38 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   };
 
+  const handleShiftClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Sesi Anda telah berakhir. Silakan login kembali.");
+      router.push("/login");
+      return;
+    }
+
+    // Arahkan ke URL dinamis yang sudah ditentukan
+    if (shiftiUrl) {
+      router.push(shiftiUrl);
+    }
+  };
+
+  const handleLemburClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Sesi Anda telah berakhir. Silakan login kembali.");
+      router.push("/login");
+      return;
+    }
+
+    // Arahkan ke URL dinamis yang sudah ditentukan
+    if (lemburUrl) {
+      router.push(lemburUrl);
+    }
+  };
+
   // Perhatikan di item "Izin/Cuti":
   // - Kita bisa beri url: "#" agar Link tidak benar-benar ke mana-mana
   // - Gunakan onClick untuk menentukan ke mana user diarahkan
@@ -80,6 +126,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         { title: "Ujian", url: "/assessment" },
         { title: "Materi", url: "/training-materials" },
         { title: "Peer Review", url: "/peer-review" },
+        { title: "Barista", url: "/barista" },
       ],
     },
     {
@@ -87,13 +134,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "#",
       icon: Calendar,
       items: [
-        { title: "Lembur", url: "/jadwal/lembur" },
+        { title: "Lembur", url: lemburUrl, onClick: handleLemburClick },
         {
           title: "Izin/Cuti",
-          url: izinCutiUrl, // atau "" (string kosong)
+          url: izinCutiUrl,
           onClick: handleIzinCutiClick,
         },
-        { title: "Shift", url: "/jadwal/shift" },
+        { title: "Shift", url: shiftiUrl, onClick: handleShiftClick },
+        { title: "Dashboard", url: "/jadwal/shift/dashboard" },
       ],
     },
   ];
