@@ -31,7 +31,7 @@ export default function KerjakanPeerReview() {
       const storedToken = localStorage.getItem("token");
       try {
         const res = await fetch(
-          "https://sahabattensbe-production-0c07.up.railway.app/api/peer-review/questions",
+          "http://localhost:8080/api/peer-review/questions",
           {
             headers: { Authorization: `Bearer ${storedToken}` },
           }
@@ -61,17 +61,14 @@ export default function KerjakanPeerReview() {
       payload[`q${q.questionNumber}`] = answers[q.questionNumber] ?? 0;
     });
     try {
-      const res = await fetch(
-        "https://sahabattensbe-production-0c07.up.railway.app/api/peer-review/submit",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${storedToken}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const res = await fetch("http://localhost:8080/api/peer-review/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${storedToken}`,
+        },
+        body: JSON.stringify(payload),
+      });
       if (!res.ok) throw new Error(`Submit failed: ${res.status}`);
       // setelah sukses bisa redirect
       router.push("/peer-review");

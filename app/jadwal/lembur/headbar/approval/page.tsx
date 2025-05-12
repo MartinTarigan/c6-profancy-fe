@@ -117,15 +117,12 @@ export default function HeadBarOvertimeApprovalPage() {
       }
 
       try {
-        const res = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app/api/account/${userId}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await fetch(`http://localhost:8080/api/account/${userId}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         if (!res.ok) {
           throw new Error(`Failed to fetch user data: ${res.status}`);
@@ -151,15 +148,12 @@ export default function HeadBarOvertimeApprovalPage() {
 
     const fetchAllOutlets = async (token: string, userOutletName: string) => {
       try {
-        const res = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app/api/outlets`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await fetch(`http://localhost:8080/api/outlets`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         if (!res.ok) {
           throw new Error(`Failed to fetch outlets: ${res.status}`);
@@ -191,7 +185,7 @@ export default function HeadBarOvertimeApprovalPage() {
     const fetchOvertimeLogs = async (token: string, outletId: number) => {
       try {
         const response = await fetch(
-          "https://sahabattensbe-production-0c07.up.railway.app/api/overtime-logs?status=PENDING",
+          "http://localhost:8080/api/overtime-logs?status=PENDING",
           {
             method: "GET",
             headers: {
@@ -313,7 +307,7 @@ export default function HeadBarOvertimeApprovalPage() {
       const verifier = jwtPayload?.sub || "HeadBar";
 
       const response = await fetch(
-        `https://sahabattensbe-production-0c07.up.railway.app/api/overtime-logs/${selectedRequest.id}/approve`,
+        `http://localhost:8080/api/overtime-logs/${selectedRequest.id}/approve`,
         {
           method: "PUT",
           headers: {

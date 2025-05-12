@@ -54,7 +54,7 @@ export default function EditAkun() {
         setIsLoading(true);
         const token = localStorage.getItem("token");
         const response = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app/api/account/${username}`,
+          `http://localhost:8080/api/account/${username}`,
           {
             method: "GET",
             headers: {
@@ -74,7 +74,9 @@ export default function EditAkun() {
           setAccountStatus(data.data.status);
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "An unknown error occurred");
+        setError(
+          err instanceof Error ? err.message : "An unknown error occurred"
+        );
         console.error("Error fetching account data:", err);
       } finally {
         setIsLoading(false);
@@ -93,7 +95,7 @@ export default function EditAkun() {
       setIsSaving(true);
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `https://sahabattensbe-production-0c07.up.railway.app/api/account/update-role-status?username=${username}`,
+        `http://localhost:8080/api/account/update-role-status?username=${username}`,
         {
           method: "PUT",
           headers: {
@@ -126,7 +128,7 @@ export default function EditAkun() {
       setIsRevoking(true);
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `https://sahabattensbe-production-0c07.up.railway.app/api/account/update-role-status?username=${username}`,
+        `http://localhost:8080/api/account/update-role-status?username=${username}`,
         {
           method: "PUT",
           headers: {
@@ -228,7 +230,12 @@ export default function EditAkun() {
                         viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
                       </svg>
                     </div>
                   </div>
@@ -295,8 +302,6 @@ export default function EditAkun() {
                 </div>
               </div>
             </div>
-
-            
 
             {/* Buttons */}
             <div className="flex justify-center gap-4 mt-10">

@@ -64,24 +64,29 @@ export default function KerjakanAssessment() {
         const username = localStorage.getItem("username");
 
         const res = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app/api/assessments/access/${username}`,
+          `http://localhost:8080/api/assessments/access/${username}`,
           {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
           }
         );
 
-        if (!res.ok) throw new Error(`Error fetching assessment: ${res.status}`);
+        if (!res.ok)
+          throw new Error(`Error fetching assessment: ${res.status}`);
 
         const data: Assessment[] = await res.json();
-        const found = data.find(a => a.id === parseInt(assessmentId, 10));
+        const found = data.find((a) => a.id === parseInt(assessmentId, 10));
         if (!found) throw new Error("Assessment tidak ditemukan");
 
         setAssessment(found);
 
         // init jawaban
         const init: { [k: string]: QuestionAnswer } = {};
-        found.questions.forEach(q => {
-          init[q.id] = { questionId: q.id, selectedOptionId: undefined, essayAnswer: "" };
+        found.questions.forEach((q) => {
+          init[q.id] = {
+            questionId: q.id,
+            selectedOptionId: undefined,
+            essayAnswer: "",
+          };
         });
         setAnswers(init);
       } catch (err) {
@@ -96,7 +101,7 @@ export default function KerjakanAssessment() {
   useEffect(() => {
     if (isLoading || error) return;
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
+      setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
           handleSubmit(true);
@@ -106,7 +111,7 @@ export default function KerjakanAssessment() {
       });
     }, 1000);
     return () => clearInterval(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, error, answers]);
 
   // format MM:SS
@@ -117,14 +122,14 @@ export default function KerjakanAssessment() {
   };
 
   const handleMultipleChoiceChange = (questionId: string, optionId: string) => {
-    setAnswers(prev => ({
+    setAnswers((prev) => ({
       ...prev,
       [questionId]: { ...prev[questionId], selectedOptionId: optionId },
     }));
   };
 
   const handleEssayChange = (questionId: string, value: string) => {
-    setAnswers(prev => ({
+    setAnswers((prev) => ({
       ...prev,
       [questionId]: { ...prev[questionId], essayAnswer: value },
     }));
@@ -145,7 +150,7 @@ export default function KerjakanAssessment() {
       }
 
       if (!skipValidation) {
-        const missing = assessment.questions.filter(q =>
+        const missing = assessment.questions.filter((q) =>
           q.type === "MULTIPLE_CHOICE"
             ? !answers[q.id]?.selectedOptionId
             : !answers[q.id]?.essayAnswer?.trim()
@@ -160,8 +165,12 @@ export default function KerjakanAssessment() {
         }
       }
 
-      const formatted = assessment.questions.map(q => {
-        const ans = answers[q.id] || { questionId: q.id, selectedOptionId: undefined, essayAnswer: "" };
+      const formatted = assessment.questions.map((q) => {
+        const ans = answers[q.id] || {
+          questionId: q.id,
+          selectedOptionId: undefined,
+          essayAnswer: "",
+        };
         return {
           questionId: ans.questionId,
           selectedOptionId:
@@ -179,7 +188,7 @@ export default function KerjakanAssessment() {
       };
 
       const res = await fetch(
-        "https://sahabattensbe-production-0c07.up.railway.app/api/trainee/assessment/submit",
+        "http://localhost:8080/api/trainee/assessment/submit",
         {
           method: "POST",
           headers: {
@@ -220,7 +229,9 @@ export default function KerjakanAssessment() {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <div className="text-center">
-          <h3 className="text-xl font-semibold mb-2">Assessment Tidak Ditemukan</h3>
+          <h3 className="text-xl font-semibold mb-2">
+            Assessment Tidak Ditemukan
+          </h3>
           <p>Assessment yang Anda cari tidak tersedia.</p>
           <Link href="/assessment">
             <Button className="mt-4">Kembali ke Daftar Assessment</Button>
@@ -238,33 +249,33 @@ export default function KerjakanAssessment() {
         title="Keluar Ujian"
         message="Apakah Anda yakin ingin keluar dari ujian? Jika keluar maka ujian Anda akan diberikan nilai 0."
       />
-    <div className="flex flex-col">
-      {/* TIMER FIXED POJOK KANAN ATAS */}
-      <div className="fixed top-4 right-4 z-50 flex items-center bg-white/90 backdrop-blur-sm p-2 rounded-lg shadow">
-        <Timer
-          className={`h-6 w-6 ${
-            timeLeft <= 10 ? "text-red-500 animate-pulse" : "text-blue-500"
-          }`}
-        />
-        <span
-          className={`ml-2 text-lg font-medium ${
-            timeLeft <= 10 ? "text-red-500 animate-pulse" : "text-blue-500"
-          }`}
-        >
-          {formatTime(timeLeft)}
-        </span>
-      </div>
+      <div className="flex flex-col">
+        {/* TIMER FIXED POJOK KANAN ATAS */}
+        <div className="fixed top-4 right-4 z-50 flex items-center bg-white/90 backdrop-blur-sm p-2 rounded-lg shadow">
+          <Timer
+            className={`h-6 w-6 ${
+              timeLeft <= 10 ? "text-red-500 animate-pulse" : "text-blue-500"
+            }`}
+          />
+          <span
+            className={`ml-2 text-lg font-medium ${
+              timeLeft <= 10 ? "text-red-500 animate-pulse" : "text-blue-500"
+            }`}
+          >
+            {formatTime(timeLeft)}
+          </span>
+        </div>
 
-      {toast && (
-        <Toast
-          type={toast.type}
-          message={toast.message}
-          onClose={() => setToast(null)}
-          duration={3000}
-        />
-      )}
+        {toast && (
+          <Toast
+            type={toast.type}
+            message={toast.message}
+            onClose={() => setToast(null)}
+            duration={3000}
+          />
+        )}
 
-<div className="mb-6">
+        <div className="mb-6">
           <button
             onClick={() => setModalOpen(true)}
             className="inline-flex items-center text-primary hover:text-primary/80"
@@ -274,74 +285,74 @@ export default function KerjakanAssessment() {
           </button>
         </div>
 
-      <div className="flex flex-col items-center mb-8">
-        <h1 className="text-primary text-3xl font-bold mb-2">
-          {`Assessment ${capitalize(assessment.template)}`}
-        </h1>
-        <p className="text-gray-500">
-          Deadline:{" "}
-          {new Date(assessment.deadline).toLocaleDateString("id-ID", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          })}
-        </p>
-      </div>
+        <div className="flex flex-col items-center mb-8">
+          <h1 className="text-primary text-3xl font-bold mb-2">
+            {`Assessment ${capitalize(assessment.template)}`}
+          </h1>
+          <p className="text-gray-500">
+            Deadline:{" "}
+            {new Date(assessment.deadline).toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </p>
+        </div>
 
-      <div className="w-full max-w-4xl mx-auto border border-gray-200 rounded-lg p-8 bg-white shadow-sm">
-        {assessment.questions.map((q, idx) => (
-          <div key={q.id} className="mb-8 border-b pb-6">
-            <h3 className="text-lg font-medium mb-4">
-              Soal {idx + 1}: {q.question}
-            </h3>
+        <div className="w-full max-w-4xl mx-auto border border-gray-200 rounded-lg p-8 bg-white shadow-sm">
+          {assessment.questions.map((q, idx) => (
+            <div key={q.id} className="mb-8 border-b pb-6">
+              <h3 className="text-lg font-medium mb-4">
+                Soal {idx + 1}: {q.question}
+              </h3>
 
-            {q.type === "MULTIPLE_CHOICE" ? (
-              <div className="space-y-3">
-                {q.options.map(opt => (
-                  <div key={opt.id} className="flex items-center">
-                    <input
-                      type="radio"
-                      id={`${q.id}-${opt.id}`}
-                      name={q.id}
-                      className="mr-3 h-4 w-4 text-primary"
-                      value={opt.id}
-                      checked={answers[q.id]?.selectedOptionId === opt.id}
-                      onChange={() =>
-                        handleMultipleChoiceChange(q.id, opt.id)
-                      }
-                    />
-                    <label
-                      htmlFor={`${q.id}-${opt.id}`}
-                      className="text-gray-700"
-                    >
-                      {opt.text}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <textarea
-                id={q.id}
-                className="w-full border border-gray-300 rounded-lg p-3 min-h-[150px] focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="Tulis jawaban Anda di sini..."
-                value={answers[q.id]?.essayAnswer || ""}
-                onChange={e => handleEssayChange(q.id, e.target.value)}
-              />
-            )}
+              {q.type === "MULTIPLE_CHOICE" ? (
+                <div className="space-y-3">
+                  {q.options.map((opt) => (
+                    <div key={opt.id} className="flex items-center">
+                      <input
+                        type="radio"
+                        id={`${q.id}-${opt.id}`}
+                        name={q.id}
+                        className="mr-3 h-4 w-4 text-primary"
+                        value={opt.id}
+                        checked={answers[q.id]?.selectedOptionId === opt.id}
+                        onChange={() =>
+                          handleMultipleChoiceChange(q.id, opt.id)
+                        }
+                      />
+                      <label
+                        htmlFor={`${q.id}-${opt.id}`}
+                        className="text-gray-700"
+                      >
+                        {opt.text}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <textarea
+                  id={q.id}
+                  className="w-full border border-gray-300 rounded-lg p-3 min-h-[150px] focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Tulis jawaban Anda di sini..."
+                  value={answers[q.id]?.essayAnswer || ""}
+                  onChange={(e) => handleEssayChange(q.id, e.target.value)}
+                />
+              )}
+            </div>
+          ))}
+
+          <div className="flex justify-center mt-8">
+            <Button
+              onClick={() => handleSubmit(false)}
+              disabled={isSubmitting}
+              className="px-8 py-2 text-lg"
+            >
+              {isSubmitting ? "Mengirim..." : "Submit Assessment"}
+            </Button>
           </div>
-        ))}
-
-        <div className="flex justify-center mt-8">
-          <Button
-            onClick={() => handleSubmit(false)}
-            disabled={isSubmitting}
-            className="px-8 py-2 text-lg"
-          >
-            {isSubmitting ? "Mengirim..." : "Submit Assessment"}
-          </Button>
         </div>
       </div>
-    </div>
     </>
   );
 }

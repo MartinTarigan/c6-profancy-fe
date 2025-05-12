@@ -105,7 +105,7 @@ export default function ApprovalPage() {
 
         // Fetch ALL leave requests and filter for pending ones
         const response = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app/api/shift-management/leave-request/all`,
+          `http://localhost:8080/api/shift-management/leave-request/all`,
           {
             method: "GET",
             headers: {
@@ -242,7 +242,7 @@ export default function ApprovalPage() {
 
       // Use the correct endpoint from your controller
       const response = await fetch(
-        `https://sahabattensbe-production-0c07.up.railway.app/api/shift-management/leave-request/${selectedRequest.id}/status`,
+        `http://localhost:8080/api/shift-management/leave-request/${selectedRequest.id}/status`,
         {
           method: "PUT",
           headers: {

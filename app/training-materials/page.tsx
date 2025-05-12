@@ -52,7 +52,7 @@ export default function ManajemenMateriPelatihan() {
 
         if (storedToken) {
           const response = await fetch(
-            "https://sahabattensbe-production-0c07.up.railway.app/api/training-materials",
+            "http://localhost:8080/api/training-materials",
             {
               headers: {
                 Authorization: `Bearer ${storedToken}`,
@@ -147,7 +147,7 @@ export default function ManajemenMateriPelatihan() {
 
     try {
       const res = await fetch(
-        `https://sahabattensbe-production-0c07.up.railway.app/api/training-materials/${id}/delete`,
+        `http://localhost:8080/api/training-materials/${id}/delete`,
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },

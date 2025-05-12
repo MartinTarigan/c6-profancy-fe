@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useMemo } from "react"
-import Link from "next/link"
+import { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import {
   Plus,
   Search,
@@ -15,114 +15,127 @@ import {
   RefreshCw,
   Eye,
   FileText,
-} from "lucide-react"
+} from "lucide-react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface PeerReviewAssignment {
-  peerReviewAssignmentId: number
-  reviewerUsername: string
-  revieweeUsername: string
-  endDateFill: string
+  peerReviewAssignmentId: number;
+  reviewerUsername: string;
+  revieweeUsername: string;
+  endDateFill: string;
 }
 
 interface GroupedAssignment {
-  revieweeUsername: string
-  endDateFill: string
-  count: number
+  revieweeUsername: string;
+  endDateFill: string;
+  count: number;
 }
 
 // Sort options
 type SortOption = {
-  label: string
-  value: string
-  direction: "asc" | "desc"
-}
+  label: string;
+  value: string;
+  direction: "asc" | "desc";
+};
 
 const SORT_OPTIONS: SortOption[] = [
   { label: "Deadline (Newest)", value: "deadline", direction: "desc" },
   { label: "Deadline (Oldest)", value: "deadline", direction: "asc" },
   { label: "Barista Name (A-Z)", value: "name", direction: "asc" },
   { label: "Barista Name (Z-A)", value: "name", direction: "desc" },
-]
+];
 
 export default function ManajemenPeerReview() {
-  const [assignments, setAssignments] = useState<PeerReviewAssignment[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState("")
+  const [assignments, setAssignments] = useState<PeerReviewAssignment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Sort and filter states
-  const [sortOption, setSortOption] = useState<SortOption>(SORT_OPTIONS[0])
+  const [sortOption, setSortOption] = useState<SortOption>(SORT_OPTIONS[0]);
 
-  const roles = typeof window !== "undefined" ? localStorage.getItem("roles") : null
-  const username = typeof window !== "undefined" ? localStorage.getItem("username") : null
-  const isAdmin = roles === "Admin"
+  const roles =
+    typeof window !== "undefined" ? localStorage.getItem("roles") : null;
+  const username =
+    typeof window !== "undefined" ? localStorage.getItem("username") : null;
+  const isAdmin = roles === "Admin";
 
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
-        setIsLoading(true)
+        setIsLoading(true);
         const url = isAdmin
-          ? "https://sahabattensbe-production-0c07.up.railway.app/api/trainee/peer-review-assignment/all"
-          : `https://sahabattensbe-production-0c07.up.railway.app/api/trainee/peer-review-assignment/by-reviewer/${username}`
-        const token = localStorage.getItem("token")
+          ? "http://localhost:8080/api/trainee/peer-review-assignment/all"
+          : `http://localhost:8080/api/trainee/peer-review-assignment/by-reviewer/${username}`;
+        const token = localStorage.getItem("token");
         const res = await fetch(url, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
-        })
-        if (!res.ok) throw new Error(`Error ${res.status}`)
-        const json = await res.json()
-        setAssignments(json.data || [])
+        });
+        if (!res.ok) throw new Error(`Error ${res.status}`);
+        const json = await res.json();
+        setAssignments(json.data || []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Unknown error")
+        setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchAssignments()
-  }, [isAdmin, username])
+    fetchAssignments();
+  }, [isAdmin, username]);
 
   const formatDate = (iso: string) => {
-    const d = new Date(iso)
-    return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`
-  }
+    const d = new Date(iso);
+    return `${String(d.getDate()).padStart(2, "0")}/${String(
+      d.getMonth() + 1
+    ).padStart(2, "0")}/${d.getFullYear()}`;
+  };
 
-  const isCompleted = (iso: string) => new Date() > new Date(iso)
+  const isCompleted = (iso: string) => new Date() > new Date(iso);
 
   // hanya untuk admin: hitung jumlah assignee per (reviewee + deadline)
   const grouped = useMemo<GroupedAssignment[]>(() => {
-    const map: Record<string, GroupedAssignment> = {}
+    const map: Record<string, GroupedAssignment> = {};
     assignments.forEach((a) => {
-      const key = `${a.revieweeUsername}|${a.endDateFill}`
+      const key = `${a.revieweeUsername}|${a.endDateFill}`;
       if (!map[key]) {
         map[key] = {
           revieweeUsername: a.revieweeUsername,
           endDateFill: a.endDateFill,
           count: 1,
-        }
+        };
       } else {
-        map[key].count++
+        map[key].count++;
       }
-    })
-    return Object.values(map)
-  }, [assignments])
+    });
+    return Object.values(map);
+  }, [assignments]);
 
   // data yang akan di-render
-  const displayData = isAdmin ? grouped : assignments
+  const displayData = isAdmin ? grouped : assignments;
 
   // Get running count
-  const runningCount = displayData.filter((item) => !isCompleted(item.endDateFill)).length
+  const runningCount = displayData.filter(
+    (item) => !isCompleted(item.endDateFill)
+  ).length;
 
   // Apply search, filter, and sort
   const filteredAndSortedData = useMemo(() => {
@@ -130,56 +143,71 @@ export default function ManajemenPeerReview() {
       // Only show running peer reviews
       .filter((item) => !isCompleted(item.endDateFill))
       // Apply search
-      .filter((item) => item.revieweeUsername.toLowerCase().includes(searchQuery.toLowerCase()))
+      .filter((item) =>
+        item.revieweeUsername.toLowerCase().includes(searchQuery.toLowerCase())
+      );
 
     // Apply sorting
     return filtered.sort((a, b) => {
-      const { value, direction } = sortOption
-      const multiplier = direction === "asc" ? 1 : -1
+      const { value, direction } = sortOption;
+      const multiplier = direction === "asc" ? 1 : -1;
 
       if (value === "deadline") {
-        return (new Date(a.endDateFill).getTime() - new Date(b.endDateFill).getTime()) * multiplier
+        return (
+          (new Date(a.endDateFill).getTime() -
+            new Date(b.endDateFill).getTime()) *
+          multiplier
+        );
       }
 
       if (value === "name") {
-        return a.revieweeUsername.localeCompare(b.revieweeUsername) * multiplier
+        return (
+          a.revieweeUsername.localeCompare(b.revieweeUsername) * multiplier
+        );
       }
 
-      return 0
-    })
-  }, [displayData, searchQuery, sortOption])
+      return 0;
+    });
+  }, [displayData, searchQuery, sortOption]);
 
   // Calculate days remaining or overdue
   const getDaysStatus = (endDate: string) => {
-    const end = new Date(endDate)
-    const now = new Date()
-    const diffTime = end.getTime() - now.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    const end = new Date(endDate);
+    const now = new Date();
+    const diffTime = end.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays < 0) {
-      return { text: `${Math.abs(diffDays)} days overdue`, color: "text-red-600" }
+      return {
+        text: `${Math.abs(diffDays)} days overdue`,
+        color: "text-red-600",
+      };
     } else if (diffDays === 0) {
-      return { text: "Due today", color: "text-amber-600" }
+      return { text: "Due today", color: "text-amber-600" };
     } else {
-      return { text: `${diffDays} days remaining`, color: "text-green-600" }
+      return { text: `${diffDays} days remaining`, color: "text-green-600" };
     }
-  }
+  };
 
   // Get initials for avatar
   const getInitials = (name: string) => {
-    return name.substring(0, 2).toUpperCase()
-  }
+    return name.substring(0, 2).toUpperCase();
+  };
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-white-50 to-indigo-50 flex items-center justify-center p-4">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <h3 className="text-xl font-medium text-slate-700">Loading Peer Reviews</h3>
-          <p className="text-slate-500 mt-2">Please wait while we fetch your data</p>
+          <h3 className="text-xl font-medium text-slate-700">
+            Loading Peer Reviews
+          </h3>
+          <p className="text-slate-500 mt-2">
+            Please wait while we fetch your data
+          </p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -191,20 +219,26 @@ export default function ManajemenPeerReview() {
               <AlertCircle className="mr-2 h-5 w-5" />
               Error Loading Data
             </CardTitle>
-            <CardDescription className="text-red-700">We could not load your peer review data</CardDescription>
+            <CardDescription className="text-red-700">
+              We could not load your peer review data
+            </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
             <p className="text-slate-700">{error}</p>
           </CardContent>
           <CardFooter>
-            <Button variant="outline" onClick={() => window.location.reload()} className="w-full">
+            <Button
+              variant="outline"
+              onClick={() => window.location.reload()}
+              className="w-full"
+            >
               <RefreshCw className="mr-2 h-4 w-4" />
               Try Again
             </Button>
           </CardFooter>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -240,7 +274,9 @@ export default function ManajemenPeerReview() {
               <RefreshCw className="h-4 w-4 text-green-600" />
             </div>
             <div>
-              <div className="text-lg font-bold text-slate-800">{runningCount}</div>
+              <div className="text-lg font-bold text-slate-800">
+                {runningCount}
+              </div>
               <p className="text-xs text-slate-500">Active peer reviews</p>
             </div>
           </div>
@@ -270,7 +306,11 @@ export default function ManajemenPeerReview() {
           {/* Sort Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1 bg-white border-blue-200 text-slate-700 h-8">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 bg-white border-blue-200 text-slate-700 h-8"
+              >
                 <ArrowUpDown className="h-3.5 w-3.5 text-blue-600" />
                 {sortOption.label}
               </Button>
@@ -279,9 +319,12 @@ export default function ManajemenPeerReview() {
               <DropdownMenuRadioGroup
                 value={`${sortOption.value}-${sortOption.direction}`}
                 onValueChange={(value) => {
-                  const [sortValue, direction] = value.split("-")
-                  const newOption = SORT_OPTIONS.find((opt) => opt.value === sortValue && opt.direction === direction)
-                  if (newOption) setSortOption(newOption)
+                  const [sortValue, direction] = value.split("-");
+                  const newOption = SORT_OPTIONS.find(
+                    (opt) =>
+                      opt.value === sortValue && opt.direction === direction
+                  );
+                  if (newOption) setSortOption(newOption);
                 }}
               >
                 {SORT_OPTIONS.map((option) => (
@@ -303,57 +346,86 @@ export default function ManajemenPeerReview() {
             <table className="w-full">
               <thead>
                 <tr className="text-white bg-gradient-to-r from-blue-600 to-blue-600">
-                  <th className="py-2.5 px-4 text-left font-medium text-sm">Barista</th>
-                  <th className="py-2.5 px-4 text-left font-medium text-sm">Deadline</th>
-                  {isAdmin && <th className="py-2.5 px-4 text-left font-medium text-sm">Assignees</th>}
-                  <th className="py-2.5 px-4 text-left font-medium text-sm">Status</th>
-                  <th className="py-2.5 px-4 text-left font-medium text-sm">Time</th>
-                  <th className="py-2.5 px-4 text-center font-medium text-sm">Action</th>
+                  <th className="py-2.5 px-4 text-left font-medium text-sm">
+                    Barista
+                  </th>
+                  <th className="py-2.5 px-4 text-left font-medium text-sm">
+                    Deadline
+                  </th>
+                  {isAdmin && (
+                    <th className="py-2.5 px-4 text-left font-medium text-sm">
+                      Assignees
+                    </th>
+                  )}
+                  <th className="py-2.5 px-4 text-left font-medium text-sm">
+                    Status
+                  </th>
+                  <th className="py-2.5 px-4 text-left font-medium text-sm">
+                    Time
+                  </th>
+                  <th className="py-2.5 px-4 text-center font-medium text-sm">
+                    Action
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {filteredAndSortedData.length > 0 ? (
                   filteredAndSortedData.map((item, index) => {
-                    const daysStatus = getDaysStatus(item.endDateFill)
-                    const bgColor = index % 2 === 0 ? "bg-white" : "bg-green-50"
-                    const hoverColor = "hover:bg-green-100"
+                    const daysStatus = getDaysStatus(item.endDateFill);
+                    const bgColor =
+                      index % 2 === 0 ? "bg-white" : "bg-green-50";
+                    const hoverColor = "hover:bg-green-100";
 
                     return (
                       <tr
                         key={
                           isAdmin
                             ? `${item.revieweeUsername}-${item.endDateFill}`
-                            : (item as PeerReviewAssignment).peerReviewAssignmentId
+                            : (item as PeerReviewAssignment)
+                                .peerReviewAssignmentId
                         }
                         className={`${bgColor} ${hoverColor} transition-colors`}
                       >
                         <td className="py-2.5 px-4">
                           <div className="flex items-center">
                             <Avatar className="h-7 w-7 mr-2.5 bg-blue-100 text-blue-700">
-                              <AvatarFallback>{getInitials(item.revieweeUsername)}</AvatarFallback>
+                              <AvatarFallback>
+                                {getInitials(item.revieweeUsername)}
+                              </AvatarFallback>
                             </Avatar>
-                            <span className="font-medium text-sm">{item.revieweeUsername}</span>
+                            <span className="font-medium text-sm">
+                              {item.revieweeUsername}
+                            </span>
                           </div>
                         </td>
                         <td className="py-2.5 px-4">
                           <div className="flex items-center">
                             <Calendar className="h-3.5 w-3.5 mr-1.5 text-slate-400" />
-                            <span className="text-sm">{formatDate(item.endDateFill)}</span>
+                            <span className="text-sm">
+                              {formatDate(item.endDateFill)}
+                            </span>
                           </div>
                         </td>
                         {isAdmin && (
                           <td className="py-2.5 px-4">
-                            <Badge variant="outline" className="bg-blue-50 text-xs">
+                            <Badge
+                              variant="outline"
+                              className="bg-blue-50 text-xs"
+                            >
                               <Users className="h-3 w-3 mr-1" />
                               {(item as GroupedAssignment).count} orang
                             </Badge>
                           </td>
                         )}
                         <td className="py-2.5 px-4">
-                          <Badge className="bg-green-100 text-green-700 hover:bg-green-200 text-xs">Running</Badge>
+                          <Badge className="bg-green-100 text-green-700 hover:bg-green-200 text-xs">
+                            Running
+                          </Badge>
                         </td>
                         <td className="py-2.5 px-4">
-                          <div className={`text-xs ${daysStatus.color} flex items-center`}>
+                          <div
+                            className={`text-xs ${daysStatus.color} flex items-center`}
+                          >
                             <Clock className="h-3 w-3 mr-1" />
                             {daysStatus.text}
                           </div>
@@ -361,8 +433,10 @@ export default function ManajemenPeerReview() {
                         <td className="py-2.5 px-4 text-center">
                           {isAdmin ? (
                             <Link
-                              href={`/peer-review/update/${item.revieweeUsername}?endDate=${encodeURIComponent(
-                                item.endDateFill,
+                              href={`/peer-review/update/${
+                                item.revieweeUsername
+                              }?endDate=${encodeURIComponent(
+                                item.endDateFill
                               )}`}
                             >
                               <Button
@@ -376,7 +450,10 @@ export default function ManajemenPeerReview() {
                             </Link>
                           ) : (
                             <Link
-                              href={`/peer-review/kerjakan/${(item as PeerReviewAssignment).peerReviewAssignmentId}`}
+                              href={`/peer-review/kerjakan/${
+                                (item as PeerReviewAssignment)
+                                  .peerReviewAssignmentId
+                              }`}
                             >
                               <Button
                                 size="sm"
@@ -389,7 +466,7 @@ export default function ManajemenPeerReview() {
                           )}
                         </td>
                       </tr>
-                    )
+                    );
                   })
                 ) : (
                   <tr>
@@ -398,7 +475,9 @@ export default function ManajemenPeerReview() {
                       className="py-10 text-center text-slate-500 bg-white/80 backdrop-blur-sm"
                     >
                       <FileText className="h-10 w-10 mx-auto text-slate-300 mb-2" />
-                      <h3 className="text-base font-medium text-slate-700">No peer reviews found</h3>
+                      <h3 className="text-base font-medium text-slate-700">
+                        No peer reviews found
+                      </h3>
                       <p className="text-slate-500 mt-1 text-sm">
                         {searchQuery
                           ? "Try adjusting your search"
@@ -413,5 +492,5 @@ export default function ManajemenPeerReview() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -62,7 +62,7 @@ export default function HeadBarOvertimeReportsPage() {
       }
 
       try {
-        const res = await fetch(`https://sahabattensbe-production-0c07.up.railway.app/api/account/${userId}`, {
+        const res = await fetch(`http://localhost:8080/api/account/${userId}`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -88,7 +88,7 @@ export default function HeadBarOvertimeReportsPage() {
 
     const fetchAllOutlets = async (token: string, userOutletName: string) => {
       try {
-        const res = await fetch(`https://sahabattensbe-production-0c07.up.railway.app/api/outlets`, {
+        const res = await fetch(`http://localhost:8080/api/outlets`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -98,7 +98,9 @@ export default function HeadBarOvertimeReportsPage() {
         const data = await res.json();
         setOutlets(data);
 
-        const matchedOutlet = data.find((o: Outlet) => o.name === userOutletName);
+        const matchedOutlet = data.find(
+          (o: Outlet) => o.name === userOutletName
+        );
         if (matchedOutlet) {
           setOutletName(matchedOutlet.name);
           setCurrentOutletId(matchedOutlet.outletId);
@@ -117,12 +119,15 @@ export default function HeadBarOvertimeReportsPage() {
 
     const fetchOvertimeLogs = async (token: string, outletId: number) => {
       try {
-        const response = await fetch("https://sahabattensbe-production-0c07.up.railway.app/api/overtime-logs", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await fetch(
+          "http://localhost:8080/api/overtime-logs",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (!response.ok) {
           setError(`Error fetching overtime logs: ${response.status}`);
@@ -147,7 +152,10 @@ export default function HeadBarOvertimeReportsPage() {
             ...log,
             statusDisplay: statusDisplayMap[log.status] || log.status,
           }))
-          .sort((a: OvertimeLog, b: OvertimeLog) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          .sort(
+            (a: OvertimeLog, b: OvertimeLog) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
 
         setOvertimeLogs(filteredLogs);
       } catch (err) {
@@ -180,7 +188,19 @@ export default function HeadBarOvertimeReportsPage() {
 
   const handleDownloadReport = () => {
     const csvContent = [
-      ["ID", "Outlet", "Barista", "Tanggal", "Waktu", "Durasi", "Alasan", "Status", "Verifier", "Diajukan", "Diperbarui"],
+      [
+        "ID",
+        "Outlet",
+        "Barista",
+        "Tanggal",
+        "Waktu",
+        "Durasi",
+        "Alasan",
+        "Status",
+        "Verifier",
+        "Diajukan",
+        "Diperbarui",
+      ],
       ...overtimeLogs.map((log) => [
         log.id,
         log.outletName,
@@ -202,7 +222,10 @@ export default function HeadBarOvertimeReportsPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `overtime-report-${new Date().toISOString().split("T")[0]}.csv`);
+    link.setAttribute(
+      "download",
+      `overtime-report-${new Date().toISOString().split("T")[0]}.csv`
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -246,12 +269,19 @@ export default function HeadBarOvertimeReportsPage() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold">Laporan Lembur HeadBar</h1>
-          {outletName && <p className="text-sm text-muted-foreground">Outlet: {outletName}</p>}
+          {outletName && (
+            <p className="text-sm text-muted-foreground">
+              Outlet: {outletName}
+            </p>
+          )}
         </div>
       </div>
 
       <div className="flex justify-end mb-6">
-        <Button onClick={handleDownloadReport} className="flex items-center gap-2">
+        <Button
+          onClick={handleDownloadReport}
+          className="flex items-center gap-2"
+        >
           <Download size={16} />
           Unduh Laporan (CSV)
         </Button>

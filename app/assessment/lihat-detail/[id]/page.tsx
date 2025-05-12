@@ -105,7 +105,7 @@ export default function UpdateAssessment() {
 
         // Fetch assessment by ID
         const response = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app/api/assessments/${id}`,
+          `http://localhost:8080/api/assessments/${id}`,
           {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
           }
@@ -159,9 +159,9 @@ export default function UpdateAssessment() {
     let url: string;
     if (tpl === "PROBATIONBARISTA") {
       url =
-        "https://sahabattensbe-production-0c07.up.railway.app/api/trainee/peer-review-assignment/reviewees";
+        "http://localhost:8080/api/trainee/peer-review-assignment/reviewees";
     } else {
-      url = `https://sahabattensbe-production-0c07.up.railway.app/api/assessments/${tpl.toLowerCase()}`;
+      url = `http://localhost:8080/api/assessments/${tpl.toLowerCase()}`;
     }
     try {
       const res = await fetch(url, {

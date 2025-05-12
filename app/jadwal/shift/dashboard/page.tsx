@@ -101,7 +101,7 @@ export default function ShiftDashboard() {
 
       try {
         const res = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app/api/account/${username}`,
+          `http://localhost:8080/api/account/${username}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -134,7 +134,7 @@ export default function ShiftDashboard() {
       }
 
       const response = await fetch(
-        "https://sahabattensbe-production-0c07.up.railway.app/api/shift/dashboard",
+        "http://localhost:8080/api/shift/dashboard",
         {
           headers: {
             Authorization: `Bearer ${token}`,

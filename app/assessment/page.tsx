@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Plus,
   Search,
@@ -20,48 +20,59 @@ import {
   Eye,
   FileText,
   ClipboardCheck,
-} from "lucide-react"
+} from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+} from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface AssignedUser {
-  id: string
-  fullName: string
+  id: string;
+  fullName: string;
 }
 
 interface Assessment {
-  id: number
-  template: string
-  deadline: string
-  assignedUsers: AssignedUser[]
-  questions?: Question[]
+  id: number;
+  template: string;
+  deadline: string;
+  assignedUsers: AssignedUser[];
+  questions?: Question[];
 }
 
 interface Question {
-  id: string
-  question: string
-  type: "MULTIPLE_CHOICE" | "ESSAY"
-  options: string[]
+  id: string;
+  question: string;
+  type: "MULTIPLE_CHOICE" | "ESSAY";
+  options: string[];
 }
 
 // Sort options
 type SortOption = {
-  label: string
-  value: string
-  direction: "asc" | "desc"
-}
+  label: string;
+  value: string;
+  direction: "asc" | "desc";
+};
 
 const SORT_OPTIONS: SortOption[] = [
   { label: "Deadline (Newest)", value: "deadline", direction: "desc" },
@@ -70,101 +81,119 @@ const SORT_OPTIONS: SortOption[] = [
   { label: "Title (Z-A)", value: "title", direction: "desc" },
   { label: "Assignees (Most)", value: "assignees", direction: "desc" },
   { label: "Assignees (Least)", value: "assignees", direction: "asc" },
-]
+];
 
 // Filter options
-const TEMPLATE_TYPES = ["HEADBAR", "BARISTA", "TRAINEEBARISTA", "PROBATIONBARISTA"]
+const TEMPLATE_TYPES = [
+  "HEADBAR",
+  "BARISTA",
+  "TRAINEEBARISTA",
+  "PROBATIONBARISTA",
+];
 
-const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
+const capitalize = (s: string) =>
+  s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 
 const getMonthName = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toLocaleString("id-ID", { month: "long" })
-}
+  const date = new Date(dateString);
+  return date.toLocaleString("id-ID", { month: "long" });
+};
 
 export default function ManajemenAssessment() {
-  const [assessments, setAssessments] = useState<Assessment[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [userRole, setUserRole] = useState<string | null>(null)
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   // Sort and filter states
-  const [sortOption, setSortOption] = useState<SortOption>(SORT_OPTIONS[0])
-  const [filterTemplates, setFilterTemplates] = useState<string[]>([])
+  const [sortOption, setSortOption] = useState<SortOption>(SORT_OPTIONS[0]);
+  const [filterTemplates, setFilterTemplates] = useState<string[]>([]);
 
   useEffect(() => {
-    const role = localStorage.getItem("roles")
-    setUserRole(role)
+    const role = localStorage.getItem("roles");
+    setUserRole(role);
 
     const fetchAssessments = async () => {
       try {
-        setIsLoading(true)
-        const token = localStorage.getItem("token")
-        const username = localStorage.getItem("username")
+        setIsLoading(true);
+        const token = localStorage.getItem("token");
+        const username = localStorage.getItem("username");
 
         // Ubah kondisi untuk mengizinkan akses bagi CEO, CIOO, dan CMO
-        const isManagement = ["Admin", "CEO", "CIOO", "CMO"].includes(role || "")
+        const isManagement = ["Admin", "CEO", "CIOO", "CMO"].includes(
+          role || ""
+        );
         const url = isManagement
-          ? "https://sahabattensbe-production-0c07.up.railway.app/api/assessments"
-          : `https://sahabattensbe-production-0c07.up.railway.app/api/assessments/access/${username}`
+          ? "http://localhost:8080/api/assessments"
+          : `http://localhost:8080/api/assessments/access/${username}`;
 
         const res = await fetch(url, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
-        })
+        });
 
         if (!res.ok) {
-          throw new Error(`Error fetching assessments: ${res.status}`)
+          throw new Error(`Error fetching assessments: ${res.status}`);
         }
 
-        const data: Assessment[] = await res.json()
-        setAssessments(data)
+        const data: Assessment[] = await res.json();
+        setAssessments(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Unknown error")
+        setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchAssessments()
-  }, [])
+    fetchAssessments();
+  }, []);
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    const day = date.getDate()
-    const month = date.getMonth() + 1
-    const year = date.getFullYear()
-    return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`
-  }
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = date.getMonth() + 1;
+    const year = date.getFullYear();
+    return `${String(day).padStart(2, "0")}/${String(month).padStart(
+      2,
+      "0"
+    )}/${year}`;
+  };
 
   // Toggle template filter
   const toggleTemplateFilter = (template: string) => {
-    setFilterTemplates((prev) => (prev.includes(template) ? prev.filter((t) => t !== template) : [...prev, template]))
-  }
+    setFilterTemplates((prev) =>
+      prev.includes(template)
+        ? prev.filter((t) => t !== template)
+        : [...prev, template]
+    );
+  };
 
   // Clear all filters
   const clearFilters = () => {
-    setFilterTemplates([])
-  }
+    setFilterTemplates([]);
+  };
 
   // Check if assessment is completed (past deadline)
-  const isCompleted = (deadline: string) => new Date() > new Date(deadline)
+  const isCompleted = (deadline: string) => new Date() > new Date(deadline);
 
   // Calculate days remaining or overdue
   const getDaysStatus = (deadline: string) => {
-    const end = new Date(deadline)
-    const now = new Date()
-    const diffTime = end.getTime() - now.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    const end = new Date(deadline);
+    const now = new Date();
+    const diffTime = end.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays < 0) {
-      return { text: `${Math.abs(diffDays)} days overdue`, color: "text-red-600" }
+      return {
+        text: `${Math.abs(diffDays)} days overdue`,
+        color: "text-red-600",
+      };
     } else if (diffDays === 0) {
-      return { text: "Due today", color: "text-amber-600" }
+      return { text: "Due today", color: "text-amber-600" };
     } else {
-      return { text: `${diffDays} days remaining`, color: "text-green-600" }
+      return { text: `${diffDays} days remaining`, color: "text-green-600" };
     }
-  }
+  };
 
   // Apply search, filter, and sort
   const filteredAndSortedAssessments = assessments
@@ -172,91 +201,112 @@ export default function ManajemenAssessment() {
     .filter((a) => !isCompleted(a.deadline))
     // Apply search
     .filter((a) => {
-      const title = `Tes ${capitalize(a.template)} ${getMonthName(a.deadline)}`.toLowerCase()
-      return title.includes(searchQuery.toLowerCase()) || a.template.toLowerCase().includes(searchQuery.toLowerCase())
+      const title = `Tes ${capitalize(a.template)} ${getMonthName(
+        a.deadline
+      )}`.toLowerCase();
+      return (
+        title.includes(searchQuery.toLowerCase()) ||
+        a.template.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     })
     // Apply template filter
     .filter((a) => {
-      if (filterTemplates.length === 0) return true
-      return filterTemplates.includes(a.template)
+      if (filterTemplates.length === 0) return true;
+      return filterTemplates.includes(a.template);
     })
     // Apply sorting
     .sort((a, b) => {
-      const { value, direction } = sortOption
-      const multiplier = direction === "asc" ? 1 : -1
+      const { value, direction } = sortOption;
+      const multiplier = direction === "asc" ? 1 : -1;
 
       if (value === "deadline") {
-        return (new Date(a.deadline).getTime() - new Date(b.deadline).getTime()) * multiplier
+        return (
+          (new Date(a.deadline).getTime() - new Date(b.deadline).getTime()) *
+          multiplier
+        );
       }
 
       if (value === "title") {
-        const titleA = `Tes ${capitalize(a.template)} ${getMonthName(a.deadline)}`
-        const titleB = `Tes ${capitalize(b.template)} ${getMonthName(b.deadline)}`
-        return titleA.localeCompare(titleB) * multiplier
+        const titleA = `Tes ${capitalize(a.template)} ${getMonthName(
+          a.deadline
+        )}`;
+        const titleB = `Tes ${capitalize(b.template)} ${getMonthName(
+          b.deadline
+        )}`;
+        return titleA.localeCompare(titleB) * multiplier;
       }
 
       if (value === "assignees") {
-        return ((a.assignedUsers?.length || 0) - (b.assignedUsers?.length || 0)) * multiplier
+        return (
+          ((a.assignedUsers?.length || 0) - (b.assignedUsers?.length || 0)) *
+          multiplier
+        );
       }
 
-      return 0
-    })
+      return 0;
+    });
 
   // Get template icon
   const getTemplateIcon = (template: string) => {
     switch (template) {
       case "HEADBAR":
-        return <ClipboardCheck className="h-4 w-4" />
+        return <ClipboardCheck className="h-4 w-4" />;
       case "BARISTA":
-        return <ClipboardList className="h-4 w-4" />
+        return <ClipboardList className="h-4 w-4" />;
       case "TRAINEEBARISTA":
-        return <FileText className="h-4 w-4" />
+        return <FileText className="h-4 w-4" />;
       case "PROBATIONBARISTA":
-        return <Users className="h-4 w-4" />
+        return <Users className="h-4 w-4" />;
       default:
-        return <ClipboardList className="h-4 w-4" />
+        return <ClipboardList className="h-4 w-4" />;
     }
-  }
+  };
 
   // Get template color
   const getTemplateColor = (template: string) => {
     switch (template) {
       case "HEADBAR":
-        return "bg-amber-100 text-amber-700"
+        return "bg-amber-100 text-amber-700";
       case "BARISTA":
-        return "bg-blue-100 text-blue-700"
+        return "bg-blue-100 text-blue-700";
       case "TRAINEEBARISTA":
-        return "bg-green-100 text-green-700"
+        return "bg-green-100 text-green-700";
       case "PROBATIONBARISTA":
-        return "bg-purple-100 text-purple-700"
+        return "bg-purple-100 text-purple-700";
       default:
-        return "bg-slate-100 text-slate-700"
+        return "bg-slate-100 text-slate-700";
     }
-  }
+  };
 
   // Get initials for avatar
   const getInitials = (template: string) => {
-    return template.substring(0, 2).toUpperCase()
-  }
+    return template.substring(0, 2).toUpperCase();
+  };
 
   // Count running and completed assessments
-  const runningCount = assessments.filter((a) => !isCompleted(a.deadline)).length
+  const runningCount = assessments.filter(
+    (a) => !isCompleted(a.deadline)
+  ).length;
 
   // Cek apakah user adalah management (Admin, CEO, CIOO, CMO)
-  const isAdmin = userRole === "Admin"
-  const isExecutive = ["CEO", "CIOO", "CMO"].includes(userRole || "")
-  const isManagement = isAdmin || isExecutive
+  const isAdmin = userRole === "Admin";
+  const isExecutive = ["CEO", "CIOO", "CMO"].includes(userRole || "");
+  const isManagement = isAdmin || isExecutive;
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-white-50 to-indigo-50 flex items-center justify-center p-4">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <h3 className="text-xl font-medium text-slate-700">Loading Assessments</h3>
-          <p className="text-slate-500 mt-2">Please wait while we fetch your data</p>
+          <h3 className="text-xl font-medium text-slate-700">
+            Loading Assessments
+          </h3>
+          <p className="text-slate-500 mt-2">
+            Please wait while we fetch your data
+          </p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -268,20 +318,26 @@ export default function ManajemenAssessment() {
               <AlertCircle className="mr-2 h-5 w-5" />
               Error Loading Data
             </CardTitle>
-            <CardDescription className="text-red-700">We could not load your assessment data</CardDescription>
+            <CardDescription className="text-red-700">
+              We could not load your assessment data
+            </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
             <p className="text-slate-700">{error}</p>
           </CardContent>
           <CardFooter>
-            <Button variant="outline" onClick={() => window.location.reload()} className="w-full">
+            <Button
+              variant="outline"
+              onClick={() => window.location.reload()}
+              className="w-full"
+            >
               <RefreshCw className="mr-2 h-4 w-4" />
               Try Again
             </Button>
           </CardFooter>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -317,7 +373,9 @@ export default function ManajemenAssessment() {
               <RefreshCw className="h-4 w-4 text-green-600" />
             </div>
             <div>
-              <div className="text-lg font-bold text-slate-800">{runningCount}</div>
+              <div className="text-lg font-bold text-slate-800">
+                {runningCount}
+              </div>
               <p className="text-xs text-slate-500">Active assessments</p>
             </div>
           </div>
@@ -347,7 +405,11 @@ export default function ManajemenAssessment() {
           {/* Sort Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1 bg-white border-blue-200 text-slate-700 h-8">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 bg-white border-blue-200 text-slate-700 h-8"
+              >
                 <ArrowUpDown className="h-3.5 w-3.5 text-blue-600" />
                 {sortOption.label}
               </Button>
@@ -356,9 +418,12 @@ export default function ManajemenAssessment() {
               <DropdownMenuRadioGroup
                 value={`${sortOption.value}-${sortOption.direction}`}
                 onValueChange={(value) => {
-                  const [sortValue, direction] = value.split("-")
-                  const newOption = SORT_OPTIONS.find((opt) => opt.value === sortValue && opt.direction === direction)
-                  if (newOption) setSortOption(newOption)
+                  const [sortValue, direction] = value.split("-");
+                  const newOption = SORT_OPTIONS.find(
+                    (opt) =>
+                      opt.value === sortValue && opt.direction === direction
+                  );
+                  if (newOption) setSortOption(newOption);
                 }}
               >
                 {SORT_OPTIONS.map((option) => (
@@ -397,7 +462,10 @@ export default function ManajemenAssessment() {
                   <h4 className="font-medium text-sm mb-1.5">Template Type</h4>
                   <div className="space-y-1.5">
                     {TEMPLATE_TYPES.map((template) => (
-                      <div key={template} className="flex items-center space-x-2">
+                      <div
+                        key={template}
+                        className="flex items-center space-x-2"
+                      >
                         <Checkbox
                           id={`template-${template}`}
                           checked={filterTemplates.includes(template)}
@@ -425,7 +493,10 @@ export default function ManajemenAssessment() {
                     <X className="mr-1 h-3 w-3" />
                     Clear
                   </Button>
-                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700 h-7 text-xs">
+                  <Button
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700 h-7 text-xs"
+                  >
                     <Check className="mr-1 h-3 w-3" />
                     Apply
                   </Button>
@@ -451,7 +522,10 @@ export default function ManajemenAssessment() {
                   </button>
                 </div>
               ))}
-              <button onClick={clearFilters} className="text-blue-600 hover:text-blue-800 text-xs underline">
+              <button
+                onClick={clearFilters}
+                className="text-blue-600 hover:text-blue-800 text-xs underline"
+              >
                 Clear all
               </button>
             </div>
@@ -464,44 +538,77 @@ export default function ManajemenAssessment() {
             <table className="w-full">
               <thead>
                 <tr className="text-white bg-gradient-to-r from-blue-600 to-blue-600">
-                  <th className="py-2.5 px-4 text-left font-medium text-sm">Assessment</th>
-                  <th className="py-2.5 px-4 text-left font-medium text-sm">Template</th>
-                  <th className="py-2.5 px-4 text-left font-medium text-sm">Assignees</th>
-                  <th className="py-2.5 px-4 text-left font-medium text-sm">Deadline</th>
-                  <th className="py-2.5 px-4 text-left font-medium text-sm">Status</th>
-                  <th className="py-2.5 px-4 text-center font-medium text-sm">Action</th>
+                  <th className="py-2.5 px-4 text-left font-medium text-sm">
+                    Assessment
+                  </th>
+                  <th className="py-2.5 px-4 text-left font-medium text-sm">
+                    Template
+                  </th>
+                  <th className="py-2.5 px-4 text-left font-medium text-sm">
+                    Assignees
+                  </th>
+                  <th className="py-2.5 px-4 text-left font-medium text-sm">
+                    Deadline
+                  </th>
+                  <th className="py-2.5 px-4 text-left font-medium text-sm">
+                    Status
+                  </th>
+                  <th className="py-2.5 px-4 text-center font-medium text-sm">
+                    Action
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {filteredAndSortedAssessments.length > 0 ? (
                   filteredAndSortedAssessments.map((assessment, index) => {
-                    const isDone = isCompleted(assessment.deadline)
-                    const daysStatus = getDaysStatus(assessment.deadline)
-                    const bgColor = index % 2 === 0 ? "bg-white" : "bg-green-50"
-                    const hoverColor = "hover:bg-green-100"
+                    const isDone = isCompleted(assessment.deadline);
+                    const daysStatus = getDaysStatus(assessment.deadline);
+                    const bgColor =
+                      index % 2 === 0 ? "bg-white" : "bg-green-50";
+                    const hoverColor = "hover:bg-green-100";
 
                     return (
-                      <tr key={assessment.id} className={`${bgColor} ${hoverColor} transition-colors`}>
+                      <tr
+                        key={assessment.id}
+                        className={`${bgColor} ${hoverColor} transition-colors`}
+                      >
                         <td className="py-2.5 px-4">
                           <div className="flex items-center">
-                            <Avatar className={`h-7 w-7 mr-2.5 ${getTemplateColor(assessment.template)}`}>
-                              <AvatarFallback>{getInitials(assessment.template)}</AvatarFallback>
+                            <Avatar
+                              className={`h-7 w-7 mr-2.5 ${getTemplateColor(
+                                assessment.template
+                              )}`}
+                            >
+                              <AvatarFallback>
+                                {getInitials(assessment.template)}
+                              </AvatarFallback>
                             </Avatar>
                             <span className="font-medium text-sm">
-                              {`Tes ${capitalize(assessment.template)} ${getMonthName(assessment.deadline)}`}
+                              {`Tes ${capitalize(
+                                assessment.template
+                              )} ${getMonthName(assessment.deadline)}`}
                             </span>
                           </div>
                         </td>
                         <td className="py-2.5 px-4">
-                          <Badge className={`${getTemplateColor(assessment.template)} text-xs`}>
+                          <Badge
+                            className={`${getTemplateColor(
+                              assessment.template
+                            )} text-xs`}
+                          >
                             <span className="flex items-center">
                               {getTemplateIcon(assessment.template)}
-                              <span className="ml-1">{capitalize(assessment.template)}</span>
+                              <span className="ml-1">
+                                {capitalize(assessment.template)}
+                              </span>
                             </span>
                           </Badge>
                         </td>
                         <td className="py-2.5 px-4">
-                          <Badge variant="outline" className="bg-blue-50 text-xs">
+                          <Badge
+                            variant="outline"
+                            className="bg-blue-50 text-xs"
+                          >
                             <Users className="h-3 w-3 mr-1" />
                             {assessment.assignedUsers?.length || 0} peserta
                           </Badge>
@@ -509,7 +616,9 @@ export default function ManajemenAssessment() {
                         <td className="py-2.5 px-4">
                           <div className="flex items-center">
                             <Calendar className="h-3.5 w-3.5 mr-1.5 text-slate-400" />
-                            <span className="text-sm">{formatDate(assessment.deadline)}</span>
+                            <span className="text-sm">
+                              {formatDate(assessment.deadline)}
+                            </span>
                           </div>
                         </td>
                         <td className="py-2.5 px-4">
@@ -523,7 +632,9 @@ export default function ManajemenAssessment() {
                             >
                               {isDone ? "Done" : "Running"}
                             </Badge>
-                            <div className={`text-xs ${daysStatus.color} flex items-center`}>
+                            <div
+                              className={`text-xs ${daysStatus.color} flex items-center`}
+                            >
                               <Clock className="h-3 w-3 mr-1" />
                               {daysStatus.text}
                             </div>
@@ -532,7 +643,9 @@ export default function ManajemenAssessment() {
                         <td className="py-2.5 px-4 text-center">
                           {isAdmin ? (
                             <div className="flex items-center justify-center gap-1">
-                              <Link href={`/assessment/lihat-detail/${assessment.id}`}>
+                              <Link
+                                href={`/assessment/lihat-detail/${assessment.id}`}
+                              >
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -542,7 +655,9 @@ export default function ManajemenAssessment() {
                                   Detail
                                 </Button>
                               </Link>
-                              <Link href={`/assessment/update/${assessment.id}`}>
+                              <Link
+                                href={`/assessment/update/${assessment.id}`}
+                              >
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -565,7 +680,9 @@ export default function ManajemenAssessment() {
                               </Button>
                             </Link>
                           ) : (
-                            <Link href={`/assessment/kerjakan/${assessment.id}`}>
+                            <Link
+                              href={`/assessment/kerjakan/${assessment.id}`}
+                            >
                               <Button
                                 size="sm"
                                 className={`rounded-full h-7 text-xs ${
@@ -581,13 +698,18 @@ export default function ManajemenAssessment() {
                           )}
                         </td>
                       </tr>
-                    )
+                    );
                   })
                 ) : (
                   <tr>
-                    <td colSpan={6} className="py-10 text-center text-slate-500 bg-white/80 backdrop-blur-sm">
+                    <td
+                      colSpan={6}
+                      className="py-10 text-center text-slate-500 bg-white/80 backdrop-blur-sm"
+                    >
                       <FileText className="h-10 w-10 mx-auto text-slate-300 mb-2" />
-                      <h3 className="text-base font-medium text-slate-700">No assessments found</h3>
+                      <h3 className="text-base font-medium text-slate-700">
+                        No assessments found
+                      </h3>
                       <p className="text-slate-500 mt-1 text-sm">
                         {searchQuery || filterTemplates.length > 0
                           ? "Try adjusting your search or filters"
@@ -602,5 +724,5 @@ export default function ManajemenAssessment() {
         </div>
       </div>
     </div>
-  )
+  );
 }

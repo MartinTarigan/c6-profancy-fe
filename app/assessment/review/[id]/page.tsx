@@ -75,11 +75,17 @@ export default function ReviewSubmission() {
       setIsSubmitting(true);
       const token = localStorage.getItem("token");
       if (!token) {
-        setToast({ type: "error", message: "Sesi login tidak valid. Silakan login kembali." });
+        setToast({
+          type: "error",
+          message: "Sesi login tidak valid. Silakan login kembali.",
+        });
         return;
       }
 
-      const totalEssayScore = Object.values(essayScores).reduce((sum, val) => sum + val, 0);
+      const totalEssayScore = Object.values(essayScores).reduce(
+        (sum, val) => sum + val,
+        0
+      );
 
       const payload = {
         submissionId: parseInt(submissionId, 10),
@@ -87,7 +93,7 @@ export default function ReviewSubmission() {
       };
 
       const response = await fetch(
-        "https://sahabattensbe-production-0c07.up.railway.app/api/trainee/assessment/review-essay",
+        "http://localhost:8080/api/trainee/assessment/review-essay",
         {
           method: "POST",
           headers: {
@@ -108,7 +114,10 @@ export default function ReviewSubmission() {
     } catch (e) {
       setToast({
         type: "error",
-        message: e instanceof Error ? e.message : "Terjadi kesalahan saat menyimpan nilai",
+        message:
+          e instanceof Error
+            ? e.message
+            : "Terjadi kesalahan saat menyimpan nilai",
       });
     } finally {
       setIsSubmitting(false);
@@ -124,11 +133,14 @@ export default function ReviewSubmission() {
 
         // 1. Jawaban user
         const ansRes = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app/api/trainee/answers/${submissionId}`,
+          `http://localhost:8080/api/trainee/answers/${submissionId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (!ansRes.ok) throw new Error("Gagal fetch submission answers");
-        const ansArr = (await ansRes.json()) as Array<{ questionId: string; answer: string }>;
+        const ansArr = (await ansRes.json()) as Array<{
+          questionId: string;
+          answer: string;
+        }>;
 
         const formatted: Record<string, SubmissionAnswer> = {};
         ansArr.forEach(({ questionId, answer }) => {
@@ -143,7 +155,7 @@ export default function ReviewSubmission() {
 
         // 2. Summary submisi
         const sumRes = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app/api/trainee/assessment/${aid}/summaries`,
+          `http://localhost:8080/api/trainee/assessment/${aid}/summaries`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (!sumRes.ok) throw new Error("Error fetching submission summaries");
@@ -156,7 +168,7 @@ export default function ReviewSubmission() {
 
         // 3. Jawaban benar
         const corrRes = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app/api/trainee/answers/correct/${aid}`,
+          `http://localhost:8080/api/trainee/answers/correct/${aid}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (!corrRes.ok) throw new Error("Error fetching correct answers");
@@ -164,7 +176,7 @@ export default function ReviewSubmission() {
         setCorrectAnswers(corrJson.data);
 
         // 4. Data assessment
-        const assRes = await fetch("https://sahabattensbe-production-0c07.up.railway.app/api/assessments", {
+        const assRes = await fetch("http://localhost:8080/api/assessments", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!assRes.ok) throw new Error("Error fetching assessment");
@@ -193,15 +205,15 @@ export default function ReviewSubmission() {
     setEssayScores((prev) => ({ ...prev, [questionId]: score }));
   };
 
-//   const isCorrect = (questionId: string, selectedOptionId?: number) => {
-//     if (selectedOptionId == null || correctAnswers[questionId] == null) return false;
-//     return selectedOptionId === correctAnswers[questionId];
-//   };
+  //   const isCorrect = (questionId: string, selectedOptionId?: number) => {
+  //     if (selectedOptionId == null || correctAnswers[questionId] == null) return false;
+  //     return selectedOptionId === correctAnswers[questionId];
+  //   };
 
-//   const countEssayQuestions = () => {
-//     if (!assessment) return 0;
-//     return assessment.questions.filter((q) => q.type === "ESSAY").length;
-//   };
+  //   const countEssayQuestions = () => {
+  //     if (!assessment) return 0;
+  //     return assessment.questions.filter((q) => q.type === "ESSAY").length;
+  //   };
 
   if (isLoading) return <LoadingIndicator />;
   if (error)
@@ -219,7 +231,9 @@ export default function ReviewSubmission() {
 
   // Pisahkan soal esai dan MC
   const essayQuestions = assessment.questions.filter((q) => q.type === "ESSAY");
-  const mcQuestions = assessment.questions.filter((q) => q.type === "MULTIPLE_CHOICE");
+  const mcQuestions = assessment.questions.filter(
+    (q) => q.type === "MULTIPLE_CHOICE"
+  );
 
   return (
     <div className="flex flex-col p-6">
@@ -233,7 +247,10 @@ export default function ReviewSubmission() {
       )}
 
       <div className="mb-6">
-        <Link href="/assessment" className="inline-flex items-center text-primary">
+        <Link
+          href="/assessment"
+          className="inline-flex items-center text-primary"
+        >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Kembali
         </Link>
@@ -247,7 +264,8 @@ export default function ReviewSubmission() {
           Peserta: <strong>{submission.username}</strong>
         </p>
         <p className="text-gray-500">
-          Waktu Pengumpulan: {new Date(submission.submittedAt).toLocaleString("id-ID")}
+          Waktu Pengumpulan:{" "}
+          {new Date(submission.submittedAt).toLocaleString("id-ID")}
         </p>
       </div>
 
@@ -256,15 +274,21 @@ export default function ReviewSubmission() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="p-4 border rounded">
             <p className="text-sm text-gray-500">Nilai Pilihan Ganda</p>
-            <p className="text-2xl font-bold">{submission.mcScore.toFixed(1)}</p>
+            <p className="text-2xl font-bold">
+              {submission.mcScore.toFixed(1)}
+            </p>
           </div>
           <div className="p-4 border rounded">
             <p className="text-sm text-gray-500">Nilai Esai</p>
-            <p className="text-2xl font-bold">{submission.essayScore.toFixed(1)}</p>
+            <p className="text-2xl font-bold">
+              {submission.essayScore.toFixed(1)}
+            </p>
           </div>
           <div className="p-4 border rounded">
             <p className="text-sm text-gray-500">Total Nilai</p>
-            <p className="text-2xl font-bold">{submission.totalScore.toFixed(1)}</p>
+            <p className="text-2xl font-bold">
+              {submission.totalScore.toFixed(1)}
+            </p>
           </div>
         </div>
 
@@ -302,10 +326,7 @@ export default function ReviewSubmission() {
               </div>
             ))}
             <div className="text-right">
-              <Button
-                onClick={handleSubmitScores}
-                disabled={isSubmitting}
-              >
+              <Button onClick={handleSubmitScores} disabled={isSubmitting}>
                 {isSubmitting ? "Menyimpan..." : "Simpan Nilai Esai"}
               </Button>
             </div>
@@ -336,7 +357,8 @@ export default function ReviewSubmission() {
                     const optId = Number(opt.id);
                     const isSelected = userSel === optId;
                     const highlightCorrectButWrong =
-                      !questionIsCorrect && correctAnswers[question.id] === optId;
+                      !questionIsCorrect &&
+                      correctAnswers[question.id] === optId;
 
                     return (
                       <div

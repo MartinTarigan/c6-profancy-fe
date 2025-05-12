@@ -99,7 +99,7 @@ export default function LoginPage() {
       switch (step) {
         case "checkUsername": {
           const res = await fetch(
-            "https://sahabattensbe-production-0c07.up.railway.app/api/auth/check-username",
+            "http://localhost:8080/api/auth/check-username",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -133,7 +133,7 @@ export default function LoginPage() {
         }
 
         case "login": {
-          const res = await fetch("https://sahabattensbe-production-0c07.up.railway.app/api/auth/login", {
+          const res = await fetch("http://localhost:8080/api/auth/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password }),
@@ -165,7 +165,7 @@ export default function LoginPage() {
 
         case "changePassword": {
           const res = await fetch(
-            `https://sahabattensbe-production-0c07.up.railway.app/api/account/change-password?username=${username}`,
+            `http://localhost:8080/api/account/change-password?username=${username}`,
             {
               method: "PUT",
               headers: { "Content-Type": "application/json" },

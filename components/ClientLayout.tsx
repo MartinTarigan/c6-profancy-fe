@@ -5,7 +5,7 @@ import { SidebarProvider, SidebarTrigger } from "./ui/sidebar";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const noLayoutPages = ["/peer-review/dashboard", "/peer-review/assessment"];
+  const noLayoutPages = ["/login"];
   const isAssessmentPage = pathname.startsWith("/assessment/kerjakan");
 
   if (noLayoutPages.includes(pathname) || isAssessmentPage) {

@@ -42,7 +42,7 @@ export default function EditMateriPelatihan() {
     async function fetchData() {
       try {
         const res = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app/api/training-materials/${id}`,
+          `http://localhost:8080/api/training-materials/${id}`,
           {
             headers: { Authorization: `Bearer ${storedToken}` },
           }
@@ -106,7 +106,7 @@ export default function EditMateriPelatihan() {
     setIsSubmitting(true);
     try {
       const res = await fetch(
-        `https://sahabattensbe-production-0c07.up.railway.app/api/training-materials/${id}/update`,
+        `http://localhost:8080/api/training-materials/${id}/update`,
         {
           method: "PUT",
           headers: {

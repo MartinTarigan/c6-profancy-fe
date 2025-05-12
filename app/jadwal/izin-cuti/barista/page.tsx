@@ -78,7 +78,7 @@ export default function BaristaLeaveRequestPage() {
 
         // Fetch user's leave requests using username
         const response = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app/api/shift-management/leave-request/user/username/${currentUsername}`,
+          `http://localhost:8080/api/shift-management/leave-request/user/username/${currentUsername}`,
           {
             method: "GET",
             headers: {
