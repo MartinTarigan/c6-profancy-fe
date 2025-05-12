@@ -1,11 +1,11 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { AppSidebar } from "./app-sidebar";
+import AppSidebar from "./app-sidebar";
 import { SidebarProvider, SidebarTrigger } from "./ui/sidebar";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const noLayoutPages = ["/login"];
+  const noLayoutPages = ["/peer-review/dashboard", "/peer-review/assessment"];
   const isAssessmentPage = pathname.startsWith("/assessment/kerjakan");
 
   if (noLayoutPages.includes(pathname) || isAssessmentPage) {
