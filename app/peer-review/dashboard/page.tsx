@@ -226,7 +226,7 @@ export default function PeerReviewDashboard() {
           throw new Error(`Error fetching summary: ${summaryRes.status}`);
         }
         const summaryData = await summaryRes.json();
-        console.log("Summary data:", summaryData);
+        console.log("Summary data:", summaryData.data);
         setDashboardSummary(summaryData);
 
         // 3. Fetch outlet performance
@@ -277,7 +277,12 @@ export default function PeerReviewDashboard() {
         }
         const categoryData = await categoryRes.json();
         console.log("Category data:", categoryData);
-        setQuestionSummary(categoryData);
+        // setQuestionSummary(categoryData);
+        setQuestionSummary(
+          categoryData && Array.isArray(categoryData.data)
+            ? categoryData.data
+            : []
+        );
 
         // 5. Fetch baristas
         console.log("Fetching baristas...");
@@ -295,8 +300,13 @@ export default function PeerReviewDashboard() {
         }
         const baristasData = await baristasRes.json();
         console.log("Baristas data:", baristasData);
-        setBaristaData(baristasData.content || []);
-
+        setBaristaData(
+          baristasData &&
+            baristasData.data &&
+            Array.isArray(baristasData.data.content)
+            ? baristasData.data.content
+            : []
+        );
         // 6. Fetch score trend
         console.log("Fetching score trend...");
         const trendRes = await fetch(
@@ -789,15 +799,28 @@ export default function PeerReviewDashboard() {
   };
 
   // Filter baristas based on search, status filter, and outlet filter
-  const filteredBaristas = baristaData.filter((barista) => {
-    const matchesSearch = barista.username
-      .toLowerCase()
+  // const filteredBaristas = baristaData.filter((barista) => {
+  //   const matchesSearch = barista.username
+  //     .toLowerCase()
+  //     .includes(searchQuery.toLowerCase());
+  //   const matchesStatus =
+  //     filterStatus === "all" ||
+  //     barista.status.toLowerCase() === filterStatus.toLowerCase();
+  //   const matchesOutlet =
+  //     filterOutlet === "all" || barista.outlet === filterOutlet;
+  //   return matchesSearch && matchesStatus && matchesOutlet;
+  // });
+
+  const filteredBaristas = (baristaData || []).filter((barista) => {
+    const matchesSearch = barista?.username
+      ?.toLowerCase()
       .includes(searchQuery.toLowerCase());
     const matchesStatus =
       filterStatus === "all" ||
-      barista.status.toLowerCase() === filterStatus.toLowerCase();
+      barista?.status?.toLowerCase() === filterStatus.toLowerCase();
     const matchesOutlet =
-      filterOutlet === "all" || barista.outlet === filterOutlet;
+      filterOutlet === "all" || barista?.outlet === filterOutlet;
+
     return matchesSearch && matchesStatus && matchesOutlet;
   });
 
@@ -911,14 +934,16 @@ export default function PeerReviewDashboard() {
 
   // Overall completion rate
   const overallCompletionRate = dashboardSummary
-    ? (dashboardSummary.completedReviews / dashboardSummary.totalReviews) * 100
+    ? (dashboardSummary.data.completedReviews /
+        dashboardSummary.data.totalReviews) *
+      100
     : (baristaData.reduce((sum, b) => sum + b.reviewsCompleted, 0) /
         baristaData.reduce((sum, b) => sum + b.reviewsTotal, 0)) *
       100;
 
   // Overall pass rate
   const overallPassRate = dashboardSummary
-    ? dashboardSummary.passRate
+    ? dashboardSummary.data.passRate
     : (baristaData.filter((b) => b.status === "Lulus").length /
         baristaData.filter((b) => b.status !== "Pending").length) *
       100;
@@ -957,7 +982,7 @@ export default function PeerReviewDashboard() {
         </header>
 
         <div className="flex flex-1">
-          {/* Sidebar */}
+          {/* Sidebar
           <aside className="w-48 bg-white border-r flex-shrink-0">
             <nav className="py-4">
               <ul className="space-y-1">
@@ -1051,7 +1076,7 @@ export default function PeerReviewDashboard() {
                 </li>
               </ul>
             </nav>
-          </aside>
+          </aside> */}
 
           {/* Main Content */}
           <main className="flex-1 bg-gray-50">
@@ -1166,7 +1191,7 @@ export default function PeerReviewDashboard() {
                         </p>
                         <h3 className="text-2xl font-bold mt-1">
                           {dashboardSummary
-                            ? dashboardSummary.totalBaristas
+                            ? dashboardSummary.data.totalBaristas
                             : baristaData.length}
                         </h3>
                       </div>
@@ -1186,10 +1211,11 @@ export default function PeerReviewDashboard() {
                       <div>
                         <p className="text-sm text-gray-500">Rata-rata Skor</p>
                         <h3 className="text-2xl font-bold mt-1">
-                          {dashboardSummary?.averageScore != null &&
-                          typeof dashboardSummary.averageScore === "number" &&
-                          !isNaN(dashboardSummary.averageScore)
-                            ? dashboardSummary.averageScore.toFixed(1)
+                          {dashboardSummary?.data.averageScore != null &&
+                          typeof dashboardSummary.data.averageScore ===
+                            "number" &&
+                          !isNaN(dashboardSummary.data.averageScore)
+                            ? dashboardSummary.data.averageScore.toFixed(1)
                             : baristaData.filter((b) => b.averageScore > 0)
                                 .length > 0
                             ? (
@@ -1210,21 +1236,23 @@ export default function PeerReviewDashboard() {
                     <div className="mt-4 flex items-center text-xs">
                       <span
                         className={`flex items-center ${
-                          dashboardSummary && dashboardSummary.scoreTrend > 0
+                          dashboardSummary &&
+                          dashboardSummary.data.scoreTrend > 0
                             ? "text-green-600"
                             : "text-red-600"
                         }`}
                       >
-                        {dashboardSummary && dashboardSummary.scoreTrend > 0 ? (
+                        {dashboardSummary &&
+                        dashboardSummary.data.scoreTrend > 0 ? (
                           <ArrowUpRight className="h-3 w-3 mr-1" />
                         ) : (
                           <ArrowDownRight className="h-3 w-3 mr-1" />
                         )}
                         {dashboardSummary?.scoreTrend != null &&
-                        typeof dashboardSummary.scoreTrend === "number"
-                          ? dashboardSummary.scoreTrend > 0
-                            ? `+${dashboardSummary.scoreTrend.toFixed(1)}`
-                            : dashboardSummary.scoreTrend.toFixed(1)
+                        typeof dashboardSummary.data.scoreTrend === "number"
+                          ? dashboardSummary.data.scoreTrend > 0
+                            ? `+${dashboardSummary.data.scoreTrend.toFixed(1)}`
+                            : dashboardSummary.data.scoreTrend.toFixed(1)
                           : "0.0"}
                         dari periode sebelumnya
                       </span>
@@ -1275,7 +1303,7 @@ export default function PeerReviewDashboard() {
                         <span>Progress</span>
                         <span>
                           {dashboardSummary
-                            ? `${dashboardSummary.completedReviews}/${dashboardSummary.totalReviews}`
+                            ? `${dashboardSummary.data.completedReviews}/${dashboardSummary.data.totalReviews}`
                             : `${baristaData.reduce(
                                 (sum, b) => sum + b.reviewsCompleted,
                                 0
@@ -1398,7 +1426,7 @@ export default function PeerReviewDashboard() {
                       <div className="h-[250px]">
                         <ResponsiveContainer width="100%" height="100%">
                           <AreaChart
-                            data={trendData}
+                            data={trendData.data}
                             margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                           >
                             <defs>
@@ -1812,16 +1840,24 @@ export default function PeerReviewDashboard() {
                                     <div
                                       className="bg-blue-500 h-2 rounded-full"
                                       style={{
-                                        width: `${calculateCompletionPercentage(
-                                          barista.reviewsCompleted,
-                                          barista.reviewsTotal
-                                        )}%`,
+                                        width:
+                                          barista.reviewsTotal === 0
+                                            ? "0%"
+                                            : `${calculateCompletionPercentage(
+                                                barista.reviewsCompleted,
+                                                barista.reviewsTotal
+                                              )}%`,
                                       }}
                                     ></div>
                                   </div>
-                                  <span className="text-xs text-gray-500">
+                                  {/* <span className="text-xs text-gray-500">
                                     {barista.reviewsCompleted}/
                                     {barista.reviewsTotal}
+                                  </span> */}
+                                  <span className="text-xs text-gray-500">
+                                    {barista.reviewsTotal === 0
+                                      ? "-"
+                                      : `${barista.reviewsCompleted}/${barista.reviewsTotal}`}
                                   </span>
                                 </div>
                               </TableCell>
