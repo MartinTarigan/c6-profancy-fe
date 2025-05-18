@@ -153,6 +153,8 @@ export default function PeerReviewDashboard() {
     useState<DashboardSummary | null>(null);
   const [trendData, setTrendData] = useState<ScoreTrend[]>([]);
   const [isExporting, setIsExporting] = useState(false);
+  const [userRole, setUserRole] = useState<string>("");
+  const [isLoadingUser, setIsLoadingUser] = useState<boolean>(true);
 
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
@@ -360,6 +362,37 @@ export default function PeerReviewDashboard() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      const username = localStorage.getItem("username");
+      const token = localStorage.getItem("token");
+
+      if (!username || !token) {
+        setIsLoadingUser(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(`${BACKEND_API_URL}/account/${username}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        const json = await res.json();
+        const role = json?.data?.role || "";
+        setUserRole(role);
+      } catch (err) {
+        console.error("Gagal mengambil role user:", err);
+      } finally {
+        setIsLoadingUser(false);
+      }
+    };
+
+    fetchUserRole();
+  }, []);
 
   // Fungsi untuk memuat data mock (sebagai fallback)
   const loadMockData = () => {
@@ -960,124 +993,33 @@ export default function PeerReviewDashboard() {
       </div>
     );
   }
+  if (isLoadingUser) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center text-gray-600">
+          Memuat informasi user...
+        </div>
+      </div>
+    );
+  }
+
+  if (!["CEO", "CMO", "CIOO"].includes(userRole)) {
+    return (
+      <div className="flex flex-col h-screen items-center justify-center">
+        <h2 className="text-xl font-semibold text-red-600 mb-2">
+          Access Denied
+        </h2>
+        <p className="text-gray-600">
+          Anda tidak memiliki akses ke dashboard ini.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <TooltipProvider>
       <div className="flex flex-col min-h-screen">
-        {/* Header */}
-        <header className="bg-blue-500 text-white py-3 px-4 flex justify-between items-center">
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center">
-              <span className="font-bold text-xl">Sahabat</span>
-              <span className="ml-1 text-xl">Tens</span>
-            </Link>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Bell className="h-5 w-5 cursor-pointer" />
-            <div className="flex items-center cursor-pointer">
-              <User className="h-5 w-5 mr-2" />
-              <span>Barista</span>
-            </div>
-          </div>
-        </header>
-
         <div className="flex flex-1">
-          {/* Sidebar
-          <aside className="w-48 bg-white border-r flex-shrink-0">
-            <nav className="py-4">
-              <ul className="space-y-1">
-                <li>
-                  <Link
-                    href="/"
-                    className="flex items-center px-4 py-2 text-gray-600 hover:bg-blue-50"
-                  >
-                    Home
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/daftar-akun"
-                    className="flex items-center px-4 py-2 text-gray-600 hover:bg-blue-50"
-                  >
-                    Daftar Akun
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/training"
-                    className="flex items-center px-4 py-2 text-gray-600 hover:bg-blue-50"
-                  >
-                    Training
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/main"
-                    className="flex items-center px-4 py-2 text-gray-600 hover:bg-blue-50"
-                  >
-                    Main
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/kasir"
-                    className="flex items-center px-4 py-2 text-gray-600 hover:bg-blue-50"
-                  >
-                    Kasir
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/peer-review"
-                    className="flex items-center px-4 py-2 text-blue-600 bg-blue-50 font-medium"
-                  >
-                    Peer Review
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/peer-review"
-                    className="flex items-center px-4 py-2 text-gray-600 hover:bg-blue-50"
-                  >
-                    Peer Review
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/jadwal"
-                    className="flex items-center px-4 py-2 text-gray-600 hover:bg-blue-50"
-                  >
-                    Jadwal
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/lembur"
-                    className="flex items-center px-4 py-2 text-gray-600 hover:bg-blue-50"
-                  >
-                    Lembur
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/izin-cuti"
-                    className="flex items-center px-4 py-2 text-gray-600 hover:bg-blue-50"
-                  >
-                    Izin/Cuti
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/shift"
-                    className="flex items-center px-4 py-2 text-gray-600 hover:bg-blue-50"
-                  >
-                    Shift
-                  </Link>
-                </li>
-              </ul>
-            </nav>
-          </aside> */}
-
           {/* Main Content */}
           <main className="flex-1 bg-gray-50">
             <div className="p-6">
@@ -1105,7 +1047,7 @@ export default function PeerReviewDashboard() {
                       </SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button
+                  {/* <Button
                     variant="outline"
                     size="sm"
                     className="h-9"
@@ -1123,7 +1065,7 @@ export default function PeerReviewDashboard() {
                         <span>Export</span>
                       </>
                     )}
-                  </Button>
+                  </Button> */}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -1346,6 +1288,56 @@ export default function PeerReviewDashboard() {
                               vertical={false}
                             />
                             <XAxis dataKey="name" />
+                            <YAxis stroke="#3b82f6" domain={[0, 4]} />
+                            <Tooltip />
+                            <Legend />
+                            <Bar
+                              dataKey="score"
+                              name="Rata-rata Skor"
+                              fill="#3b82f6"
+                              radius={[4, 4, 0, 0]}
+                              barSize={30}
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                      {/* Tingkat Kelulusan Chart */}
+                      <div className="h-[300px] mt-6">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                            data={outletPerformanceData}
+                            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                          >
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              vertical={false}
+                            />
+                            <XAxis dataKey="name" />
+                            <YAxis stroke="#f59e0b" domain={[0, 100]} />
+                            <Tooltip />
+                            <Legend />
+                            <Bar
+                              dataKey="passRate"
+                              name="Tingkat Kelulusan (%)"
+                              fill="#f59e0b"
+                              radius={[4, 4, 0, 0]}
+                              barSize={30}
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      {/* <div className="h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                            data={outletPerformanceData}
+                            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                          >
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              vertical={false}
+                            />
+                            <XAxis dataKey="name" />
                             <YAxis
                               yAxisId="left"
                               orientation="left"
@@ -1378,7 +1370,7 @@ export default function PeerReviewDashboard() {
                             />
                           </BarChart>
                         </ResponsiveContainer>
-                      </div>
+                      </div> */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                         {Array.isArray(outletData) ? (
                           outletData.map((outlet) => (
@@ -1402,7 +1394,9 @@ export default function PeerReviewDashboard() {
                                 <div>
                                   <p className="text-gray-500">Lulus</p>
                                   <p className="font-medium">
-                                    {outlet.passRate}%
+                                    {typeof outlet.passRate === "number"
+                                      ? outlet.passRate.toFixed(0) + "%"
+                                      : "0%"}
                                   </p>
                                 </div>
                               </div>
@@ -1472,12 +1466,12 @@ export default function PeerReviewDashboard() {
                             Rata-rata 6 bulan:
                           </span>
                           <span className="font-medium ml-1">
-                            {trendData.length > 0
+                            {trendData.data?.length > 0
                               ? (
-                                  trendData.reduce(
+                                  trendData.data.reduce(
                                     (sum, item) => sum + (item.score || 0),
                                     0
-                                  ) / trendData.length
+                                  ) / trendData.data.length
                                 ).toFixed(2)
                               : "0.0"}
                           </span>
@@ -1485,12 +1479,12 @@ export default function PeerReviewDashboard() {
                         <div className="flex items-center text-green-600">
                           <TrendingUp className="h-4 w-4 mr-1" />
                           <span>
-                            {trendData.length > 1
+                            {trendData.data?.length > 1
                               ? `${(
-                                  trendData[trendData.length - 1].score -
-                                  trendData[0].score
+                                  trendData.data[trendData.data.length - 1]
+                                    .score - trendData.data[0].score
                                 ).toFixed(1)} peningkatan`
-                              : "+0.7 peningkatan"}
+                              : "+0.0 peningkatan"}
                           </span>
                         </div>
                       </div>
@@ -1508,7 +1502,7 @@ export default function PeerReviewDashboard() {
                           <BarChart
                             data={questionSummary}
                             layout="vertical"
-                            margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+                            margin={{ top: 25, right: 0, left: 0, bottom: 0 }}
                           >
                             <CartesianGrid
                               strokeDasharray="3 3"
@@ -1519,7 +1513,7 @@ export default function PeerReviewDashboard() {
                             <YAxis
                               dataKey="text"
                               type="category"
-                              width={100}
+                              width={300}
                               tick={{ fontSize: 12 }}
                             />
                             <Tooltip />
@@ -1555,13 +1549,12 @@ export default function PeerReviewDashboard() {
                               outerRadius={80}
                               paddingAngle={2}
                               dataKey="value"
-                              label={({ name, percent }) =>
-                                `${name} (${
-                                  typeof percent === "number"
-                                    ? (percent * 100).toFixed(0)
-                                    : "0"
-                                }%)`
-                              }
+                              label={({ name, percent }) => {
+                                const percentText = `${(percent * 100).toFixed(
+                                  0
+                                )}%`;
+                                return `${name}\n${percentText}`;
+                              }}
                               labelLine={false}
                             >
                               {statusCounts.map((entry, index) => (
