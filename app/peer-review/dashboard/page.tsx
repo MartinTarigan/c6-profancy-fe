@@ -148,6 +148,8 @@ export default function PeerReviewDashboard() {
     []
   );
   const [timeRange, setTimeRange] = useState("this-month");
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
+
   const [activeTab, setActiveTab] = useState("overview");
   const [dashboardSummary, setDashboardSummary] =
     useState<DashboardSummary | null>(null);
@@ -155,6 +157,36 @@ export default function PeerReviewDashboard() {
   const [isExporting, setIsExporting] = useState(false);
   const [userRole, setUserRole] = useState<string>("");
   const [isLoadingUser, setIsLoadingUser] = useState<boolean>(true);
+  const [availableYears, setAvailableYears] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchYears = async () => {
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `${BACKEND_API_URL}/dashboard/peer-review/available-years`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const json = await res.json();
+      if (Array.isArray(json.data) && json.data.length > 0) {
+        const years = json.data.map(String);
+        setAvailableYears(years);
+
+        // Set default selected year ke tahun terbaru (atau yang pertama)
+        setTimeRange(years[0]);
+      } else {
+        const currentYear = String(new Date().getFullYear());
+        setAvailableYears([currentYear]);
+        setTimeRange(currentYear); // fallback default
+      }
+    };
+
+    fetchYears();
+  }, []);
 
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
@@ -229,15 +261,15 @@ export default function PeerReviewDashboard() {
         }
         const summaryData = await summaryRes.json();
         console.log("Summary data:", summaryData.data);
-        setDashboardSummary(summaryData);
+        setDashboardSummary(summaryData.data);
 
         // 3. Fetch outlet performance
         console.log("Fetching outlet performance...");
         const outletRes = await fetch(
-          `${BACKEND_API_URL}/dashboard/peer-review/outlet-performance?timeRange=${timeRange}`,
-          {
-            headers,
-          }
+          `${BACKEND_API_URL}/dashboard/peer-review/outlet-performance?timeRange=${timeRange}${
+            selectedMonth !== "all" ? `&month=${selectedMonth}` : ""
+          }`,
+          { headers }
         );
         if (!outletRes.ok) {
           console.error("Error fetching outlet performance:", outletRes.status);
@@ -289,7 +321,7 @@ export default function PeerReviewDashboard() {
         // 5. Fetch baristas
         console.log("Fetching baristas...");
         const baristasRes = await fetch(
-          `${BACKEND_API_URL}/dashboard/peer-review/baristas?outlet=${
+          `${BACKEND_API_URL}/dashboard/peer-review/baristas?timeRange=${timeRange}&outlet=${
             filterOutlet !== "all" ? filterOutlet : ""
           }&status=${
             filterStatus !== "all" ? filterStatus : ""
@@ -312,7 +344,7 @@ export default function PeerReviewDashboard() {
         // 6. Fetch score trend
         console.log("Fetching score trend...");
         const trendRes = await fetch(
-          `${BACKEND_API_URL}/dashboard/peer-review/score-trend?months=6`,
+          `${BACKEND_API_URL}/dashboard/peer-review/score-trend?timeRange=${timeRange}`,
           { headers }
         );
         if (!trendRes.ok) {
@@ -737,13 +769,17 @@ export default function PeerReviewDashboard() {
     fetchDashboardData();
   }, []);
 
+  useEffect(() => {
+    // Reset month filter ketika timeRange berubah
+    setSelectedMonth("all");
+  }, [timeRange]);
+
   // Panggil fetchDashboardData saat filter berubah
   useEffect(() => {
     if (!isLoading) {
       fetchDashboardData();
     }
-  }, [timeRange]);
-
+  }, [timeRange, selectedMonth]);
   // Panggil fetchDashboardData saat filter barista berubah
   useEffect(() => {
     if (!isLoading && !isLoading) {
@@ -966,19 +1002,20 @@ export default function PeerReviewDashboard() {
   };
 
   // Overall completion rate
-  const overallCompletionRate = dashboardSummary
-    ? (dashboardSummary.data.completedReviews /
-        dashboardSummary.data.totalReviews) *
-      100
-    : (baristaData.reduce((sum, b) => sum + b.reviewsCompleted, 0) /
-        baristaData.reduce((sum, b) => sum + b.reviewsTotal, 0)) *
-      100;
+  const overallCompletionRate =
+    dashboardSummary?.completedReviews != null &&
+    dashboardSummary?.totalReviews != null
+      ? (dashboardSummary.completedReviews / dashboardSummary.totalReviews) *
+        100
+      : (baristaData.reduce((sum, b) => sum + b.reviewsCompleted, 0) /
+          baristaData.reduce((sum, b) => sum + b.reviewsTotal, 0)) *
+        100;
 
   // Overall pass rate
-  const overallPassRate = dashboardSummary
-    ? dashboardSummary.data.passRate
-    : (baristaData.filter((b) => b.status === "Lulus").length /
-        baristaData.filter((b) => b.status !== "Pending").length) *
+  const overallPassRate =
+    dashboardSummary?.passRate ??
+    (baristaData.filter((b) => b.status === "Lulus").length /
+      baristaData.filter((b) => b.status !== "Pending").length) *
       100;
 
   if (isLoading) {
@@ -1033,18 +1070,11 @@ export default function PeerReviewDashboard() {
                       <SelectValue placeholder="Pilih periode" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="this-month">
-                        Bulan Ini (Mei 2025)
-                      </SelectItem>
-                      <SelectItem value="last-month">
-                        Bulan Lalu (April 2025)
-                      </SelectItem>
-                      <SelectItem value="last-3-months">
-                        3 Bulan Terakhir
-                      </SelectItem>
-                      <SelectItem value="last-6-months">
-                        6 Bulan Terakhir
-                      </SelectItem>
+                      {availableYears.map((year) => (
+                        <SelectItem key={year} value={year}>
+                          Tahun {year}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   {/* <Button
@@ -1133,7 +1163,7 @@ export default function PeerReviewDashboard() {
                         </p>
                         <h3 className="text-2xl font-bold mt-1">
                           {dashboardSummary
-                            ? dashboardSummary.data.totalBaristas
+                            ? dashboardSummary.totalBaristas
                             : baristaData.length}
                         </h3>
                       </div>
@@ -1153,11 +1183,9 @@ export default function PeerReviewDashboard() {
                       <div>
                         <p className="text-sm text-gray-500">Rata-rata Skor</p>
                         <h3 className="text-2xl font-bold mt-1">
-                          {dashboardSummary?.data.averageScore != null &&
-                          typeof dashboardSummary.data.averageScore ===
-                            "number" &&
-                          !isNaN(dashboardSummary.data.averageScore)
-                            ? dashboardSummary.data.averageScore.toFixed(1)
+                          {typeof dashboardSummary?.averageScore === "number" &&
+                          !isNaN(dashboardSummary.averageScore)
+                            ? dashboardSummary.averageScore.toFixed(1)
                             : baristaData.filter((b) => b.averageScore > 0)
                                 .length > 0
                             ? (
@@ -1178,25 +1206,28 @@ export default function PeerReviewDashboard() {
                     <div className="mt-4 flex items-center text-xs">
                       <span
                         className={`flex items-center ${
-                          dashboardSummary &&
-                          dashboardSummary.data.scoreTrend > 0
+                          typeof dashboardSummary?.scoreTrend === "number" &&
+                          dashboardSummary.scoreTrend > 0
                             ? "text-green-600"
                             : "text-red-600"
                         }`}
                       >
-                        {dashboardSummary &&
-                        dashboardSummary.data.scoreTrend > 0 ? (
-                          <ArrowUpRight className="h-3 w-3 mr-1" />
+                        {typeof dashboardSummary?.scoreTrend === "number" ? (
+                          dashboardSummary.scoreTrend > 0 ? (
+                            <>
+                              <ArrowUpRight className="h-3 w-3 mr-1" />+
+                              {dashboardSummary.scoreTrend.toFixed(1)}{" "}
+                            </>
+                          ) : (
+                            <>
+                              <ArrowDownRight className="h-3 w-3 mr-1" />
+                              {dashboardSummary.scoreTrend.toFixed(1)}{" "}
+                            </>
+                          )
                         ) : (
-                          <ArrowDownRight className="h-3 w-3 mr-1" />
+                          "0.0"
                         )}
-                        {dashboardSummary?.scoreTrend != null &&
-                        typeof dashboardSummary.data.scoreTrend === "number"
-                          ? dashboardSummary.data.scoreTrend > 0
-                            ? `+${dashboardSummary.data.scoreTrend.toFixed(1)}`
-                            : dashboardSummary.data.scoreTrend.toFixed(1)
-                          : "0.0"}
-                        dari periode sebelumnya
+                        dari penambahan nilai sebelumnya
                       </span>
                     </div>
                   </CardContent>
@@ -1245,7 +1276,7 @@ export default function PeerReviewDashboard() {
                         <span>Progress</span>
                         <span>
                           {dashboardSummary
-                            ? `${dashboardSummary.data.completedReviews}/${dashboardSummary.data.totalReviews}`
+                            ? `${dashboardSummary.completedReviews}/${dashboardSummary.totalReviews}`
                             : `${baristaData.reduce(
                                 (sum, b) => sum + b.reviewsCompleted,
                                 0
@@ -1272,10 +1303,33 @@ export default function PeerReviewDashboard() {
                         <h2 className="text-lg font-medium">
                           Performa Berdasarkan Outlet
                         </h2>
-                        <Button variant="ghost" size="sm">
-                          <Filter className="h-4 w-4 mr-2" />
-                          <span>Filter</span>
-                        </Button>
+                        <div className="flex gap-2">
+                          {timeRange.match(/^\d{4}$/) && (
+                            <Select
+                              value={selectedMonth}
+                              onValueChange={setSelectedMonth}
+                            >
+                              <SelectTrigger className="w-[140px]">
+                                <SelectValue placeholder="Pilih bulan" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="all">Semua Bulan</SelectItem>
+                                <SelectItem value="1">Januari</SelectItem>
+                                <SelectItem value="2">Februari</SelectItem>
+                                <SelectItem value="3">Maret</SelectItem>
+                                <SelectItem value="4">April</SelectItem>
+                                <SelectItem value="5">Mei</SelectItem>
+                                <SelectItem value="6">Juni</SelectItem>
+                                <SelectItem value="7">Juli</SelectItem>
+                                <SelectItem value="8">Agustus</SelectItem>
+                                <SelectItem value="9">September</SelectItem>
+                                <SelectItem value="10">Oktober</SelectItem>
+                                <SelectItem value="11">November</SelectItem>
+                                <SelectItem value="12">Desember</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </div>
                       </div>
                       <div className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
@@ -1476,7 +1530,7 @@ export default function PeerReviewDashboard() {
                               : "0.0"}
                           </span>
                         </div>
-                        <div className="flex items-center text-green-600">
+                        {/* <div className="flex items-center text-green-600">
                           <TrendingUp className="h-4 w-4 mr-1" />
                           <span>
                             {trendData.data?.length > 1
@@ -1486,7 +1540,7 @@ export default function PeerReviewDashboard() {
                                 ).toFixed(1)} peningkatan`
                               : "+0.0 peningkatan"}
                           </span>
-                        </div>
+                        </div> */}
                       </div>
                     </CardContent>
                   </Card>
