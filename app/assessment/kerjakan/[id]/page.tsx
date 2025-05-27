@@ -753,23 +753,25 @@ export default function KerjakanAssessment() {
                             )
                             .filter(Boolean)
                         : currentQuestion.options
-                      ).map((opt) => (
-                        <div
-                          key={opt.id}
-                          className="flex items-center space-x-2 rounded-lg border p-3 hover:bg-slate-50 transition-colors"
-                        >
-                          <RadioGroupItem
-                            value={opt.id}
-                            id={`${currentQuestion.id}-${opt.id}`}
-                          />
-                          <Label
-                            htmlFor={`${currentQuestion.id}-${opt.id}`}
-                            className="flex-1 cursor-pointer font-normal"
+                      ).map((opt) =>
+                        opt ? (
+                          <div
+                            key={opt.id}
+                            className="flex items-center space-x-2 rounded-lg border p-3 hover:bg-slate-50 transition-colors"
                           >
-                            {opt.text}
-                          </Label>
-                        </div>
-                      ))}
+                            <RadioGroupItem
+                              value={opt.id}
+                              id={`${currentQuestion.id}-${opt.id}`}
+                            />
+                            <Label
+                              htmlFor={`${currentQuestion.id}-${opt.id}`}
+                              className="flex-1 cursor-pointer font-normal"
+                            >
+                              {opt.text}
+                            </Label>
+                          </div>
+                        ) : null
+                      )}
                     </RadioGroup>
                   ) : (
                     <div className="space-y-2">
