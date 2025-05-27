@@ -1,7 +1,6 @@
 "use client"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import General from "@/components/Cards/General"
 import ShiftDashboard from "@/components/ShiftDashboard"
 
 export default function Home() {

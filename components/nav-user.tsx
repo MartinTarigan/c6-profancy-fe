@@ -1,13 +1,12 @@
 "use client"
 import { useRouter } from "next/navigation"
-import { ChevronsUpDown, LogOut, User, Globe } from "lucide-react"
+import { ChevronsUpDown, LogOut, Globe } from "lucide-react"
 import { useState, useEffect } from "react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -39,7 +38,7 @@ export function NavUser({
       setLanguageState(savedLanguage)
     }
 
-    setUsername(localStorage.getItem("username"));
+    setUsername(localStorage.getItem("username") || "");
   }, [])
 
   const setLanguage = (lang: string) => {

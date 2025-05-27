@@ -4,7 +4,6 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AdminDashboard } from "@/components/shift/admin/admin-dashboard"
 import LoadingIndicator from "@/components/LoadingIndicator"
-import { AppSidebar } from "@/components/app-sidebar"
 
 export default function AdminDashboardPage() {
   const router = useRouter()

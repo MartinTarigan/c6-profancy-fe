@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -696,8 +698,7 @@ export default function AssessmentDetailPage() {
                       </div>
                       <Progress
                         value={assessmentDetail.scoreDistribution.high}
-                        className="h-2 bg-slate-100"
-                        indicatorClassName="bg-green-500"
+                        className="h-2 bg-slate-100 [&>div]:bg-green-500"
                       />
                     </div>
                     <div>
@@ -711,8 +712,7 @@ export default function AssessmentDetailPage() {
                       </div>
                       <Progress
                         value={assessmentDetail.scoreDistribution.medium}
-                        className="h-2 bg-slate-100"
-                        indicatorClassName="bg-blue-500"
+                        className="h-2 bg-slate-100 [&>div]:bg-blue-500"
                       />
                     </div>
                     <div>
@@ -726,8 +726,7 @@ export default function AssessmentDetailPage() {
                       </div>
                       <Progress
                         value={assessmentDetail.scoreDistribution.low}
-                        className="h-2 bg-slate-100"
-                        indicatorClassName="bg-red-500"
+                        className="h-2 bg-slate-100 [&>div]:bg-red-500"
                       />
                     </div>
                   </div>

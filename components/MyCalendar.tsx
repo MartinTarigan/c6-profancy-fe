@@ -932,8 +932,7 @@ export default function MyCalendar() {
           <ConfirmModal
             message="Apakah Anda yakin ingin membatalkan perubahan?"
             onConfirm={handleConfirmCancel}
-            onCancel={() => setShowConfirmModal(false)}
-          />
+            onClose={() => setShowConfirmModal(false)} isOpen={false}          />
         )}
 
         {/* Outlet Selection */}
@@ -982,7 +981,13 @@ export default function MyCalendar() {
               <Calendar
                 locale="id-ID"
                 value={date}
-                onChange={setDate}
+                onChange={(value) => {
+                  if (value instanceof Date) {
+                    setDate(value);
+                  } else if (Array.isArray(value) && value[0] instanceof Date) {
+                    setDate(value[0]);
+                  }
+                }}
                 className="modern-calendar"
                 tileClassName={({ date, view }) => {
                   if (view === "month") {

@@ -76,19 +76,19 @@ export default function DetailAkun() {
     }
   }, [username]);
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "-";
-    try {
-      const date = new Date(dateString);
-      return new Intl.DateTimeFormat("id-ID", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }).format(date);
-    } catch (e) {
-      return dateString || "-";
-    }
-  };
+  // const formatDate = (dateString: string | null) => {
+  //   if (!dateString) return "-";
+  //   try {
+  //     const date = new Date(dateString);
+  //     return new Intl.DateTimeFormat("id-ID", {
+  //       day: "numeric",
+  //       month: "long",
+  //       year: "numeric",
+  //     }).format(date);
+  //   } catch (e) {
+  //     return e;
+  //   }
+  // };
 
   return (
     <div className="flex flex-col w-full max-w-5xl mx-auto px-4 py-6">
@@ -220,7 +220,7 @@ export default function DetailAkun() {
                       Tanggal Lahir
                     </h3>
                     <p className="text-lg">
-                      {formatDate(accountData.dateOfBirth)}
+                      {/* {formatDate(accountData.dateOfBirth)} */}
                     </p>
                   </div>
                 </div>
@@ -255,10 +255,10 @@ export default function DetailAkun() {
                     </h3>
                     <div className="space-y-1">
                       <p className="text-sm text-muted-foreground">
-                        Dibuat: {formatDate(accountData.createdAt)}
+                        {/* Dibuat: {formatDate(accountData.createdAt)} */}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Diperbarui: {formatDate(accountData.updatedAt)}
+                        {/* Diperbarui: {formatDate(accountData.updatedAt)} */}
                       </p>
                     </div>
                   </div>

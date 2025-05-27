@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import * as React from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { BookOpen, Calendar, Home, Bell, Users, Coffee } from "lucide-react";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
