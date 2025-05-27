@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
   Timer,
-  Clock,
   CheckCircle,
   AlertTriangle,
   HelpCircle,

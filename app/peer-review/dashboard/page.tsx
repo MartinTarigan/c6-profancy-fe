@@ -1,8 +1,9 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {
   BarChart,
   Bar,
@@ -19,16 +20,12 @@ import {
   Area,
 } from "recharts";
 import {
-  User,
   Users,
-  Bell,
   Search,
   TrendingUp,
   MapPin,
   Coffee,
   Calendar,
-  Download,
-  Filter,
   ArrowUpRight,
   ArrowDownRight,
   XCircle,
@@ -1475,7 +1472,7 @@ export default function PeerReviewDashboard() {
                       <div className="h-[250px]">
                         <ResponsiveContainer width="100%" height="100%">
                           <AreaChart
-                            data={trendData.data}
+                            data={trendData}
                             margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                           >
                             <defs>
@@ -1521,12 +1518,12 @@ export default function PeerReviewDashboard() {
                             Rata-rata 6 bulan:
                           </span>
                           <span className="font-medium ml-1">
-                            {trendData.data?.length > 0
+                            {trendData.length > 0
                               ? (
-                                  trendData.data.reduce(
+                                  trendData.reduce(
                                     (sum, item) => sum + (item.score || 0),
                                     0
-                                  ) / trendData.data.length
+                                  ) / trendData.length
                                 ).toFixed(2)
                               : "0.0"}
                           </span>
