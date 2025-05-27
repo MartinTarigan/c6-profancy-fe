@@ -3,7 +3,11 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
@@ -48,36 +52,45 @@ export default function UpdateAssessment() {
       try {
         setIsLoading(true);
         const token = localStorage.getItem("token");
-        
+
         // Fetch assessment by ID
-        const response = await fetch(`https://sahabattensbe-production-0c07.up.railway.app/api/assessments/${id}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        
+        const response = await fetch(
+          `https://rumahbaristensbe-production.up.railway.app/api/assessments/${id}`,
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          }
+        );
+
         if (!response.ok) {
           throw new Error(`Error fetching assessment: ${response.status}`);
         }
-        
+
         const assessmentData: Assessment = await response.json();
-        
+
         // Set form data with existing values
         setTemplate(assessmentData.template);
         setDeadline(new Date(assessmentData.deadline));
-        
+
         // Extract usernames from assigned users
-        const assignedUsernames = assessmentData.assignedUsers.map(user => user.id);
+        const assignedUsernames = assessmentData.assignedUsers.map(
+          (user) => user.id
+        );
         setSelectedUsers(assignedUsernames);
-        
+
         // Fetch available users for the template
         await fetchUsers(assessmentData.template);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Terjadi kesalahan saat mengambil data");
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Terjadi kesalahan saat mengambil data"
+        );
         console.error("Error fetching assessment data:", err);
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     if (id) {
       fetchAssessmentData();
     }
@@ -87,9 +100,10 @@ export default function UpdateAssessment() {
     setLoadingUsers(true);
     let url: string;
     if (tpl === "PROBATIONBARISTA") {
-      url = "https://sahabattensbe-production-0c07.up.railway.app/api/trainee/peer-review-assignment/reviewees";
+      url =
+        "https://rumahbaristensbe-production.up.railway.app/api/trainee/peer-review-assignment/reviewees";
     } else {
-      url = `https://sahabattensbe-production-0c07.up.railway.app/api/assessments/${tpl.toLowerCase()}`;
+      url = `https://rumahbaristensbe-production.up.railway.app/api/assessments/${tpl.toLowerCase()}`;
     }
     try {
       const res = await fetch(url, {
@@ -132,19 +146,22 @@ export default function UpdateAssessment() {
         deadline: format(deadline, "yyyy-MM-dd"),
         assignedUsername: selectedUsers,
       };
-      
+
       // Use PUT method for update
-      const res = await fetch(`https://sahabattensbe-production-0c07.up.railway.app/api/assessments/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          ...(localStorage.getItem("token")
-            ? { Authorization: `Bearer ${localStorage.getItem("token")}` }
-            : {}),
-        },
-        body: JSON.stringify(payload),
-      });
-      
+      const res = await fetch(
+        `https://rumahbaristensbe-production.up.railway.app/api/assessments/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            ...(localStorage.getItem("token")
+              ? { Authorization: `Bearer ${localStorage.getItem("token")}` }
+              : {}),
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
       if (!res.ok) throw new Error(`Error ${res.status}`);
       router.push("/assessment");
     } catch (e) {
@@ -176,9 +193,7 @@ export default function UpdateAssessment() {
         ← Back
       </Button>
 
-      <h1 className="text-3xl font-bold text-center my-8">
-        Update Assessment
-      </h1>
+      <h1 className="text-3xl font-bold text-center my-8">Update Assessment</h1>
 
       <div className="max-w-xl mx-auto space-y-6 border rounded-lg p-6">
         {/* Pilih Template */}
@@ -212,7 +227,9 @@ export default function UpdateAssessment() {
                 className="w-full justify-start text-left font-normal"
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {deadline ? format(deadline, "PPP", { locale: undefined }) : "Select deadline"}
+                {deadline
+                  ? format(deadline, "PPP", { locale: undefined })
+                  : "Select deadline"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">

@@ -49,7 +49,7 @@ export default function AdminDashboardPage() {
   if (isAuthorized) {
     return (
       <div className="flex min-h-screen">
-        <AppSidebar />
+        {/* <AppSidebar /> */}
         <AdminDashboard />
       </div>
     )

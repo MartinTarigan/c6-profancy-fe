@@ -53,25 +53,35 @@ export default function DetailAssessment() {
         setIsLoading(true);
         const token = localStorage.getItem("token");
         const username = localStorage.getItem("username");
-        if (!username) throw new Error("Username tidak ditemukan. Silakan login kembali.");
+        if (!username)
+          throw new Error("Username tidak ditemukan. Silakan login kembali.");
 
         // Fetch assessment
-        const assessmentRes = await fetch("https://sahabattensbe-production-0c07.up.railway.app/api/assessments", {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        if (!assessmentRes.ok) throw new Error(`Error fetching assessment: ${assessmentRes.status}`);
+        const assessmentRes = await fetch(
+          "https://rumahbaristensbe-production.up.railway.app/api/assessments",
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          }
+        );
+        if (!assessmentRes.ok)
+          throw new Error(`Error fetching assessment: ${assessmentRes.status}`);
         const assessmentsData: Assessment[] = await assessmentRes.json();
-        const found = assessmentsData.find(a => a.id === parseInt(assessmentId, 10));
+        const found = assessmentsData.find(
+          (a) => a.id === parseInt(assessmentId, 10)
+        );
         if (!found) throw new Error("Assessment tidak ditemukan");
         setAssessment(found);
 
         // Fetch submissions
         setIsLoadingSubmissions(true);
         const submissionsRes = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app/api/trainee/assessment/${assessmentId}/summaries`,
+          `https://rumahbaristensbe-production.up.railway.app/api/trainee/assessment/${assessmentId}/summaries`,
           { headers: token ? { Authorization: `Bearer ${token}` } : {} }
         );
-        if (!submissionsRes.ok) throw new Error(`Error fetching submissions: ${submissionsRes.status}`);
+        if (!submissionsRes.ok)
+          throw new Error(
+            `Error fetching submissions: ${submissionsRes.status}`
+          );
         const submissionsData = await submissionsRes.json();
         setSubmissions(submissionsData.data || []);
       } catch (err) {
@@ -115,7 +125,9 @@ export default function DetailAssessment() {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <div className="text-center">
-          <h3 className="text-xl font-semibold mb-2">Assessment Tidak Ditemukan</h3>
+          <h3 className="text-xl font-semibold mb-2">
+            Assessment Tidak Ditemukan
+          </h3>
           <p>Assessment yang Anda cari tidak tersedia.</p>
           <Link href="/assessment">
             <Button className="mt-4">Kembali ke Daftar Assessment</Button>
@@ -140,7 +152,9 @@ export default function DetailAssessment() {
 
       {/* Header */}
       <div className="flex flex-col items-center mb-8">
-        <h1 className="text-primary text-3xl font-bold mb-2">Detail Assessment</h1>
+        <h1 className="text-primary text-3xl font-bold mb-2">
+          Detail Assessment
+        </h1>
         <p className="text-gray-500">
           {assessment.template} — Deadline: {formatDate(assessment.deadline)}
         </p>
@@ -193,7 +207,7 @@ export default function DetailAssessment() {
 
         <h3 className="font-medium mb-2">Daftar Peserta</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          {assessment.assignedUsers.map(u => (
+          {assessment.assignedUsers.map((u) => (
             <div key={u.id} className="text-sm">
               {u.fullName}
             </div>
@@ -212,7 +226,9 @@ export default function DetailAssessment() {
           </div>
         ) : submissions.length === 0 ? (
           <div className="text-center py-8 border rounded-lg">
-            <p className="text-gray-500">Belum ada submisi untuk assessment ini.</p>
+            <p className="text-gray-500">
+              Belum ada submisi untuk assessment ini.
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto rounded-lg">
@@ -229,20 +245,28 @@ export default function DetailAssessment() {
                 </tr>
               </thead>
               <tbody>
-                {submissions.map(sub => {
+                {submissions.map((sub) => {
                   // kondisi: MC = 0 & belum dinilai → tidak perlu review esai
-                  const skipEssayReview = !sub.essayReviewed && sub.mcScore === 0;
+                  const skipEssayReview =
+                    !sub.essayReviewed && sub.mcScore === 0;
 
                   return (
-                    <tr key={sub.submissionId} className="bg-blue-50 border-b border-white">
+                    <tr
+                      key={sub.submissionId}
+                      className="bg-blue-50 border-b border-white"
+                    >
                       <td className="py-3 px-4">{sub.username}</td>
-                      <td className="py-3 px-4">{formatDate(sub.submittedAt)}</td>
+                      <td className="py-3 px-4">
+                        {formatDate(sub.submittedAt)}
+                      </td>
                       <td className="py-3 px-4">{sub.mcScore.toFixed(1)}</td>
                       <td className="py-3 px-4">{sub.essayScore.toFixed(1)}</td>
                       <td className="py-3 px-4">{sub.totalScore.toFixed(1)}</td>
                       <td className="py-3 px-4">
                         {skipEssayReview ? (
-                          <span className="text-red-600">Penilaian Esai Tidak Diperlukan</span>
+                          <span className="text-red-600">
+                            Penilaian Esai Tidak Diperlukan
+                          </span>
                         ) : sub.essayReviewed ? (
                           <span className="text-green-600">Sudah Dinilai</span>
                         ) : (
@@ -251,11 +275,17 @@ export default function DetailAssessment() {
                       </td>
                       <td className="py-3 px-4">
                         <Link
-                          href={`/assessment/review/${sub.submissionId}`
-                            + `?assessmentId=${assessmentId}`
-                            + `&username=${encodeURIComponent(sub.username)}`}
+                          href={
+                            `/assessment/review/${sub.submissionId}` +
+                            `?assessmentId=${assessmentId}` +
+                            `&username=${encodeURIComponent(sub.username)}`
+                          }
                         >
-                          <Button variant="outline" size="sm" disabled={skipEssayReview}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={skipEssayReview}
+                          >
                             Review
                           </Button>
                         </Link>

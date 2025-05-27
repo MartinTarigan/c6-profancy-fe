@@ -192,7 +192,7 @@ export default function OvertimeLogList() {
 
       // Determine if we need to add query parameters for sorting or filtering
       let url =
-        "https://sahabattensbe-production-0c07.up.railway.app/api/overtime-logs";
+        "https://rumahbaristensbe-production.up.railway.app/api/overtime-logs";
       const queryParams = [];
 
       if (selectedStatus !== "ALL") {
@@ -261,7 +261,7 @@ export default function OvertimeLogList() {
       }
 
       const response = await fetch(
-        "https://sahabattensbe-production-0c07.up.railway.app/api/outlets",
+        "https://rumahbaristensbe-production.up.railway.app/api/outlets",
         {
           headers: {
             Authorization: `Bearer ${token}`,

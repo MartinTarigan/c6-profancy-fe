@@ -85,7 +85,7 @@ export default function TambahLogLembur() {
   const fetchOutlets = async (storedToken: string) => {
     try {
       const res = await fetch(
-        "https://sahabattensbe-production-0c07.up.railway.app/api/outlets",
+        "https://rumahbaristensbe-production.up.railway.app/api/outlets",
         {
           method: "GET",
           headers: {
@@ -208,7 +208,7 @@ export default function TambahLogLembur() {
       console.log("🟢 Current Outlet:", currentOutlet);
 
       const res = await fetch(
-        `https://sahabattensbe-production-0c07.up.railway.app/api/overtime-logs`,
+        `https://rumahbaristensbe-production.up.railway.app/api/overtime-logs`,
         {
           method: "POST",
           headers: {

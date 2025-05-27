@@ -107,7 +107,7 @@ export default function ReportsPage() {
 
         // Fetch ALL leave requests
         const response = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app/api/shift-management/leave-request/all`,
+          `https://rumahbaristensbe-production.up.railway.app/api/shift-management/leave-request/all`,
           {
             method: "GET",
             headers: {

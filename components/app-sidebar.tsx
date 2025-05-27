@@ -3,8 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { BookOpen, Calendar } from "lucide-react";
-
+import { BookOpen, Calendar, Home, Bell, Users, Coffee } from "lucide-react";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import {
@@ -15,156 +14,307 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const router = useRouter();
+interface Notification {
+  id: string;
+  message: string;
+  read: boolean;
+}
 
+const POLLING_CONFIG = {
+  ACTIVE_INTERVAL: 30000,
+  INACTIVE_INTERVAL: 120000,
+  BACKOFF_FACTOR: 1.5,
+  MAX_INTERVAL: 300000,
+  INACTIVITY_THRESHOLD: 60000,
+};
+
+export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const [user, setUser] = React.useState({
     name: "",
     email: "",
     avatar: "/images/Mascott Tens@300x.png",
+    role: "",
   });
+  const [navItems, setNavItems] = React.useState<any[]>([]);
+  const [notificationCount, setNotificationCount] = React.useState(0);
+  const [userRoles, setUserRoles] = React.useState<string>("");
 
-  // State untuk menampung URL dinamis "Izin/Cuti"
-  const [izinCutiUrl, setIzinCutiUrl] = React.useState("");
-  const [lemburUrl, setLemburUrl] = React.useState("");
-  const [shiftiUrl, setShiftUrl] = React.useState("");
+  const lastUserActivityRef = React.useRef(Date.now());
+  const pollingIntervalRef = React.useRef(POLLING_CONFIG.ACTIVE_INTERVAL);
+  const pollingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const failedAttemptsRef = React.useRef(0);
+
+  const fetchNotifications = React.useCallback(async () => {
+    const token = localStorage.getItem("token");
+    const username = localStorage.getItem("username");
+    if (!token || !username) {
+      setNotificationCount(0);
+      return;
+    }
+    try {
+      const res = await fetch(
+        `https://rumahbaristensbe-production.up.railway.app/api/notifications/${username}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!res.ok) throw new Error("Failed to fetch");
+      // Ambil array notifikasi dari field `data`
+      const json = (await res.json()) as {
+        status: number;
+        message: string;
+        timestamp: string;
+        data: Notification[];
+      };
+      const notifications = json.data;
+      const unread = notifications.filter((n) => !n.read).length;
+      setNotificationCount(unread);
+      failedAttemptsRef.current = 0;
+      pollingIntervalRef.current = POLLING_CONFIG.ACTIVE_INTERVAL;
+    } catch {
+      failedAttemptsRef.current += 1;
+      pollingIntervalRef.current = Math.min(
+        pollingIntervalRef.current * POLLING_CONFIG.BACKOFF_FACTOR,
+        POLLING_CONFIG.MAX_INTERVAL
+      );
+    } finally {
+      if (pollingTimeoutRef.current) clearTimeout(pollingTimeoutRef.current);
+      pollingTimeoutRef.current = setTimeout(
+        fetchNotifications,
+        pollingIntervalRef.current
+      );
+    }
+  }, []);
+
+  const updateUserActivity = React.useCallback(() => {
+    lastUserActivityRef.current = Date.now();
+    if (pollingIntervalRef.current !== POLLING_CONFIG.ACTIVE_INTERVAL) {
+      pollingIntervalRef.current = POLLING_CONFIG.ACTIVE_INTERVAL;
+      if (pollingTimeoutRef.current) {
+        clearTimeout(pollingTimeoutRef.current);
+        pollingTimeoutRef.current = null;
+        fetchNotifications();
+      }
+    }
+  }, [fetchNotifications]);
 
   React.useEffect(() => {
     const storedName = localStorage.getItem("username") ?? "";
     const storedRoles = localStorage.getItem("roles") ?? "";
     const token = localStorage.getItem("token");
-
     setUser({
-      name: storedName,
-      email: storedRoles,
+      name: storedName || "John Doe",
+      email: storedRoles || "user@example.com",
       avatar: "/images/Mascott Tens@300x.png",
+      role: storedRoles || "Barista",
     });
-
-    // Jika tidak ada token, user dianggap sesi kadaluarsa
+    setUserRoles(storedRoles);
     if (!token) {
-      return;
-    }
-
-    // Tentukan URL dinamis berdasarkan roles
-    if (storedRoles.includes("HeadBar")) {
-      setIzinCutiUrl("/jadwal/izin-cuti/headbar");
+      setNotificationCount(0);
+      setNavItems([]);
     } else {
-      setIzinCutiUrl("/jadwal/izin-cuti/barista");
+      fetchNotifications();
     }
+  }, [fetchNotifications]);
 
-    if (storedRoles.includes("Admin")) {
-      setShiftUrl("/jadwal/shift/admin");
+  const generateNavItems = React.useCallback((roles: string, count: number) => {
+    const baseItems = [
+      {
+        title: "Home",
+        url: roles.includes("Admin")
+          ? "/jadwal/shift/admin"
+          : roles.includes("CEO")
+          ? "/jadwal/shift/dashboard"
+          : "/",
+        icon: Home,
+        standalone: true,
+      },
+      {
+        title: "Notifications",
+        url: "/notification",
+        icon: Bell,
+        standalone: true,
+        badge: count > 0 ? count : undefined,
+      },
+    ];
+    let roleItems: any[] = [];
+    if (roles.includes("Admin")) {
+      roleItems = [
+        {
+          title: "Account Management",
+          url: "/account",
+          icon: Users,
+          standalone: true,
+        },
+        {
+          title: "Training Management",
+          url: "#",
+          icon: BookOpen,
+          items: [
+            { title: "Assessment", url: "/assessment" },
+            { title: "Material", url: "/training-materials" },
+            { title: "Peer Review", url: "/peer-review" },
+          ],
+        },
+      ];
+    } else if (roles.includes("HeadBar")) {
+      roleItems = [
+        {
+          title: "Account Management",
+          url: "/account",
+          icon: Users,
+          standalone: true,
+        },
+        {
+          title: "Training Management",
+          url: "#",
+          icon: BookOpen,
+          items: [
+            { title: "Assessment", url: "/assessment" },
+            { title: "Material", url: "/training-materials" },
+            { title: "Peer Review", url: "/peer-review" },
+          ],
+        },
+        {
+          title: "Schedule Management",
+          url: "#",
+          icon: Calendar,
+          items: [
+            {
+              title: "Overtime Management",
+              url: "/jadwal/lembur/headbar",
+            },
+            {
+              title: "Leave Management",
+              url: "/jadwal/izin-cuti/headbar",
+            },
+            { title: "Shift Management", url: "/jadwal/shift" },
+          ],
+        },
+      ];
+    } else if (roles.includes("CLEVEL")) {
+      roleItems = [
+        {
+          title: "Account Management",
+          url: "/account",
+          icon: Users,
+          standalone: true,
+        },
+        {
+          title: "Training",
+          url: "#",
+          icon: BookOpen,
+          items: [
+            {
+              title: "Peer Review & Grading",
+              url: "/peer-review",
+            },
+            {
+              title: "Performance Grading",
+              url: "/assessment/dashboard-clevel",
+            },
+            {
+              title: "Dashboard",
+              url: "/peer-review/dashboard",
+            },
+          ],
+        },
+      ];
     } else {
-      setShiftUrl("/jadwal/shift");
+      roleItems = [
+        {
+          title: "Training",
+          url: "#",
+          icon: BookOpen,
+          items: [
+            { title: "Assessment", url: "/assessment" },
+            { title: "Material", url: "/training-materials" },
+            { title: "Peer Review", url: "/peer-review" },
+          ],
+        },
+        {
+          title: "Schedule",
+          url: "#",
+          icon: Calendar,
+          items: [
+            { title: "Request Overtime", url: "/jadwal/lembur" },
+            {
+              title: "Request Leave",
+              url: "/jadwal/izin-cuti/barista",
+            },
+            { title: "Shift", url: "/jadwal/shift" },
+          ],
+        },
+      ];
     }
-
-    if (storedRoles.includes("HeadBar")) {
-      setLemburUrl("/jadwal/lembur/headbar");
-    } else {
-      setLemburUrl("/jadwal/lembur");
-    }
+    setNavItems([...baseItems, ...roleItems]);
   }, []);
 
-  const handleIzinCutiClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-
+  React.useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Sesi Anda telah berakhir. Silakan login kembali.");
-      router.push("/login");
-      return;
+    if (token) {
+      generateNavItems(userRoles, notificationCount);
+    } else {
+      setNavItems([]);
     }
+  }, [userRoles, notificationCount, generateNavItems]);
 
-    // Arahkan ke URL dinamis yang sudah ditentukan
-    if (izinCutiUrl) {
-      router.push(izinCutiUrl);
-    }
-  };
+  React.useEffect(() => {
+    const events = [
+      "mousedown",
+      "keydown",
+      "scroll",
+      "mousemove",
+      "touchstart",
+      "click",
+    ];
+    events.forEach((e) => window.addEventListener(e, updateUserActivity));
+    return () =>
+      events.forEach((e) => window.removeEventListener(e, updateUserActivity));
+  }, [updateUserActivity]);
 
-  const handleShiftClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
+  React.useEffect(() => {
+    const checkInactivity = setInterval(() => {
+      if (
+        Date.now() - lastUserActivityRef.current >
+        POLLING_CONFIG.INACTIVITY_THRESHOLD
+      ) {
+        pollingIntervalRef.current = POLLING_CONFIG.INACTIVE_INTERVAL;
+      }
+    }, 10000);
+    return () => clearInterval(checkInactivity);
+  }, []);
 
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Sesi Anda telah berakhir. Silakan login kembali.");
-      router.push("/login");
-      return;
-    }
-
-    // Arahkan ke URL dinamis yang sudah ditentukan
-    if (shiftiUrl) {
-      router.push(shiftiUrl);
-    }
-  };
-
-  const handleLemburClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Sesi Anda telah berakhir. Silakan login kembali.");
-      router.push("/login");
-      return;
-    }
-
-    // Arahkan ke URL dinamis yang sudah ditentukan
-    if (lemburUrl) {
-      router.push(lemburUrl);
-    }
-  };
-
-  // Perhatikan di item "Izin/Cuti":
-  // - Kita bisa beri url: "#" agar Link tidak benar-benar ke mana-mana
-  // - Gunakan onClick untuk menentukan ke mana user diarahkan
-  const navMain = [
-    {
-      title: "Training",
-      url: "#",
-      icon: BookOpen,
-      isActive: true,
-      items: [
-        { title: "Ujian", url: "/assessment" },
-        { title: "Materi", url: "/training-materials" },
-        { title: "Peer Review", url: "/peer-review" },
-        { title: "Barista", url: "/barista" },
-      ],
-    },
-    {
-      title: "Jadwal",
-      url: "#",
-      icon: Calendar,
-      items: [
-        { title: "Lembur", url: lemburUrl, onClick: handleLemburClick },
-        {
-          title: "Izin/Cuti",
-          url: izinCutiUrl,
-          onClick: handleIzinCutiClick,
-        },
-        { title: "Shift", url: shiftiUrl, onClick: handleShiftClick },
-        { title: "Dashboard", url: "/jadwal/shift/dashboard" },
-      ],
-    },
-  ];
+  React.useEffect(() => {
+    const handler = () => fetchNotifications();
+    window.addEventListener("notificationsUpdated", handler);
+    return () => window.removeEventListener("notificationsUpdated", handler);
+  }, [fetchNotifications]);
 
   return (
-    <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <Image
-          className="dark:invert mt-3 mb-3"
-          src="/images/login_logo.png"
-          alt="Logo"
-          width={120}
-          height={10}
-          priority
-        />
+    <Sidebar
+      collapsible="icon"
+      className="border-r border-border/10 bg-primary shadow-sm"
+      {...props}
+    >
+      <SidebarHeader className="flex items-center justify-center border-b border-border/10 px-6 py-5">
+        <div className="flex items-center gap-2">
+          <Coffee className="h-6 w-6 text-white" />
+          <Image
+            className="dark:invert"
+            src="/images/login_logo.png"
+            alt="Logo"
+            width={100}
+            height={10}
+            priority
+          />
+        </div>
       </SidebarHeader>
-      <SidebarContent>
-        <NavMain items={navMain} />
+      <SidebarContent className="px-3 py-4">
+        <NavMain items={navItems} />
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="border-t border-border/10 bg-muted/5">
         <NavUser user={user} />
       </SidebarFooter>
-      <SidebarRail />
+      <SidebarRail className="bg-muted/5" />
     </Sidebar>
   );
 }

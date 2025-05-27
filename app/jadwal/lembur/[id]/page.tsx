@@ -104,7 +104,7 @@ export default function OvertimeLogDetail() {
   const fetchOutlets = async (storedToken: string) => {
     try {
       const res = await fetch(
-        "https://sahabattensbe-production-0c07.up.railway.app/api/outlets",
+        "https://rumahbaristensbe-production.up.railway.app/api/outlets",
         {
           method: "GET",
           headers: {
@@ -132,7 +132,7 @@ export default function OvertimeLogDetail() {
 
     try {
       const res = await fetch(
-        `https://sahabattensbe-production-0c07.up.railway.app/api/overtime-logs/${params.id}`,
+        `https://rumahbaristensbe-production.up.railway.app/api/overtime-logs/${params.id}`,
         {
           method: "GET",
           headers: {
@@ -180,7 +180,7 @@ export default function OvertimeLogDetail() {
     setUpdating(true);
     try {
       const res = await fetch(
-        `https://sahabattensbe-production-0c07.up.railway.app/api/overtime-logs/${params.id}/status`,
+        `https://rumahbaristensbe-production.up.railway.app/api/overtime-logs/${params.id}/status`,
         {
           method: "PUT",
           headers: {

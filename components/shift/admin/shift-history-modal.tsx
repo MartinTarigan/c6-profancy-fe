@@ -132,8 +132,8 @@ export function ShiftHistoryModal({
       // Endpoint berbeda berdasarkan mode
       const endpoint =
         mode === "modal" && baristaId
-          ? `https://sahabattensbe-production-0c07.up.railway.app/api/admin/barista/${baristaId}/shifts?${queryParams.toString()}`
-          : `https://sahabattensbe-production-0c07.up.railway.app/api/admin/shifts/schedule?${queryParams.toString()}`;
+          ? `https://rumahbaristensbe-production.up.railway.app/api/admin/barista/${baristaId}/shifts?${queryParams.toString()}`
+          : `https://rumahbaristensbe-production.up.railway.app/api/admin/shifts/schedule?${queryParams.toString()}`;
 
       const response = await fetch(endpoint, {
         method: "GET",

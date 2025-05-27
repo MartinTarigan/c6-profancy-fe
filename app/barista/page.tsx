@@ -51,7 +51,7 @@ export default function BaristaDashboard() {
 
       try {
         const res = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app/api/account/${username}`,
+          `https://rumahbaristensbe-production.up.railway.app/api/account/${username}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -84,7 +84,7 @@ export default function BaristaDashboard() {
   ).length;
 
   useEffect(() => {
-    if (!["CEO", "CMO", "CIOO", "Admin"].includes(userRole)) return;
+    if (!["CLEVEL", "HR", "Admin"].includes(userRole)) return;
 
     const token = localStorage.getItem("token");
     if (!token) {
@@ -93,7 +93,7 @@ export default function BaristaDashboard() {
     }
 
     fetch(
-      "https://sahabattensbe-production-0c07.up.railway.app/api/baristas/stats",
+      "https://rumahbaristensbe-production.up.railway.app/api/baristas/stats",
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -113,7 +113,7 @@ export default function BaristaDashboard() {
         alert("Gagal mengambil data dashboard barista.");
       });
 
-    fetch("https://sahabattensbe-production-0c07.up.railway.app/api/outlets", {
+    fetch("https://rumahbaristensbe-production.up.railway.app/api/outlets", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -131,7 +131,7 @@ export default function BaristaDashboard() {
       });
 
     fetch(
-      "https://sahabattensbe-production-0c07.up.railway.app/api/baristas/all",
+      "https://rumahbaristensbe-production.up.railway.app/api/baristas/all",
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -159,7 +159,7 @@ export default function BaristaDashboard() {
     );
   }
 
-  if (!["CEO", "CMO", "CIOO", "Admin"].includes(userRole)) {
+  if (!["CLEVEL", "HR", "Admin"].includes(userRole)) {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
         <h2 className="text-xl font-semibold text-red-600 mb-2">

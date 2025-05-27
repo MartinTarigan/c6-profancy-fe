@@ -1,9 +1,20 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-
-// Pastikan sudah terinstall & di-import Skeleton dari shadcn/ui
+import { useParams, useRouter } from "next/navigation";
+import {
+  Calendar,
+  Building,
+  MapPin,
+  Phone,
+  User,
+  UserCheck,
+  Home,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 interface AccountData {
   fullName: string;
@@ -21,6 +32,7 @@ interface AccountData {
 
 export default function DetailAkun() {
   const params = useParams();
+  const router = useRouter();
   const username = params.username as string;
 
   const [accountData, setAccountData] = useState<AccountData | null>(null);
@@ -34,7 +46,7 @@ export default function DetailAkun() {
         const token = localStorage.getItem("token");
 
         const response = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app/api/account/${username}`,
+          `https://rumahbaristensbe-production.up.railway.app/api/account/${username}`,
           {
             method: "GET",
             headers: {
@@ -50,7 +62,9 @@ export default function DetailAkun() {
         const result = await response.json();
         setAccountData(result.data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "An unknown error occurred");
+        setError(
+          err instanceof Error ? err.message : "An unknown error occurred"
+        );
         console.error("Error fetching account data:", err);
       } finally {
         setIsLoading(false);
@@ -62,125 +76,206 @@ export default function DetailAkun() {
     }
   }, [username]);
 
-  return (
-    <div className="flex flex-col items-center mb-6">
-      <h1 className="text-primary text-3xl font-bold mb-6">Detail Akun</h1>
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "-";
+    try {
+      const date = new Date(dateString);
+      return new Intl.DateTimeFormat("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }).format(date);
+    } catch (e) {
+      return dateString || "-";
+    }
+  };
 
-      <div className="w-full max-w-4xl border border-gray-200 rounded-lg p-8 bg-white shadow-sm">
-        {/* 1. Kondisi Loading → Tampilkan Skeleton */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-6">
-              {/* Skeleton untuk beberapa field di kolom kiri */}
-              <div>
-                <Skeleton className="h-4 w-24 mb-2" /> 
-                <Skeleton className="h-4 w-40" />
-              </div>
-              <div>
-                <Skeleton className="h-4 w-24 mb-2" /> 
-                <Skeleton className="h-4 w-40" />
-              </div>
-              <div>
-                <Skeleton className="h-4 w-24 mb-2" /> 
-                <Skeleton className="h-4 w-40" />
-              </div>
-              <div>
-                <Skeleton className="h-4 w-24 mb-2" /> 
-                <Skeleton className="h-4 w-40" />
-              </div>
-            </div>
-            <div className="space-y-6">
-              {/* Skeleton untuk beberapa field di kolom kanan */}
-              <div>
-                <Skeleton className="h-4 w-24 mb-2" /> 
-                <Skeleton className="h-4 w-40" />
-              </div>
-              <div>
-                <Skeleton className="h-4 w-24 mb-2" /> 
-                <Skeleton className="h-4 w-40" />
-              </div>
-              <div>
-                <Skeleton className="h-4 w-24 mb-2" /> 
-                <Skeleton className="h-4 w-40" />
-              </div>
-              <div>
-                <Skeleton className="h-4 w-24 mb-2" /> 
-                <Skeleton className="h-4 w-40" />
-              </div>
-              <div>
-                <Skeleton className="h-4 w-24 mb-2" /> 
-                <Skeleton className="h-4 w-40" />
-              </div>
+  return (
+    <div className="flex flex-col w-full max-w-5xl mx-auto px-4 py-6">
+      <h1 className="text-primary text-3xl font-bold mb-8">Detail Akun</h1>
+
+      {isLoading ? (
+        <Card className="w-full border border-gray-200 rounded-xl shadow-md overflow-hidden">
+          <div className="bg-primary/5 p-6 flex items-center">
+            <Skeleton className="h-16 w-16 rounded-full" />
+            <div className="ml-6 space-y-2">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-4 w-32" />
             </div>
           </div>
-        ) : error ? (
-          /* 2. Kondisi Error → Tampilkan pesan error */
-          <div className="text-destructive text-center">
+          <CardContent className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i}>
+                    <Skeleton className="h-4 w-24 mb-2" />
+                    <Skeleton className="h-5 w-40" />
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-6">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i}>
+                    <Skeleton className="h-4 w-24 mb-2" />
+                    <Skeleton className="h-5 w-40" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : error ? (
+        <Card className="w-full border border-red-200 rounded-xl shadow-md overflow-hidden">
+          <div className="bg-red-50 p-8 text-destructive text-center">
             <h3 className="text-xl font-semibold mb-2">Error Loading Data</h3>
             <p>{error}</p>
+            <Button
+              variant="outline"
+              className="mt-4 border-red-300 text-destructive hover:bg-red-50"
+              onClick={() => router.back()}
+            >
+              Kembali
+            </Button>
           </div>
-        ) : !accountData ? (
-          /* 3. Kondisi accountData null → Tampilkan "not found" */
-          <div className="text-center">
+        </Card>
+      ) : !accountData ? (
+        <Card className="w-full border border-gray-200 rounded-xl shadow-md overflow-hidden">
+          <div className="bg-muted/50 p-8 text-center">
             <h3 className="text-xl font-semibold mb-2">Account Not Found</h3>
             <p>The requested account could not be found.</p>
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => router.back()}
+            >
+              Kembali
+            </Button>
           </div>
-        ) : (
-          /* 4. Kondisi Berhasil → Tampilkan data sebenarnya */
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-medium mb-2">Role</h3>
-                <p>{accountData.role}</p>
+        </Card>
+      ) : (
+        <Card className="w-full border border-gray-200 rounded-xl shadow-md overflow-hidden">
+          {/* Header with user basic info */}
+          <div className="bg-primary/5 p-6 flex flex-col md:flex-row md:items-center">
+            <div className="flex items-center">
+              <div className="bg-primary text-white rounded-full h-16 w-16 flex items-center justify-center text-2xl font-bold">
+                {accountData.fullName.charAt(0).toUpperCase()}
               </div>
-              <div>
-                <h3 className="font-medium mb-2">Username</h3>
-                <p>{accountData.username}</p>
-              </div>
-              <div>
-                <h3 className="font-medium mb-2">Nama Lengkap</h3>
-                <p>{accountData.fullName}</p>
-              </div>
-              <div>
-                <h3 className="font-medium mb-2">Jenis Kelamin</h3>
-                <p>{accountData.gender ? "Laki-Laki" : "Perempuan"}</p>
+              <div className="ml-6">
+                <h2 className="text-2xl font-bold">{accountData.fullName}</h2>
+                <p className="text-muted-foreground">@{accountData.username}</p>
               </div>
             </div>
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-medium mb-2">Nomor HP</h3>
-                <p>{accountData.phoneNumber}</p>
+            <div className="mt-4 md:mt-0 md:ml-auto">
+              <Badge
+                className={`px-4 py-1.5 text-sm font-medium ${
+                  accountData.status === "Active"
+                    ? "bg-green-100 text-green-800 hover:bg-green-200"
+                    : "bg-red-100 text-red-800 hover:bg-red-200"
+                }`}
+              >
+                {accountData.status === "Active" ? "Active" : "Revoked"}
+              </Badge>
+            </div>
+          </div>
+
+          <CardContent className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <div className="flex items-start">
+                  <UserCheck className="h-5 w-5 text-primary mt-0.5 mr-3 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-medium text-muted-foreground mb-1">
+                      Role
+                    </h3>
+                    <p className="text-lg">{accountData.role}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <User className="h-5 w-5 text-primary mt-0.5 mr-3 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-medium text-muted-foreground mb-1">
+                      Jenis Kelamin
+                    </h3>
+                    <p className="text-lg">
+                      {accountData.gender ? "Laki-Laki" : "Perempuan"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <Phone className="h-5 w-5 text-primary mt-0.5 mr-3 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-medium text-muted-foreground mb-1">
+                      Nomor HP
+                    </h3>
+                    <p className="text-lg">{accountData.phoneNumber}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <Calendar className="h-5 w-5 text-primary mt-0.5 mr-3 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-medium text-muted-foreground mb-1">
+                      Tanggal Lahir
+                    </h3>
+                    <p className="text-lg">
+                      {formatDate(accountData.dateOfBirth)}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h3 className="font-medium mb-2">Alamat</h3>
-                <p>{accountData.address}</p>
-              </div>
-              <div>
-                <h3 className="font-medium mb-2">Tanggal Lahir</h3>
-                <p>{accountData.dateOfBirth}</p>
-              </div>
-              <div>
-                <h3 className="font-medium mb-2">Outlet</h3>
-                <p>{accountData.outlet}</p>
-              </div>
-              <div>
-                <h3 className="font-medium mb-2">Status Akun</h3>
-                <div className="inline-block">
-                  <span
-                    className={`px-4 py-1 rounded-full text-sm ${
-                      accountData.status === "Active"
-                        ? "bg-green-100 text-success"
-                        : "bg-red-100 text-destructive"
-                    }`}
-                  >
-                    {accountData.status === "Active" ? "Active" : "Revoked"}
-                  </span>
+
+              <div className="space-y-6">
+                <div className="flex items-start">
+                  <Building className="h-5 w-5 text-primary mt-0.5 mr-3 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-medium text-muted-foreground mb-1">
+                      Outlet
+                    </h3>
+                    <p className="text-lg">{accountData.outlet}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <MapPin className="h-5 w-5 text-primary mt-0.5 mr-3 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-medium text-muted-foreground mb-1">
+                      Alamat
+                    </h3>
+                    <p className="text-lg">{accountData.address || "-"}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <Home className="h-5 w-5 text-primary mt-0.5 mr-3 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-medium text-muted-foreground mb-1">
+                      Informasi Akun
+                    </h3>
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground">
+                        Dibuat: {formatDate(accountData.createdAt)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Diperbarui: {formatDate(accountData.updatedAt)}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+
+            <Separator className="my-8" />
+
+            <div className="flex justify-end">
+              <Button variant="outline" onClick={() => router.back()}>
+                Kembali
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

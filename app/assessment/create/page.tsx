@@ -86,9 +86,9 @@ export default function TambahAssessment() {
     let url: string;
     if (tpl === "PROBATIONBARISTA") {
       url =
-        "https://sahabattensbe-production-0c07.up.railway.app/api/trainee/peer-review-assignment/reviewees";
+        "https://rumahbaristensbe-production.up.railway.app/api/trainee/peer-review-assignment/reviewees";
     } else {
-      url = `https://sahabattensbe-production-0c07.up.railway.app/api/assessments/${tpl.toLowerCase()}`;
+      url = `https://rumahbaristensbe-production.up.railway.app/api/assessments/${tpl.toLowerCase()}`;
     }
     try {
       const res = await fetch(url, {
@@ -131,7 +131,7 @@ export default function TambahAssessment() {
         assignedUsername: selectedUsers,
       };
       const res = await fetch(
-        "https://sahabattensbe-production-0c07.up.railway.app/api/assessments",
+        "https://rumahbaristensbe-production.up.railway.app/api/assessments",
         {
           method: "POST",
           headers: {

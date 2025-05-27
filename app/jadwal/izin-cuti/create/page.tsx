@@ -79,7 +79,7 @@ export default function CreateLeaveRequestPage() {
     const fetchUserProfile = async () => {
       try {
         const response = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app/api/user/profile`,
+          `https://rumahbaristensbe-production.up.railway.app/api/user/profile`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -178,7 +178,7 @@ export default function CreateLeaveRequestPage() {
       };
 
       const response = await fetch(
-        "https://sahabattensbe-production-0c07.up.railway.app/api/shift-management/leave-request/create",
+        "https://rumahbaristensbe-production.up.railway.app/api/shift-management/leave-request/create",
         {
           method: "POST",
           headers: {

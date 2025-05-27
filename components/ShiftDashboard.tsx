@@ -224,7 +224,6 @@ export default function ShiftDashboard() {
     calculateActiveOvertimeHours();
   }, [overtimeLogs]);
 
-  // Funchttps://sahabattensbe-production-0c07.up.railway.app-production-0c07.up.railway.appive overtime hours (excluding CANCELLED logs)
   const calculateActiveOvertimeHours = (logs = overtimeLogs) => {
     // Filter out CANCELLED overtime logs
     const activeLogs = logs.filter((log) => log.status !== "CANCELLED");
@@ -261,7 +260,7 @@ export default function ShiftDashboard() {
     try {
       console.log(`Fetching data for userId: ${userId}, period: ${period}`);
       const response = await fetch(
-        `https://sahabattensbe-production-0c07.up.railway.app/api/shift/personal-summary?userId=${userId}&period=${period}`,
+        `https://rumahbaristensbe-production.up.railway.app/api/shift/personal-summary?userId=${userId}&period=${period}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -350,7 +349,7 @@ export default function ShiftDashboard() {
       );
 
       const response = await fetch(
-        `https://sahabattensbe-production-0c07.up.railway.app/api/overtime-logs/user/${userId}`,
+        `https://rumahbaristensbe-production.up.railway.app/api/overtime-logs/user/${userId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -385,7 +384,7 @@ export default function ShiftDashboard() {
     try {
       const today = format(new Date(), "yyyy-MM-dd");
       const response = await fetch(
-        `https://sahabattensbe-production-0c07.up.railway.app/api/shift/detail?userId=${userId}&date=${today}`,
+        `https://rumahbaristensbe-production.up.railway.app/api/shift/detail?userId=${userId}&date=${today}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -423,7 +422,7 @@ export default function ShiftDashboard() {
       }
 
       const response = await fetch(
-        `https://sahabattensbe-production-0c07.up.railway.app/api/shift/${outletId}?startDate=${startDate}&endDate=${endDate}`,
+        `https://rumahbaristensbe-production.up.railway.app/api/shift/${outletId}?startDate=${startDate}&endDate=${endDate}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -460,7 +459,7 @@ export default function ShiftDashboard() {
 
     try {
       const response = await fetch(
-        `https://sahabattensbe-production-0c07.up.railway.app/api/shift/detail?userId=${userId}&date=${dateStr}`,
+        `https://rumahbaristensbe-production.up.railway.app/api/shift/detail?userId=${userId}&date=${dateStr}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -535,15 +534,6 @@ export default function ShiftDashboard() {
             />
           )}
           <Tabs defaultValue="ringkasan-pribadi">
-            <TabsList className="mb-4">
-              <TabsTrigger value="ringkasan-pribadi">
-                Ringkasan Pribadi
-              </TabsTrigger>
-              <TabsTrigger value="jadwal-shift" disabled>
-                Jadwal Shift
-              </TabsTrigger>
-            </TabsList>
-
             <TabsContent value="ringkasan-pribadi">
               <div className="flex justify-between items-center mb-4">
                 <div>

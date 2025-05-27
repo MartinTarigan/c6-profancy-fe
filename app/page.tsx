@@ -65,11 +65,16 @@ export default function Home() {
   // Show original home page for admin and headbar roles
   if (isAdminOrHeadBar) {
     console.log("User has admin or headbar role, showing General component")
-    return (
-      <div className="grid grid-cols-2">
-        <General />
-      </div>
-    )
+    if (localStorage.getItem("roles")?.includes("ROLE_Admin")) {
+      // If user is admin, redirect to admin dashboard
+      router.push("/jadwal/shift/admin")
+      return null
+    }
+    // return (
+    //   <div className="grid grid-cols-2">
+    //     <General />
+    //   </div>
+    // )
   }
 
   // Show shift dashboard for other roles

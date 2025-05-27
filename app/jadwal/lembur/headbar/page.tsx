@@ -93,7 +93,7 @@ export default function HeadBarOvertimePage() {
 
       try {
         const res = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app/api/account/${userId}`,
+          `https://rumahbaristensbe-production.up.railway.app/api/account/${userId}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -124,7 +124,7 @@ export default function HeadBarOvertimePage() {
     const fetchAllOutlets = async (token: string, userOutletName: string) => {
       try {
         const res = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app/api/outlets`,
+          `https://rumahbaristensbe-production.up.railway.app/api/outlets`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -158,7 +158,7 @@ export default function HeadBarOvertimePage() {
     const fetchOvertimeLogs = async (token: string, outletId: number) => {
       try {
         const response = await fetch(
-          "https://sahabattensbe-production-0c07.up.railway.app/api/overtime-logs",
+          "https://rumahbaristensbe-production.up.railway.app/api/overtime-logs",
           {
             method: "GET",
             headers: {

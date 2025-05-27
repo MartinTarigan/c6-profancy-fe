@@ -130,35 +130,40 @@ export function ShiftDistributionChart({ data, outlets }: ShiftDistributionChart
   )
 
   const CustomTooltip = ({
-    active,
-    payload,
-    label,
-  }: TooltipProps<ValueType, NameType>) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-4 border rounded-lg shadow-lg">
-          <p className="font-semibold text-slate-800 mb-2">{`Rentang Hari: ${label}`}</p>
-          <div className="space-y-1.5">
-            {payload.map((entry, index) => (
+  active,
+  payload,
+  label,
+}: TooltipProps<ValueType, NameType>) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white p-4 border rounded-lg shadow-lg">
+        <p className="font-semibold text-slate-800 mb-2">{`Rentang Hari: ${label}`}</p>
+        <div className="space-y-1.5">
+          {payload.map((entry, index) => {
+            const outletId = entry.name?.toString().startsWith("outlet")
+              ? Number(entry.name.toString().replace("outlet", ""))
+              : null
+
+            const outletName = outletId !== null
+              ? displayOutlets.find((o) => o.outletId === outletId)?.name || `Outlet ${outletId}`
+              : (entry.name === "count" ? "Total Barista" : entry.name)
+
+            return (
               <div key={index} className="flex items-center gap-2 text-sm">
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }} />
                 <span className="text-slate-700 font-medium">
-                {entry.name === "count"
-                    ? "Total Barista"
-                    : typeof entry.name === "string"
-                      ? entry.name.replace("outlet", "Outlet ")
-                      : `Outlet ${entry.name}`}
-                  <span className="font-semibold">{entry.value}</span>
+                  {outletName}: <span className="font-semibold">{entry.value}</span>
                 </span>
               </div>
-            ))}
-          </div>
+            )
+          })}
         </div>
-      )
-    }
-    return null
+      </div>
+    )
   }
-  
+  return null
+}
+
 
   const handleLegendClick = (outlet: { outletId: number; name: string }) => {
     if (activeOutlet === outlet.outletId) {

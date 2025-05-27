@@ -42,7 +42,7 @@ export default function EditMateriPelatihan() {
     async function fetchData() {
       try {
         const res = await fetch(
-          `https://sahabattensbe-production-0c07.up.railway.app/api/training-materials/${id}`,
+          `https://rumahbaristensbe-production.up.railway.app/api/training-materials/${id}`,
           {
             headers: { Authorization: `Bearer ${storedToken}` },
           }
@@ -106,7 +106,7 @@ export default function EditMateriPelatihan() {
     setIsSubmitting(true);
     try {
       const res = await fetch(
-        `https://sahabattensbe-production-0c07.up.railway.app/api/training-materials/${id}/update`,
+        `https://rumahbaristensbe-production.up.railway.app/api/training-materials/${id}/update`,
         {
           method: "PUT",
           headers: {
@@ -119,7 +119,7 @@ export default function EditMateriPelatihan() {
       const result = await res.json();
       if (res.ok) {
         setToast({ type: "success", message: "Materi berhasil diperbarui" });
-        setTimeout(() => router.push("/training/materi"), 1500);
+        setTimeout(() => router.push("/training-materials"), 1500);
       } else {
         setToast({
           type: "error",
@@ -250,7 +250,7 @@ export default function EditMateriPelatihan() {
                   size={4}
                   required
                 >
-                  <option value="TRAINEE_BARISTA">Trainee Barista</option>
+                  <option value="INTERN_BARISTA">Intern Barista</option>
                   <option value="PROBATION_BARISTA">Probation Barista</option>
                   <option value="BARISTA">Barista</option>
                   <option value="HEAD_BARISTA">Head Barista</option>
