@@ -251,7 +251,6 @@ export default function ApprovalPage() {
           },
           body: JSON.stringify({
             status: actionType === "approve" ? "APPROVED" : "REJECTED",
-            notes: "", // Add notes if your API requires it
           }),
         }
       );

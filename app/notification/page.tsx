@@ -363,7 +363,7 @@ export default function NotificationsPage() {
         );
       case "LEAVE_REQUEST":
         return <Badge className="bg-green-500 hover:bg-green-600">Cuti</Badge>;
-      case "SHIFT_ASSIGNED":
+      case "SHIFT":
         return <Badge className="bg-pink-500 hover:bg-green-600">Shift</Badge>;
       default:
         return (
