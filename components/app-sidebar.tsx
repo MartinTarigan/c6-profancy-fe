@@ -121,8 +121,10 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         title: "Home",
         url: roles.includes("Admin")
           ? "/jadwal/shift/admin"
-          : roles.includes("CEO")
+          : roles.includes("CLEVEL")
           ? "/jadwal/shift/dashboard"
+          : roles.includes("HeadBar")
+          ? "/account"
           : "/",
         icon: Home,
         standalone: true,
@@ -205,15 +207,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           items: [
             {
               title: "Peer Review & Grading",
-              url: "/peer-review",
+              url: "/peer-review/dashboard",
             },
             {
               title: "Performance Grading",
               url: "/assessment/dashboard-clevel",
-            },
-            {
-              title: "Dashboard",
-              url: "/peer-review/dashboard",
             },
           ],
         },

@@ -64,9 +64,14 @@ export default function Home() {
   // Show original home page for admin and headbar roles
   if (isAdminOrHeadBar) {
     console.log("User has admin or headbar role, showing General component")
-    if (localStorage.getItem("roles")?.includes("ROLE_Admin")) {
-      // If user is admin, redirect to admin dashboard
+    if (localStorage.getItem("roles")?.includes("Admin")) {
       router.push("/jadwal/shift/admin")
+      return null
+    } if (localStorage.getItem("roles")?.includes("HeadBar")) {
+      router.push("/account")
+      return null
+    } if (localStorage.getItem("roles")?.includes("CLEVEL")) {
+      router.push("/jadwal/shift/dashboard")
       return null
     }
     // return (

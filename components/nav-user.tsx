@@ -56,7 +56,8 @@ export function NavUser({
   const displayRole = () => {
     if (user.role.includes("Admin")) return "Admin"
     if (user.role.includes("HeadBar")) return "Headbar Barista"
-    if (user.role.includes("CEO")) return "CEO"
+    if (user.role.includes("CLEVEL")) return "CLEVEL"
+    if (user.role.includes("HR")) return "HR"
     return "Barista"
   }
 

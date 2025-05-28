@@ -187,9 +187,8 @@ export default function MyCalendar() {
 
         if (
           userRes.data.role === "Admin" ||
-          userRes.data.role === "CEO" ||
-          userRes.data.role === "CIOO" ||
-          userRes.data.role === "CMO"
+          userRes.data.role === "CLEVEL" ||
+          userRes.data.role === "HR"
         ) {
           fetchAllOutlets(token); // Admin or C-Level can select any outlet
         }
@@ -940,9 +939,8 @@ export default function MyCalendar() {
           <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-4 border border-white/20 shadow-xl">
             <div className="relative max-w-md mx-auto">
               {userRole === "Admin" ||
-              userRole === "CEO" ||
-              userRole === "CIOO" ||
-              userRole === "CMO" ? (
+              userRole === "CLEVEL" ||
+              userRole === "HR" ? (
                 <select
                   value={outletId || ""}
                   onChange={handleOutletChange}

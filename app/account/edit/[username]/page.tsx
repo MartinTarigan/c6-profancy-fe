@@ -217,8 +217,8 @@ export default function EditAkun() {
                     >
                       <option value="Barista">Barista</option>
                       <option value="Head Bar">Head Bar</option>
-                      <option value="CLEVEL">CEO</option>
-                      <option value="HR">CIIO</option>
+                      <option value="CLEVEL">CLEVEL</option>
+                      <option value="HR">HR</option>
                       <option value="Admin">Admin</option>
                     </select>
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">

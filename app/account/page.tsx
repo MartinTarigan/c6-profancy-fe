@@ -207,9 +207,8 @@ export default function DaftarAkun() {
   const getRoleColor = (role: string) => {
     const roleMap: Record<string, string> = {
       Admin: "bg-purple-100 text-purple-800",
-      CEO: "bg-blue-100 text-blue-800",
-      CIOO: "bg-indigo-100 text-indigo-800",
-      CMO: "bg-cyan-100 text-cyan-800",
+      CLEVEL: "bg-blue-100 text-blue-800",
+      HR: "bg-indigo-100 text-indigo-800",
       "Head Bar": "bg-amber-100 text-amber-800",
       HeadBar: "bg-amber-100 text-amber-800",
       ROLE_HeadBar: "bg-amber-100 text-amber-800",
@@ -600,9 +599,8 @@ export default function DaftarAkun() {
           >
             <option value="">Filter by Role</option>
             <option value="Admin">Admin</option>
-            <option value="CEO">CEO</option>
-            <option value="CIOO">CIOO</option>
-            <option value="CMO">CMO</option>
+            <option value="CLEVEL">CLEVEL</option>
+            <option value="HR">HR</option>
             <option value="Head Bar">Head Bar</option>
             <option value="Barista">Barista</option>
             <option value="Trainee Barista">Trainee Barista</option>

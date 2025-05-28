@@ -139,7 +139,6 @@ export default function ManajemenAssessment() {
         const token = localStorage.getItem("token");
         const username = localStorage.getItem("username");
 
-        // Ubah kondisi untuk mengizinkan akses bagi CEO, CIOO, dan CMO
         const isManagement = ["Admin", "CLEVEL", "HR"].includes(role || "");
         const url = isManagement
           ? "https://rumahbaristensbe-production.up.railway.app/api/assessments"
@@ -360,7 +359,6 @@ export default function ManajemenAssessment() {
     (a) => !isCompleted(a.deadline)
   ).length;
 
-  // Cek apakah user adalah management (Admin, CEO, CIOO, CMO)
   const isAdmin = userRole === "Admin";
   const isExecutive = ["CLEVEL", "HR"].includes(userRole || "");
   const isManagement = isAdmin || isExecutive;
