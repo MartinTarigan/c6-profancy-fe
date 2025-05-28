@@ -67,9 +67,6 @@ export default function Home() {
     if (localStorage.getItem("roles")?.includes("Admin")) {
       router.push("/jadwal/shift/admin")
       return null
-    } if (localStorage.getItem("roles")?.includes("HeadBar")) {
-      router.push("/account")
-      return null
     } if (localStorage.getItem("roles")?.includes("CLEVEL")) {
       router.push("/jadwal/shift/dashboard")
       return null

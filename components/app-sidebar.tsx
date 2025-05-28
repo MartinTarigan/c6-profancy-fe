@@ -124,7 +124,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           : roles.includes("CLEVEL")
           ? "/jadwal/shift/dashboard"
           : roles.includes("HeadBar")
-          ? "/account"
+          ? "/"
           : "/",
         icon: Home,
         standalone: true,
