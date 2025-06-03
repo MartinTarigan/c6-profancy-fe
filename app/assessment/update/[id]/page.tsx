@@ -16,7 +16,7 @@ import LoadingIndicator from "@/components/LoadingIndicator";
 const TEMPLATES = [
   { label: "Assessment Head Bar", value: "HEADBAR" },
   { label: "Assessment Barista", value: "BARISTA" },
-  { label: "Assessment Trainee Barista", value: "TRAINEEBARISTA" },
+  { label: "Assessment Intern Barista", value: "INTERNBARISTA" },
   { label: "Assessment Probation Barista", value: "PROBATIONBARISTA" },
 ];
 
@@ -31,6 +31,13 @@ interface Assessment {
   deadline: string;
   assignedUsers: AssignedUser[];
 }
+
+const transformFullNameToUsernameFormat = (
+  fullName: string | undefined | null
+): string => {
+  if (!fullName) return "";
+  return fullName.toLowerCase().replace(/\s+/g, ".");
+};
 
 export default function UpdateAssessment() {
   const router = useRouter();
@@ -53,7 +60,6 @@ export default function UpdateAssessment() {
         setIsLoading(true);
         const token = localStorage.getItem("token");
 
-        // Fetch assessment by ID
         const response = await fetch(
           `https://rumahbaristensbe-production.up.railway.app/api/assessments/${id}`,
           {
@@ -71,11 +77,11 @@ export default function UpdateAssessment() {
         setTemplate(assessmentData.template);
         setDeadline(new Date(assessmentData.deadline));
 
-        // Extract usernames from assigned users
-        const assignedUsernames = assessmentData.assignedUsers.map(
-          (user) => user.id
-        );
-        setSelectedUsers(assignedUsernames);
+        const preSelectedUsernames = assessmentData.assignedUsers
+          .map((user) => transformFullNameToUsernameFormat(user.fullName))
+          .filter(Boolean);
+
+        setSelectedUsers(preSelectedUsernames);
 
         // Fetch available users for the template
         await fetchUsers(assessmentData.template);
@@ -141,10 +147,18 @@ export default function UpdateAssessment() {
     if (!deadline || selectedUsers.length === 0) return;
     setSubmitting(true);
     try {
+      // Filter out UUIDs from selectedUsers
+      const filteredAssignedUsers = selectedUsers.filter((user) => {
+        const isUUID =
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+            user
+          );
+        return !isUUID;
+      });
+
       const payload = {
-        template,
         deadline: format(deadline, "yyyy-MM-dd"),
-        assignedUsername: selectedUsers,
+        assignedUsername: filteredAssignedUsers, // Use the filtered list
       };
 
       // Use PUT method for update

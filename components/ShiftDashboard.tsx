@@ -30,6 +30,7 @@ import {
   RadialBar,
   PolarAngleAxis,
 } from "recharts";
+import LoadingIndicator from "./LoadingIndicator";
 
 // Types based on backend models
 interface ShiftDetail {
@@ -318,11 +319,6 @@ export default function ShiftDashboard() {
       } else {
         monthName = period;
       }
-
-      setToast({
-        type: "success",
-        message: `Ringkasan Anda untuk ${monthName}: ${data.completedDays} hari kerja selesai`,
-      });
     } catch (err) {
       console.error("Error fetching shift summary:", err);
 
@@ -586,9 +582,7 @@ export default function ShiftDashboard() {
               )}
 
               {loading ? (
-                <div className="flex justify-center items-center h-64">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3C67FF]"></div>
-                </div>
+                <LoadingIndicator />
               ) : error ? (
                 // Show specific error message
                 <Alert variant="destructive" className="mb-4">

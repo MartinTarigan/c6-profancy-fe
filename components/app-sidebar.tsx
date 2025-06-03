@@ -196,9 +196,19 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       roleItems = [
         {
           title: "Account Management",
-          url: "/account",
+          url: "#",
           icon: Users,
-          standalone: true,
+          items: [
+            {
+              title: "Account",
+              url: "/account",
+            },
+            {
+              title: "Barista",
+              url: "/barista",
+            },
+          ],
+          // standalone: true,
         },
         {
           title: "Training",

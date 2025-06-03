@@ -47,6 +47,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import type { DateRange } from "react-day-picker";
+import LoadingIndicator from "@/components/LoadingIndicator";
 
 interface AssignedUser {
   id: string;
@@ -380,19 +381,7 @@ export default function AssessmentDashboard() {
   }, {} as Record<string, Assessment[]>);
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-white-50 to-indigo-50 flex items-center justify-center p-4">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <h3 className="text-xl font-medium text-slate-700">
-            Memuat Dashboard Assessment
-          </h3>
-          <p className="text-slate-500 mt-2">
-            Mohon tunggu sementara kami mengambil data
-          </p>
-        </div>
-      </div>
-    );
+    return <LoadingIndicator />;
   }
 
   if (error) {

@@ -9,6 +9,7 @@ import "chart.js/auto";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Search, Users, UserCheck, UserX, Store } from "lucide-react";
+import LoadingIndicator from "@/components/LoadingIndicator";
 
 interface BaristaData {
   total: number;
@@ -84,7 +85,8 @@ export default function BaristaDashboard() {
   ).length;
 
   useEffect(() => {
-    if (!["CLEVEL", "HR", "Admin"].includes(userRole)) return;
+    if (!["CEO", "CMO", "CIOO", "CLEVEL", "ROLE_CLEVEL"].includes(userRole))
+      return;
 
     const token = localStorage.getItem("token");
     if (!token) {
@@ -159,7 +161,7 @@ export default function BaristaDashboard() {
     );
   }
 
-  if (!["CLEVEL", "HR", "Admin"].includes(userRole)) {
+  if (!["CEO", "CMO", "CIOO", "Admin", "CLEVEL"].includes(userRole)) {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
         <h2 className="text-xl font-semibold text-red-600 mb-2">
@@ -173,11 +175,7 @@ export default function BaristaDashboard() {
   }
 
   if (!data) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        Loading dashboard data...
-      </div>
-    );
+    return <LoadingIndicator />;
   }
 
   const roleTotal = data?.roleStats?.reduce((acc, r) => acc + r.count, 0) || 0;
@@ -496,7 +494,7 @@ export default function BaristaDashboard() {
                     <th className="px-4 py-3 text-left">Role</th>
                     <th className="px-4 py-3 text-left">Status</th>
                     <th className="px-4 py-3 text-left">Outlet</th>
-                    <th className="px-4 py-3 text-left">Kontak</th>
+                    {/* <th className="px-4 py-3 text-left">Kontak</th> */}
                     {/* <th className="px-4 py-3 text-right">Action</th> */}
                   </tr>
                 </thead>
@@ -521,9 +519,9 @@ export default function BaristaDashboard() {
                         </span>
                       </td>
                       <td className="px-4 py-3 border-t">{barista.outlet}</td>
-                      <td className="px-4 py-3 border-t">
+                      {/* <td className="px-4 py-3 border-t">
                         {barista.contact || "-"}
-                      </td>
+                      </td> */}
                       {/* <td className="px-4 py-3 border-t text-right">
                         <Button
                           variant="outline"

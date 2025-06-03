@@ -4,6 +4,8 @@
 import type React from "react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import LoadingIndicator from "@/components/LoadingIndicator";
+
 import {
   Bell,
   Check,
@@ -655,7 +657,6 @@ function NotificationsContent({
   isLoading,
   error,
   renderNotificationItem,
-  renderSkeletons,
 }: {
   notifications: Notification[];
   isLoading: boolean;
@@ -673,9 +674,8 @@ function NotificationsContent({
       </div>
     );
   }
-
   if (isLoading) {
-    return <div className="divide-y divide-gray-100">{renderSkeletons()}</div>;
+    return <LoadingIndicator />;
   }
 
   if (notifications.length === 0) {

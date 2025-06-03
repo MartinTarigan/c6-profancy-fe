@@ -27,6 +27,16 @@ import { format } from "date-fns";
 import Link from "next/link";
 import { id as localeId } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
+import Toast from "@/components/Toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import LoadingIndicator from "@/components/LoadingIndicator";
 
 interface LeaveRequest {
   id: string;
@@ -71,6 +81,13 @@ export default function EditLeaveRequestPage() {
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [canEdit, setCanEdit] = useState<boolean>(false);
+
+  const [toast, setToast] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+
+  const [showCancelModal, setShowCancelModal] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchLeaveRequest = async () => {
@@ -196,25 +213,27 @@ export default function EditLeaveRequestPage() {
       const result = await response.json();
       setLeaveRequest(result.data);
 
-      alert("Permohonan berhasil diubah!");
-      router.push("/jadwal/izin-cuti/barista/list");
+      setToast({ type: "success", message: "Permohonan berhasil diubah!" });
     } catch (err) {
       console.error("Error saat mengubah permohonan:", err);
-      alert(
-        err instanceof Error
-          ? err.message
-          : "Gagal mengubah permohonan. Silakan coba lagi."
-      );
+      setToast({
+        type: "error",
+        message:
+          err instanceof Error
+            ? err.message
+            : "Gagal mengubah permohonan. Silakan coba lagi.",
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleCancel = async () => {
-    if (!confirm("Apakah Anda yakin ingin membatalkan permohonan ini?")) {
-      return;
-    }
+  const handleCancel = () => {
+    setShowCancelModal(true);
+  };
 
+  const confirmCancel = async () => {
+    setShowCancelModal(false);
     setIsSubmitting(true);
 
     try {
@@ -260,19 +279,21 @@ export default function EditLeaveRequestPage() {
       // Set canEdit to false since canceled requests can't be edited
       setCanEdit(false);
 
-      alert("Permohonan berhasil dibatalkan!");
+      setToast({ type: "success", message: "Permohonan berhasil dibatalkan!" });
 
       // Wait a moment before redirecting to show the updated status
       setTimeout(() => {
-        router.push("/jadwal/izin-cuti/barista/list");
+        router.push("/jadwal/izin-cuti/barista");
       }, 1000);
     } catch (err) {
       console.error("Error saat membatalkan permohonan:", err);
-      alert(
-        err instanceof Error
-          ? err.message
-          : "Gagal membatalkan permohonan. Silakan coba lagi."
-      );
+      setToast({
+        type: "error",
+        message:
+          err instanceof Error
+            ? err.message
+            : "Gagal membatalkan permohonan. Silakan coba lagi.",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -341,11 +362,7 @@ export default function EditLeaveRequestPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingIndicator />;
   }
 
   if (error) {
@@ -367,10 +384,7 @@ export default function EditLeaveRequestPage() {
             Permohonan Tidak Ditemukan
           </h3>
           <p>Permohonan yang Anda cari tidak ditemukan.</p>
-          <Link
-            href="/jadwal/izin-cuti/barista/list"
-            className="mt-4 inline-block"
-          >
+          <Link href="/jadwal/izin-cuti/barista" className="mt-4 inline-block">
             <Button>Kembali ke Daftar Permohonan</Button>
           </Link>
         </div>
@@ -379,141 +393,183 @@ export default function EditLeaveRequestPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex flex-col">
-        <div className="flex items-center gap-4 mb-6">
-          <Link href="/jadwal/izin-cuti/barista/list">
-            <Button variant="outline" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <h1 className="text-2xl font-bold">
-            {canEdit
-              ? "Edit Permohonan Izin/Cuti"
-              : "Detail Permohonan Izin/Cuti"}
-          </h1>
+    <>
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed top-4 right-4 z-[9999]">
+          <Toast
+            type={toast.type}
+            message={toast.message}
+            onClose={() => setToast(null)}
+          />
         </div>
+      )}
 
-        <Card className="w-full max-w-2xl mx-auto">
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle>Form Permohonan</CardTitle>
-              <div>{getStatusBadge(leaveRequest.status)}</div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nama Barista</Label>
-                <Input
-                  id="name"
-                  value={leaveRequest.userName}
-                  disabled
-                  className="bg-gray-50"
-                />
+      {/* Cancellation Confirmation Modal */}
+      <Dialog open={showCancelModal} onOpenChange={setShowCancelModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Pembatalan</DialogTitle>
+            <DialogDescription className="text-base">
+              Yakin mau batalin permohonan izin/cuti ini? Kalau udah dibatalin,
+              permohonan ini nggak bisa diubah lagi ya.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex justify-end gap-3 mt-6">
+            <Button
+              variant="outline"
+              onClick={() => setShowCancelModal(false)}
+              disabled={isSubmitting}
+            >
+              Nggak Jadi
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmCancel}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Memproses..." : "Yakin, Batalin"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <div className="container mx-auto p-6">
+        <div className="flex flex-col">
+          <div className="flex items-center gap-4 mb-6">
+            <Link href="/jadwal/izin-cuti/barista">
+              <Button variant="outline" size="icon">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </Link>
+            <h1 className="text-2xl font-bold">
+              {canEdit
+                ? "Edit Permohonan Izin/Cuti"
+                : "Detail Permohonan Izin/Cuti"}
+            </h1>
+          </div>
+
+          <Card className="w-full max-w-2xl mx-auto">
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle>Form Permohonan</CardTitle>
+                <div>{getStatusBadge(leaveRequest.status)}</div>
               </div>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nama Barista</Label>
+                  <Input
+                    id="name"
+                    value={leaveRequest.userName}
+                    disabled
+                    className="bg-gray-50"
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="date">Tanggal Izin/Cuti</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={`w-full justify-start text-left font-normal ${
-                        !date && "text-muted-foreground"
-                      } ${errors.date ? "border-red-500" : ""}`}
-                      disabled={!canEdit}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formatDate(date)}
-                    </Button>
-                  </PopoverTrigger>
-                  {canEdit && (
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={setDate}
-                        initialFocus
-                        disabled={(date) =>
-                          date < new Date(new Date().setHours(0, 0, 0, 0))
-                        }
-                      />
-                    </PopoverContent>
+                <div className="space-y-2">
+                  <Label htmlFor="date">Tanggal Izin/Cuti</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={`w-full justify-start text-left font-normal ${
+                          !date && "text-muted-foreground"
+                        } ${errors.date ? "border-red-500" : ""}`}
+                        disabled={!canEdit}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formatDate(date)}
+                      </Button>
+                    </PopoverTrigger>
+                    {canEdit && (
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={date}
+                          onSelect={setDate}
+                          initialFocus
+                          disabled={(date) =>
+                            date < new Date(new Date().setHours(0, 0, 0, 0))
+                          }
+                        />
+                      </PopoverContent>
+                    )}
+                  </Popover>
+                  {errors.date && (
+                    <p className="text-red-500 text-sm">{errors.date}</p>
                   )}
-                </Popover>
-                {errors.date && (
-                  <p className="text-red-500 text-sm">{errors.date}</p>
-                )}
-              </div>
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="leaveType">Jenis Permohonan</Label>
-                <Select
-                  value={leaveType}
-                  onValueChange={setLeaveType}
-                  disabled={!canEdit}
-                >
-                  <SelectTrigger
-                    id="leaveType"
-                    className={errors.leaveType ? "border-red-500" : ""}
+                <div className="space-y-2">
+                  <Label htmlFor="leaveType">Jenis Permohonan</Label>
+                  <Select
+                    value={leaveType}
+                    onValueChange={setLeaveType}
+                    disabled={!canEdit}
                   >
-                    <SelectValue placeholder="Pilih jenis permohonan" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="OFF_DAY">Cuti</SelectItem>
-                    <SelectItem value="IZIN">Izin</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.leaveType && (
-                  <p className="text-red-500 text-sm">{errors.leaveType}</p>
-                )}
-              </div>
+                    <SelectTrigger
+                      id="leaveType"
+                      className={errors.leaveType ? "border-red-500" : ""}
+                    >
+                      <SelectValue placeholder="Pilih jenis permohonan" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="OFF_DAY">Cuti</SelectItem>
+                      <SelectItem value="IZIN">Izin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.leaveType && (
+                    <p className="text-red-500 text-sm">{errors.leaveType}</p>
+                  )}
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="reason">Alasan</Label>
-                <Textarea
-                  id="reason"
-                  placeholder="Masukkan alasan permohonan secara detail"
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  className={errors.reason ? "border-red-500" : ""}
-                  rows={4}
-                  disabled={!canEdit}
-                />
-                {errors.reason && (
-                  <p className="text-red-500 text-sm">{errors.reason}</p>
-                )}
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reason">Alasan</Label>
+                  <Textarea
+                    id="reason"
+                    placeholder="Masukkan alasan permohonan secara detail"
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    className={errors.reason ? "border-red-500" : ""}
+                    rows={4}
+                    disabled={!canEdit}
+                  />
+                  {errors.reason && (
+                    <p className="text-red-500 text-sm">{errors.reason}</p>
+                  )}
+                </div>
 
-              <div className="flex justify-end space-x-4 pt-4">
-                <Link href="/jadwal/izin-cuti/barista/list">
-                  <Button variant="outline" type="button">
-                    Kembali
-                  </Button>
-                </Link>
+                <div className="flex justify-end space-x-4 pt-4">
+                  <Link href="/jadwal/izin-cuti/barista">
+                    <Button variant="outline" type="button">
+                      Kembali
+                    </Button>
+                  </Link>
 
-                {leaveRequest.status !== "CANCELED" && (
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={handleCancel}
-                    disabled={isSubmitting}
-                  >
-                    Batalkan Permohonan
-                  </Button>
-                )}
+                  {leaveRequest.status === "PENDING" && (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={handleCancel}
+                      disabled={isSubmitting}
+                    >
+                      Batalkan Permohonan
+                    </Button>
+                  )}
 
-                {canEdit && (
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Memproses..." : "Simpan Perubahan"}
-                  </Button>
-                )}
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+                  {canEdit && (
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting ? "Memproses..." : "Simpan Perubahan"}
+                    </Button>
+                  )}
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

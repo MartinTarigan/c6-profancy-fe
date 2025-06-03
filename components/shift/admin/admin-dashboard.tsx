@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -17,6 +16,7 @@ import {
 import type { DateRange } from "react-day-picker";
 import { debounce } from "lodash";
 import { format, isValid } from "date-fns";
+import { id } from "date-fns/locale";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -61,7 +61,7 @@ interface AdminDashboardFilterRequestDTO {
 }
 
 interface ShiftDetail {
-  shiftDate: string; // Change from 'date' to 'shiftDate' to match backend DTO
+  shiftDate: string;
   shiftType: number;
 }
 
@@ -74,9 +74,8 @@ interface BaristaShiftSummaryDTO {
   overtimeDays: number;
 }
 
-// Sesuaikan dengan OutletResponseDTO dari backend
 interface Outlet {
-  outletId: number; // Perubahan dari id ke outletId untuk sesuai dengan backend
+  outletId: number;
   name: string;
   location?: string;
   headBarName?: string;
@@ -113,6 +112,25 @@ interface ApiResponse<T> {
   message: string;
 }
 
+interface OvertimeItem {
+  date: string;
+  baristaName: string;
+  outletName: string;
+  duration: number;
+  status: string;
+  shiftType?: number;
+  id?: number;
+  reason?: string;
+  startHour?: string;
+}
+
+interface BaristaData {
+  id: string;
+  firstName: string;
+  lastName: string;
+  name: string;
+}
+
 export function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -147,6 +165,15 @@ export function AdminDashboard() {
     baristaName: "",
   });
 
+  // Overtime related state
+  const [overtimeData, setOvertimeData] = useState<OvertimeItem[]>([]);
+  const [baristas, setBaristas] = useState<BaristaData[]>([]);
+  const [overtimeFilter, setOvertimeFilter] = useState({
+    outletId: "all",
+    baristaName: "",
+  });
+  const [isLoadingOvertime, setIsLoadingOvertime] = useState(false);
+
   const [toastMessage, setToastMessage] = useState<{
     type: "success" | "error" | "info" | "warning";
     message: string;
@@ -160,7 +187,6 @@ export function AdminDashboard() {
     const token = localStorage.getItem("token");
     const roles = localStorage.getItem("roles");
 
-    // Cek apakah token atau roles tidak ada
     if (!token || !roles) {
       setToastMessage({
         type: "error",
@@ -173,22 +199,18 @@ export function AdminDashboard() {
       return;
     }
 
-    // Cek apakah roles adalah JSON string atau string biasa
     let rolesArray: string[];
     if (roles.startsWith("[") && roles.endsWith("]")) {
-      // Jika terlihat seperti JSON array
       try {
         rolesArray = JSON.parse(roles);
       } catch (e) {
         console.error("Failed to parse roles as JSON:", e);
-        rolesArray = [roles]; // Jika gagal parse, anggap sebagai string biasa
+        rolesArray = [roles];
       }
     } else {
-      // Jika bukan JSON, anggap sebagai string biasa
       rolesArray = [roles];
     }
 
-    // Cek apakah ada role "ADMIN" (case-insensitive)
     const hasAdminRole = rolesArray.some(
       (role) => typeof role === "string" && role.toUpperCase() === "ADMIN"
     );
@@ -205,11 +227,10 @@ export function AdminDashboard() {
       return;
     }
 
-    // Jika role valid, lanjutkan memuat data
     loadOutlets();
+    fetchBaristaData();
   }, []);
 
-  // Fungsi loadOutlets dengan Bearer Token
   const loadOutlets = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -252,10 +273,8 @@ export function AdminDashboard() {
 
       const result: ApiResponse<Outlet[]> = await response.json();
       console.log("Outlet data received:", result);
-      console.log("Raw outlet data:", JSON.stringify(result.data, null, 2));
 
       if (result.success && result.data) {
-        // Filter out outlets with null or undefined outletIds
         const validOutlets: Outlet[] = result.data
           .filter(
             (outlet) =>
@@ -273,8 +292,6 @@ export function AdminDashboard() {
 
         console.log("Processed valid outlets:", validOutlets);
         setOutlets(validOutlets);
-
-        // After loading outlets, load dashboard data
         loadDashboardData();
       } else {
         throw new Error(result.message || "Gagal memuat data outlet");
@@ -289,7 +306,117 @@ export function AdminDashboard() {
     }
   };
 
-  // Fungsi loadDashboardData dengan Bearer Token
+  const fetchBaristaData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const response = await fetch(
+        "https://rumahbaristensbe-production.up.railway.app/api/admin/baristas",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to fetch barista data");
+
+      const data = await response.json();
+      if (data && Array.isArray(data)) {
+        const mappedBaristas = data.map((barista) => ({
+          id: barista.id,
+          firstName: barista.firstName || "",
+          lastName: barista.lastName || "",
+          name:
+            `${barista.firstName || ""} ${barista.lastName || ""}`.trim() ||
+            barista.id,
+        }));
+        setBaristas(mappedBaristas);
+      }
+    } catch (error) {
+      console.error("Error fetching barista data:", error);
+    }
+  };
+
+  const loadOvertimeData = async () => {
+    setIsLoadingOvertime(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setToastMessage({
+          type: "error",
+          message: "Silakan login terlebih dahulu.",
+        });
+        return;
+      }
+
+      const queryParams = new URLSearchParams();
+      queryParams.append(
+        "startDate",
+        format(dateRange?.from || new Date(), "yyyy-MM-dd")
+      );
+      queryParams.append(
+        "endDate",
+        format(dateRange?.to || new Date(), "yyyy-MM-dd")
+      );
+      queryParams.append("sort", "tanggal-desc");
+
+      const response = await fetch(
+        `https://rumahbaristensbe-production.up.railway.app/api/overtime-logs?${queryParams.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
+
+      if (response.status === 401) {
+        setToastMessage({
+          type: "error",
+          message: "Sesi Anda telah berakhir. Silakan login kembali.",
+        });
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Overtime API response:", data);
+
+      if (data && Array.isArray(data)) {
+        const mappedOvertime: OvertimeItem[] = data.map((item) => ({
+          date: item.dateOvertime,
+          baristaName: item.baristaName,
+          outletName: item.outletName,
+          duration: Number.parseInt(item.duration.split(":")[0]) || 0,
+          status: item.status,
+        }));
+        setOvertimeData(mappedOvertime);
+      } else {
+        setOvertimeData([]);
+      }
+    } catch (error) {
+      console.error("Error loading overtime data:", error);
+      setToastMessage({
+        type: "error",
+        message: "Gagal memuat data lembur. Silakan coba lagi.",
+      });
+      setOvertimeData([]);
+    } finally {
+      setIsLoadingOvertime(false);
+    }
+  };
+
   const loadDashboardData = async () => {
     setIsLoading(true);
     setError(null);
@@ -354,7 +481,6 @@ export function AdminDashboard() {
       console.log("Dashboard API response:", result);
 
       if (result.success && result.data) {
-        // Log shift dates for debugging
         result.data.forEach((summary) => {
           console.log(
             `Barista: ${summary.baristaName}, Shifts:`,
@@ -425,19 +551,8 @@ export function AdminDashboard() {
           mostActiveBarista,
         });
 
-        // Generate histogram data menggunakan fungsi helper
         const histogramData = generateHistogramData(tableData, outlets);
         setHistogramData(histogramData);
-
-        setToastMessage({
-          type: "success",
-          message:
-            result.message ||
-            `Data berhasil dimuat untuk periode ${format(
-              dateRange?.from || new Date(),
-              "yyyy-MM-dd"
-            )} - ${format(dateRange?.to || new Date(), "yyyy-MM-dd")}`,
-        });
       } else {
         setToastMessage({
           type: "info",
@@ -477,7 +592,6 @@ export function AdminDashboard() {
     }
   };
 
-  // Tambahkan fungsi untuk memastikan data histogram dibuat dengan benar
   const generateHistogramData = (
     tableData: BaristaTableData[],
     outlets: Outlet[]
@@ -492,7 +606,6 @@ export function AdminDashboard() {
       { min: 25, max: Number.POSITIVE_INFINITY, label: "25+" },
     ];
 
-    // Make sure we have valid outlets with IDs
     const validOutlets = outlets.filter(
       (outlet) =>
         outlet && outlet.outletId !== null && outlet.outletId !== undefined
@@ -501,14 +614,12 @@ export function AdminDashboard() {
     const histogramData: HistogramData[] = ranges.map((range) => {
       const item: HistogramData = { range: range.label, count: 0 };
 
-      // Add a default value for each outlet to ensure the chart renders properly
       validOutlets.forEach((outlet) => {
         if (outlet.outletId !== null && outlet.outletId !== undefined) {
           item[`outlet${outlet.outletId}`] = 0;
         }
       });
 
-      // Now count the actual data
       if (validOutlets.length > 0 && tableData.length > 0) {
         validOutlets.forEach((outlet) => {
           if (outlet.outletId !== null && outlet.outletId !== undefined) {
@@ -534,7 +645,6 @@ export function AdminDashboard() {
 
   const debouncedLoadDashboardData = debounce(loadDashboardData, 500);
 
-  // Process shift schedule data with proper date handling
   const filteredShiftScheduleData = summaryData
     .filter((summary) => {
       if (
@@ -596,6 +706,35 @@ export function AdminDashboard() {
     )
     .sort((a, b) => a.date.localeCompare(b.date));
 
+  const filteredOvertimeData = overtimeData
+    .filter((overtime) => {
+      return overtime.status.toUpperCase() === "APPROVED";
+    })
+    .filter((overtime) => {
+      if (overtimeFilter.outletId && overtimeFilter.outletId !== "all") {
+        const selectedOutlet = outlets.find(
+          (o) => o.outletId === Number(overtimeFilter.outletId)
+        );
+        return overtime.outletName === selectedOutlet?.name;
+      }
+      return true;
+    })
+    .filter((overtime) => {
+      if (overtimeFilter.baristaName) {
+        const baristaName = getBaristaName(overtime.baristaName);
+        return baristaName
+          .toLowerCase()
+          .includes(overtimeFilter.baristaName.toLowerCase());
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      if (!a.date && !b.date) return 0;
+      if (!a.date) return 1;
+      if (!b.date) return -1;
+      return a.date.localeCompare(b.date);
+    });
+
   const resetFilters = () => {
     setConfirmTitle("Konfirmasi Reset Filter");
     setConfirmMessage("Apakah Anda yakin ingin mereset semua filter?");
@@ -610,13 +749,19 @@ export function AdminDashboard() {
         outletId: "all",
         baristaName: "",
       });
+      setOvertimeFilter({
+        outletId: "all",
+        baristaName: "",
+      });
       setToastMessage({
         type: "info",
         message: "Filter telah direset",
       });
 
-      // Reload data after resetting filters
-      setTimeout(() => loadDashboardData(), 100);
+      setTimeout(() => {
+        loadDashboardData();
+        loadOvertimeData();
+      }, 100);
     });
     setShowConfirmModal(true);
   };
@@ -632,12 +777,14 @@ export function AdminDashboard() {
     }
   };
 
-  // Fungsi untuk mengekspor data barista ke CSV
+  const getBaristaName = (baristaName: string) => {
+    const barista = baristas.find((b) => b.id === baristaName);
+    return barista ? barista.name : baristaName;
+  };
+
   const exportBaristaToCSV = () => {
-    // Membuat header CSV
     const headers = ["Nama Barista", "Outlet", "Hari Kerja", "Lembur", "Total"];
 
-    // Urutkan data sesuai dengan pengaturan sort saat ini
     const sortedData = [...tableData].sort((a, b) => {
       const aValue = a[sortField as keyof BaristaTableData];
       const bValue = b[sortField as keyof BaristaTableData];
@@ -653,7 +800,6 @@ export function AdminDashboard() {
       }
     });
 
-    // Membuat konten CSV
     const csvContent = [
       headers.join(","),
       ...sortedData.map((barista) =>
@@ -667,13 +813,11 @@ export function AdminDashboard() {
       ),
     ].join("\n");
 
-    // Membuat link download
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
 
-    // Membuat nama file dengan periode
     const startDate = format(dateRange?.from || new Date(), "yyyyMMdd");
     const endDate = format(dateRange?.to || new Date(), "yyyyMMdd");
     link.setAttribute(
@@ -684,62 +828,81 @@ export function AdminDashboard() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
-    setToastMessage({
-      type: "success",
-      message: "Data barista berhasil diekspor ke CSV",
-    });
   };
 
-  // Fungsi untuk mengekspor jadwal shift ke CSV
   const exportShiftScheduleToCSV = () => {
-    // Membuat header CSV
     const headers = ["Tanggal", "Barista", "Tipe Shift", "Outlet"];
-
-    // Membuat konten CSV
     const csvContent = [
       headers.join(","),
       ...filteredShiftScheduleData.map((shift) =>
         [
           shift.date,
           `"${shift.baristaName.replace(/"/g, '""')}"`,
-          getShiftTypeName(shift.shiftType),
+          `"${getShiftTypeName(shift.shiftType).replace(/"/g, '""')}"`,
           `"${shift.outletName.replace(/"/g, '""')}"`,
         ].join(",")
       ),
     ].join("\n");
 
-    // Membuat link download
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
 
-    // Membuat nama file dengan periode
     const startDate = format(dateRange?.from || new Date(), "yyyyMMdd");
     const endDate = format(dateRange?.to || new Date(), "yyyyMMdd");
-    link.setAttribute("download", `jadwal-shift-${startDate}-${endDate}.csv`);
+    link.setAttribute("download", `laporan-shift-${startDate}-${endDate}.csv`);
 
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
 
-    setToastMessage({
-      type: "success",
-      message: "Jadwal shift berhasil diekspor ke CSV",
-    });
+  const exportOvertimeToCSV = () => {
+    const headers = ["Tanggal", "Barista", "Outlet", "Durasi (Jam)"];
+    const csvContent = [
+      headers.join(","),
+      ...filteredOvertimeData.map((overtime) =>
+        [
+          overtime.date && isValid(new Date(overtime.date))
+            ? format(new Date(overtime.date), "dd/MM/yyyy")
+            : "Tanggal tidak valid",
+          `"${getBaristaName(overtime.baristaName).replace(/"/g, '""')}"`,
+          `"${overtime.outletName.replace(/"/g, '""')}"`,
+          overtime.duration,
+        ].join(",")
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+
+    const startDateFormatted = format(
+      dateRange?.from || new Date(),
+      "yyyyMMdd"
+    );
+    const endDateFormatted = format(dateRange?.to || new Date(), "yyyyMMdd");
+    link.setAttribute(
+      "download",
+      `laporan-lembur-${startDateFormatted}-${endDateFormatted}.csv`
+    );
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   useEffect(() => {
     if (dateRange?.from && dateRange?.to) {
       debouncedLoadDashboardData();
+      loadOvertimeData();
     }
   }, [selectedOutlets, dateRange, searchQuery]);
 
   useEffect(() => {
-    // Reset filter outlet jika outlets berubah
     if (outlets.length > 0 && selectedOutlets.length > 0) {
-      // Verifikasi bahwa outlet yang dipilih ada dalam daftar
       const outletExists = outlets.some(
         (outlet) => outlet.outletId === selectedOutlets[0]
       );
@@ -748,11 +911,6 @@ export function AdminDashboard() {
       }
     }
   }, [outlets]);
-
-  useEffect(() => {
-    console.log("Current outlets state:", outlets);
-    console.log("Current selectedOutlets state:", selectedOutlets);
-  }, [outlets, selectedOutlets]);
 
   if (error) {
     return (
@@ -766,9 +924,9 @@ export function AdminDashboard() {
     );
   }
 
-  if (isLoading && tableData.length === 0) {
-    return <LoadingIndicator />;
-  }
+  // if (isLoading) {
+  //   return <LoadingIndicator />;
+  // }
 
   return (
     <div className="flex-1 overflow-auto bg-slate-50">
@@ -792,24 +950,30 @@ export function AdminDashboard() {
         )}
 
         <Tabs defaultValue="summary" className="space-y-6">
-          <TabsList className="grid w-full md:w-auto grid-cols-3 md:inline-flex bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
+          <TabsList className="grid w-full md:w-auto grid-cols-4 md:inline-flex bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
             <TabsTrigger
               value="summary"
-              className="data-[state=active]:bg-teal-50 data-[state=active]:text-teal-800 data-[state=active]:shadow-sm rounded-md"
+              className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-800 data-[state=active]:shadow-sm rounded-md"
             >
               Ringkasan
             </TabsTrigger>
             <TabsTrigger
               value="details"
-              className="data-[state=active]:bg-teal-50 data-[state=active]:text-teal-800 data-[state=active]:shadow-sm rounded-md"
+              className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-800 data-[state=active]:shadow-sm rounded-md"
             >
               Detail Barista
             </TabsTrigger>
             <TabsTrigger
               value="schedule"
-              className="data-[state=active]:bg-teal-50 data-[state=active]:text-teal-800 data-[state=active]:shadow-sm rounded-md"
+              className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-800 data-[state=active]:shadow-sm rounded-md"
             >
               Jadwal Shift
+            </TabsTrigger>
+            <TabsTrigger
+              value="overtime"
+              className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-800 data-[state=active]:shadow-sm rounded-md"
+            >
+              Jadwal Lembur
             </TabsTrigger>
           </TabsList>
 
@@ -828,9 +992,13 @@ export function AdminDashboard() {
                 Reset Filter
               </Button>
               <Button
-                onClick={loadDashboardData}
+                onClick={() => {
+                  loadDashboardData();
+                  loadOvertimeData();
+                }}
                 disabled={isLoading}
-                className="bg-blue-600 hover:bg-teal-700 transition-colors"
+                className="bg-blue-600 hover:bg-blue-700 transition-colors"
+                style={{ backgroundColor: "#3c67ff" }}
               >
                 {isLoading ? (
                   <>
@@ -848,9 +1016,9 @@ export function AdminDashboard() {
           </div>
 
           <TabsContent value="summary" className="space-y-8">
-            <Card className="border-teal-100 bg-gradient-to-br from-teal-50 to-white shadow-md overflow-hidden">
-              <CardHeader className="pb-3 border-b border-teal-100">
-                <CardTitle className="text-lg font-medium text-teal-800">
+            <Card className="border-blue-100 bg-gradient-to-br from-blue-50 to-white shadow-md overflow-hidden">
+              <CardHeader className="pb-3 border-b border-blue-100">
+                <CardTitle className="text-lg font-medium text-blue-800">
                   Filter Data
                 </CardTitle>
                 <CardDescription>
@@ -882,7 +1050,7 @@ export function AdminDashboard() {
                         }
                       }}
                     >
-                      <SelectTrigger className="border-slate-200 bg-white hover:border-slate-300 transition-colors">
+                      <SelectTrigger className="border-slate-200 bg-white hover:border-blue-300 transition-colors">
                         <SelectValue placeholder="Pilih outlet" />
                       </SelectTrigger>
                       <SelectContent>
@@ -915,7 +1083,7 @@ export function AdminDashboard() {
                         placeholder="Nama barista..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-9 border-slate-200 bg-white hover:border-slate-300 transition-colors"
+                        className="pl-9 border-slate-200 bg-white hover:border-blue-300 transition-colors"
                       />
                     </div>
                   </div>
@@ -927,9 +1095,8 @@ export function AdminDashboard() {
                     <DatePickerWithRange
                       dateRange={dateRange}
                       setDateRange={(range: DateRange | undefined) => {
-                        if (range?.from && range?.to) {
-                          setDateRange(range);
-                        }
+                        console.log("Date range changed:", range);
+                        setDateRange(range);
                       }}
                     />
                   </div>
@@ -945,7 +1112,7 @@ export function AdminDashboard() {
                         <Badge
                           key={`selected-outlet-${id}`}
                           variant="secondary"
-                          className="flex items-center gap-1 bg-teal-100 text-teal-800 hover:bg-teal-200 transition-colors"
+                          className="flex items-center gap-1 bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors"
                         >
                           {outlet.name || `Outlet ${id}`}
                           <button
@@ -954,7 +1121,7 @@ export function AdminDashboard() {
                                 selectedOutlets.filter((o) => o !== id)
                               )
                             }
-                            className="ml-1 rounded-full hover:bg-teal-300 p-1 transition-colors"
+                            className="ml-1 rounded-full hover:bg-blue-300 p-1 transition-colors"
                           >
                             ×
                           </button>
@@ -973,13 +1140,13 @@ export function AdminDashboard() {
             ) : (
               <>
                 <div className="grid gap-6 md:grid-cols-4">
-                  <Card className="border-l-4 border-l-teal-500 shadow-md hover:shadow-lg transition-shadow bg-white">
+                  <Card className="border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-shadow bg-white">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium text-slate-600">
                         Total Barista
                       </CardTitle>
-                      <div className="h-10 w-10 rounded-full bg-teal-50 flex items-center justify-center">
-                        <Users className="h-5 w-5 text-teal-600" />
+                      <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center">
+                        <Users className="h-5 w-5 text-blue-600" />
                       </div>
                     </CardHeader>
                     <CardContent>
@@ -992,13 +1159,13 @@ export function AdminDashboard() {
                     </CardContent>
                   </Card>
 
-                  <Card className="border-l-4 border-l-cyan-500 shadow-md hover:shadow-lg transition-shadow bg-white">
+                  <Card className="border-l-4 border-l-indigo-500 shadow-md hover:shadow-lg transition-shadow bg-white">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium text-slate-600">
                         Total Shift
                       </CardTitle>
-                      <div className="h-10 w-10 rounded-full bg-cyan-50 flex items-center justify-center">
-                        <Calendar className="h-5 w-5 text-cyan-600" />
+                      <div className="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center">
+                        <Calendar className="h-5 w-5 text-indigo-600" />
                       </div>
                     </CardHeader>
                     <CardContent>
@@ -1066,7 +1233,7 @@ export function AdminDashboard() {
                             Jumlah barista berdasarkan rentang hari kerja
                           </CardDescription>
                         </div>
-                        <BarChart3 className="h-5 w-5 text-teal-500" />
+                        <BarChart3 className="h-5 w-5 text-blue-500" />
                       </div>
                     </CardHeader>
                     <CardContent className="pt-6">
@@ -1104,15 +1271,15 @@ export function AdminDashboard() {
                     </CardHeader>
                     <CardContent className="pt-6 space-y-5">
                       {metrics.mostActiveOutlet ? (
-                        <div className="flex items-start gap-4 p-4 rounded-lg bg-teal-50 border border-teal-200 shadow-sm">
-                          <div className="h-8 w-8 rounded-full bg-teal-500 flex items-center justify-center text-white mt-0.5 shrink-0">
+                        <div className="flex items-start gap-4 p-4 rounded-lg bg-blue-50 border border-blue-200 shadow-sm">
+                          <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white mt-0.5 shrink-0">
                             <span className="text-sm">✓</span>
                           </div>
                           <div>
-                            <h4 className="font-medium text-teal-800 text-base">
+                            <h4 className="font-medium text-blue-800 text-base">
                               Outlet Paling Aktif
                             </h4>
-                            <p className="text-sm text-teal-700 mt-1.5">
+                            <p className="text-sm text-blue-700 mt-1.5">
                               <span className="font-semibold">
                                 {metrics.mostActiveOutlet}
                               </span>{" "}
@@ -1138,15 +1305,15 @@ export function AdminDashboard() {
                       )}
 
                       {metrics.mostActiveBarista ? (
-                        <div className="flex items-start gap-4 p-4 rounded-lg bg-cyan-50 border border-cyan-200 shadow-sm">
-                          <div className="h-8 w-8 rounded-full bg-cyan-500 flex items-center justify-center text-white mt-0.5 shrink-0">
+                        <div className="flex items-start gap-4 p-4 rounded-lg bg-indigo-50 border border-indigo-200 shadow-sm">
+                          <div className="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center text-white mt-0.5 shrink-0">
                             <span className="text-sm">i</span>
                           </div>
                           <div>
-                            <h4 className="font-medium text-cyan-800 text-base">
+                            <h4 className="font-medium text-indigo-800 text-base">
                               Barista Paling Aktif
                             </h4>
-                            <p className="text-sm text-cyan-700 mt-1.5">
+                            <p className="text-sm text-indigo-700 mt-1.5">
                               <span className="font-semibold">
                                 {metrics.mostActiveBarista}
                               </span>{" "}
@@ -1197,9 +1364,9 @@ export function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="details" className="space-y-6">
-            <Card className="border-teal-100 bg-gradient-to-br from-teal-50 to-white shadow-md overflow-hidden">
-              <CardHeader className="pb-3 border-b border-teal-100">
-                <CardTitle className="text-lg font-medium text-teal-800">
+            <Card className="border-blue-100 bg-gradient-to-br from-blue-50 to-white shadow-md overflow-hidden">
+              <CardHeader className="pb-3 border-b border-blue-100">
+                <CardTitle className="text-lg font-medium text-blue-800">
                   Filter Data
                 </CardTitle>
                 <CardDescription>
@@ -1231,7 +1398,7 @@ export function AdminDashboard() {
                         }
                       }}
                     >
-                      <SelectTrigger className="border-slate-200 bg-white hover:border-slate-300 transition-colors">
+                      <SelectTrigger className="border-slate-200 bg-white hover:border-blue-300 transition-colors">
                         <SelectValue placeholder="Pilih outlet" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1264,7 +1431,7 @@ export function AdminDashboard() {
                         placeholder="Nama barista..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-9 border-slate-200 bg-white hover:border-slate-300 transition-colors"
+                        className="pl-9 border-slate-200 bg-white hover:border-blue-300 transition-colors"
                       />
                     </div>
                   </div>
@@ -1276,9 +1443,8 @@ export function AdminDashboard() {
                     <DatePickerWithRange
                       dateRange={dateRange}
                       setDateRange={(range: DateRange | undefined) => {
-                        if (range?.from && range?.to) {
-                          setDateRange(range);
-                        }
+                        console.log("Date range changed:", range);
+                        setDateRange(range);
                       }}
                     />
                   </div>
@@ -1299,7 +1465,7 @@ export function AdminDashboard() {
                 <Button
                   variant="outline"
                   onClick={exportBaristaToCSV}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 border-blue-200 hover:bg-blue-50"
                 >
                   <Download className="h-4 w-4" />
                   Export CSV
@@ -1440,7 +1606,7 @@ export function AdminDashboard() {
                           .map((barista) => (
                             <tr
                               key={barista.baristaId}
-                              className="cursor-pointer hover:bg-teal-50 transition-colors"
+                              className="cursor-pointer hover:bg-blue-50 transition-colors"
                               onClick={() => {
                                 if (
                                   !barista.baristaId ||
@@ -1471,7 +1637,7 @@ export function AdminDashboard() {
                               </td>
                               <td className="px-4 py-3 text-slate-700">
                                 <div className="flex items-center gap-2">
-                                  <MapPin className="h-4 w-4 text-teal-500" />
+                                  <MapPin className="h-4 w-4 text-blue-500" />
                                   {barista.outletName}
                                 </div>
                               </td>
@@ -1505,7 +1671,7 @@ export function AdminDashboard() {
                   Menampilkan {tableData.length} dari {tableData.length} barista
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="inline-block w-2 h-2 bg-teal-500 rounded-full"></span>
+                  <span className="inline-block w-2 h-2 bg-blue-500 rounded-full"></span>
                   Klik pada baris untuk melihat detail shift
                 </div>
               </CardFooter>
@@ -1513,9 +1679,9 @@ export function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="schedule" className="space-y-6">
-            <Card className="border-teal-100 bg-gradient-to-br from-teal-50 to-white shadow-md overflow-hidden">
-              <CardHeader className="pb-3 border-b border-teal-100">
-                <CardTitle className="text-lg font-medium text-teal-800">
+            <Card className="border-blue-100 bg-gradient-to-br from-blue-50 to-white shadow-md overflow-hidden">
+              <CardHeader className="pb-3 border-b border-blue-100">
+                <CardTitle className="text-lg font-medium text-blue-800">
                   Filter Data
                 </CardTitle>
                 <CardDescription>
@@ -1537,7 +1703,7 @@ export function AdminDashboard() {
                         })
                       }
                     >
-                      <SelectTrigger className="border-slate-200 bg-white hover:border-slate-300 transition-colors">
+                      <SelectTrigger className="border-slate-200 bg-white hover:border-blue-300 transition-colors">
                         <SelectValue placeholder="Pilih outlet" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1575,7 +1741,7 @@ export function AdminDashboard() {
                             baristaName: e.target.value,
                           })
                         }
-                        className="pl-9 border-slate-200 bg-white hover:border-slate-300 transition-colors"
+                        className="pl-9 border-slate-200 bg-white hover:border-blue-300 transition-colors"
                       />
                     </div>
                   </div>
@@ -1587,9 +1753,8 @@ export function AdminDashboard() {
                     <DatePickerWithRange
                       dateRange={dateRange}
                       setDateRange={(range: DateRange | undefined) => {
-                        if (range?.from && range?.to) {
-                          setDateRange(range);
-                        }
+                        console.log("Date range changed:", range);
+                        setDateRange(range);
                       }}
                     />
                   </div>
@@ -1610,7 +1775,7 @@ export function AdminDashboard() {
                 <Button
                   variant="outline"
                   onClick={exportShiftScheduleToCSV}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 border-blue-200 hover:bg-blue-50"
                 >
                   <Download className="h-4 w-4" />
                   Export CSV
@@ -1623,7 +1788,7 @@ export function AdminDashboard() {
                   </div>
                 ) : isLoading ? (
                   <div className="flex justify-center items-center h-40">
-                    <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
                   </div>
                 ) : filteredShiftScheduleData.length === 0 ? (
                   <div className="flex justify-center items-center h-40 bg-slate-50 rounded-lg p-4">
@@ -1664,11 +1829,11 @@ export function AdminDashboard() {
                         {filteredShiftScheduleData.map((shift, index) => (
                           <TableRow
                             key={index}
-                            className="hover:bg-teal-50 transition-colors"
+                            className="hover:bg-blue-50 transition-colors"
                           >
                             <TableCell>
                               <div className="flex items-center gap-2">
-                                <Calendar className="h-4 w-4 text-teal-500" />
+                                <Calendar className="h-4 w-4 text-blue-500" />
                                 <span
                                   className={`font-medium ${
                                     shift.date === "Tanggal tidak valid"
@@ -1688,7 +1853,7 @@ export function AdminDashboard() {
                                 className={`px-3 py-1 rounded-full text-xs font-medium inline-block ${
                                   shift.shiftType === 1
                                     ? "bg-amber-100 text-amber-800"
-                                    : "bg-cyan-100 text-cyan-800"
+                                    : "bg-indigo-100 text-indigo-800"
                                 }`}
                               >
                                 {getShiftTypeName(shift.shiftType)}
@@ -1699,6 +1864,173 @@ export function AdminDashboard() {
                                 <MapPin className="h-4 w-4 text-rose-500" />
                                 <span className="font-medium text-slate-700">
                                   {shift.outletName}
+                                </span>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="overtime" className="space-y-6">
+            <Card className="border-blue-100 bg-gradient-to-br from-blue-50 to-white shadow-md overflow-hidden">
+              <CardHeader className="pb-3 border-b border-blue-100">
+                <CardTitle className="text-lg font-medium text-blue-800">
+                  Filter Data Lembur
+                </CardTitle>
+                <CardDescription>
+                  Sesuaikan filter untuk melihat data lembur yang diinginkan
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="flex flex-col md:flex-row gap-6">
+                  <div className="flex-1">
+                    <label className="text-sm font-medium mb-2 block text-slate-700">
+                      Filter Outlet
+                    </label>
+                    <Select
+                      value={overtimeFilter.outletId}
+                      onValueChange={(value) =>
+                        setOvertimeFilter({
+                          ...overtimeFilter,
+                          outletId: value,
+                        })
+                      }
+                    >
+                      <SelectTrigger className="border-slate-200 bg-white hover:border-blue-300 transition-colors">
+                        <SelectValue placeholder="Pilih outlet" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Semua Outlet</SelectItem>
+                        {outlets.map((outlet) => (
+                          <SelectItem
+                            key={`outlet-filter-${outlet.outletId}`}
+                            value={String(outlet.outletId)}
+                          >
+                            {outlet.name || `Outlet ${outlet.outletId}`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex-1">
+                    <label className="text-sm font-medium mb-2 block text-slate-700">
+                      Cari Barista
+                    </label>
+                    <div className="relative">
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                      <Input
+                        placeholder="Nama barista..."
+                        value={overtimeFilter.baristaName}
+                        onChange={(e) =>
+                          setOvertimeFilter({
+                            ...overtimeFilter,
+                            baristaName: e.target.value,
+                          })
+                        }
+                        className="pl-9 border-slate-200 bg-white hover:border-blue-300 transition-colors"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-md hover:shadow-lg transition-shadow bg-white">
+              <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <CardTitle className="text-lg font-medium text-slate-800">
+                    Jadwal Lembur Disetujui
+                  </CardTitle>
+                  <CardDescription>
+                    Detail jadwal lembur yang telah disetujui
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={exportOvertimeToCSV}
+                  className="flex items-center gap-2 border-blue-200 hover:bg-blue-50"
+                >
+                  <Download className="h-4 w-4" />
+                  Export CSV
+                </Button>
+              </CardHeader>
+              <CardContent className="pt-6 space-y-6">
+                {isLoadingOvertime ? (
+                  <div className="flex justify-center items-center h-40">
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                  </div>
+                ) : filteredOvertimeData.length === 0 ? (
+                  <div className="flex justify-center items-center h-40 bg-slate-50 rounded-lg p-4">
+                    <p className="text-slate-500">
+                      Tidak ada jadwal lembur. Data lembur akan muncul ketika
+                      barista melakukan overtime.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-md border border-slate-200 overflow-auto max-h-[60vh]">
+                    <Table>
+                      <TableHeader className="bg-slate-50">
+                        <TableRow>
+                          <TableHead className="font-semibold text-slate-700">
+                            Tanggal
+                          </TableHead>
+                          <TableHead className="font-semibold text-slate-700">
+                            Barista
+                          </TableHead>
+                          <TableHead className="font-semibold text-slate-700">
+                            Outlet
+                          </TableHead>
+                          <TableHead className="font-semibold text-slate-700">
+                            Durasi
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredOvertimeData.map((overtime, index) => (
+                          <TableRow
+                            key={index}
+                            className="hover:bg-blue-50 transition-colors"
+                          >
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-blue-500" />
+                                <span className="font-medium text-slate-800">
+                                  {overtime.date &&
+                                  isValid(new Date(overtime.date))
+                                    ? format(
+                                        new Date(overtime.date),
+                                        "dd MMM yyyy",
+                                        {
+                                          locale: id,
+                                        }
+                                      )
+                                    : "Tanggal tidak valid"}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-medium text-slate-700">
+                              {getBaristaName(overtime.baristaName)}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <MapPin className="h-4 w-4 text-rose-500" />
+                                <span className="font-medium text-slate-700">
+                                  {overtime.outletName}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Clock className="h-4 w-4 text-amber-500" />
+                                <span className="font-medium text-amber-700">
+                                  {overtime.duration} jam
                                 </span>
                               </div>
                             </TableCell>

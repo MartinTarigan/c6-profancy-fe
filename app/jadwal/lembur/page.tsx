@@ -56,6 +56,7 @@ interface OvertimeLog {
   outletName: string;
   createdAt: string;
   updatedAt: string;
+  baristaName: string;
 }
 
 interface Outlet {

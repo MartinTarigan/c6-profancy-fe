@@ -27,6 +27,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import LoadingIndicator from "@/components/LoadingIndicator";
 
 interface UserData {
   username: string;
@@ -213,7 +214,7 @@ export default function DaftarAkun() {
       HeadBar: "bg-amber-100 text-amber-800",
       ROLE_HeadBar: "bg-amber-100 text-amber-800",
       Barista: "bg-emerald-100 text-emerald-800",
-      "Trainee Barista": "bg-teal-100 text-teal-800",
+      "Intern Barista": "bg-pink-100 text-teal-800",
       "Probation Barista": "bg-lime-100 text-lime-800",
     };
 
@@ -632,54 +633,7 @@ export default function DaftarAkun() {
 
       {isLoading ? (
         viewMode === "table" ? (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse shadow-md rounded-lg overflow-hidden">
-              <thead>
-                <tr className="bg-gradient-to-r from-primary to-primary/90 text-white">
-                  <th className="py-2 px-3 text-left font-bold">Username</th>
-                  <th className="py-2 px-3 text-left font-bold">
-                    Nama Lengkap
-                  </th>
-                  {userRole === "Admin" && (
-                    <th className="py-2 px-3 text-left font-bold">No HP</th>
-                  )}
-                  <th className="py-2 px-3 text-left font-bold">Role</th>
-                  <th className="py-2 px-3 text-left font-bold">Outlet</th>
-                  <th className="py-2 px-3 text-left font-bold">Status</th>
-                  <th className="py-2 px-3 text-left font-bold">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="border-b even:bg-primary-bg/20">
-                    <td className="py-2 px-3">
-                      <Skeleton className="h-4 w-20" />
-                    </td>
-                    <td className="py-2 px-3">
-                      <Skeleton className="h-4 w-32" />
-                    </td>
-                    {userRole === "Admin" && (
-                      <td className="py-2 px-3">
-                        <Skeleton className="h-4 w-24" />
-                      </td>
-                    )}
-                    <td className="py-2 px-3">
-                      <Skeleton className="h-4 w-32" />
-                    </td>
-                    <td className="py-2 px-3">
-                      <Skeleton className="h-4 w-32" />
-                    </td>
-                    <td className="py-2 px-3">
-                      <Skeleton className="h-6 w-16 rounded-full" />
-                    </td>
-                    <td className="py-2 px-3">
-                      <Skeleton className="h-8 w-16 rounded-md" />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <LoadingIndicator />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {Array.from({ length: 8 }).map((_, i) => (

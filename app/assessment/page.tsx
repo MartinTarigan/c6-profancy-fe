@@ -48,6 +48,7 @@ import {
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import LoadingIndicator from "@/components/LoadingIndicator";
 
 interface AssignedUser {
   id: string;
@@ -364,19 +365,7 @@ export default function ManajemenAssessment() {
   const isManagement = isAdmin || isExecutive;
 
   if (isLoading && !assessments.length) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-white-50 to-indigo-50 flex items-center justify-center p-4">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <h3 className="text-xl font-medium text-slate-700">
-            Loading Assessments
-          </h3>
-          <p className="text-slate-500 mt-2">
-            Please wait while we fetch your data
-          </p>
-        </div>
-      </div>
-    );
+    return <LoadingIndicator />;
   }
 
   if (error && !assessments.length) {
@@ -442,15 +431,21 @@ export default function ManajemenAssessment() {
           onValueChange={setActiveTab}
           className="w-full"
         >
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
+          <TabsList
+            className={`grid w-full max-w-md mx-auto ${
+              isAdmin ? "grid-cols-1" : "grid-cols-2"
+            } mb-6`}
+          >
             <TabsTrigger value="running" className="rounded-full">
               <RefreshCw className="h-4 w-4 mr-2" />
               Assessment Aktif
             </TabsTrigger>
-            <TabsTrigger value="history" className="rounded-full">
-              <History className="h-4 w-4 mr-2" />
-              Riwayat Pengerjaan
-            </TabsTrigger>
+            {!isAdmin && (
+              <TabsTrigger value="history" className="rounded-full">
+                <History className="h-4 w-4 mr-2" />
+                Riwayat Pengerjaan
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="running">
@@ -832,132 +827,136 @@ export default function ManajemenAssessment() {
             </div>
           </TabsContent>
 
-          <TabsContent value="history">
-            {/* History Heading */}
-            <div className="flex justify-between items-center mb-3">
-              <h2 className="text-lg font-medium text-slate-800 flex items-center">
-                <History className="h-4 w-4 mr-2 text-purple-600" />
-                Riwayat Pengerjaan Assessment
-              </h2>
-            </div>
-
-            {/* History Search */}
-            <div className="bg-white rounded-lg border border-purple-100 p-3 mb-4">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-                <input
-                  type="text"
-                  placeholder="Cari riwayat pengerjaan..."
-                  className="w-full pl-8 pr-3 py-1.5 text-sm border border-purple-100 rounded-md focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent bg-white/50"
-                  value={historySearchQuery}
-                  onChange={(e) => setHistorySearchQuery(e.target.value)}
-                />
+          {!isAdmin && (
+            <TabsContent value="history">
+              {/* History Heading */}
+              <div className="flex justify-between items-center mb-3">
+                <h2 className="text-lg font-medium text-slate-800 flex items-center">
+                  <History className="h-4 w-4 mr-2 text-purple-600" />
+                  Riwayat Pengerjaan Assessment
+                </h2>
               </div>
-            </div>
 
-            {/* History Table */}
-            <div className="bg-white rounded-lg overflow-hidden shadow-sm border border-purple-100">
-              {isHistoryLoading ? (
-                <div className="p-8 text-center">
-                  <Loader2 className="h-8 w-8 animate-spin text-purple-600 mx-auto mb-4" />
-                  <p className="text-slate-500">Memuat riwayat pengerjaan...</p>
+              {/* History Search */}
+              <div className="bg-white rounded-lg border border-purple-100 p-3 mb-4">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                  <input
+                    type="text"
+                    placeholder="Cari riwayat pengerjaan..."
+                    className="w-full pl-8 pr-3 py-1.5 text-sm border border-purple-100 rounded-md focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent bg-white/50"
+                    value={historySearchQuery}
+                    onChange={(e) => setHistorySearchQuery(e.target.value)}
+                  />
                 </div>
-              ) : historyError ? (
-                <div className="p-8 text-center">
-                  <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
-                  <h3 className="text-base font-medium text-slate-700 mb-1">
-                    Error Loading History
-                  </h3>
-                  <p className="text-slate-500 text-sm">{historyError}</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.location.reload()}
-                    className="mt-4"
-                  >
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Try Again
-                  </Button>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="text-white bg-gradient-to-r from-purple-600 to-purple-600">
-                        <th className="py-2.5 px-4 text-left font-medium text-sm">
-                          No.
-                        </th>
-                        <th className="py-2.5 px-4 text-left font-medium text-sm">
-                          Assessment
-                        </th>
-                        <th className="py-2.5 px-4 text-left font-medium text-sm">
-                          Tanggal Pengerjaan
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredHistory.length > 0 ? (
-                        filteredHistory.map((history, index) => {
-                          const bgColor =
-                            index % 2 === 0 ? "bg-white" : "bg-purple-50";
-                          const hoverColor = "hover:bg-purple-100";
+              </div>
 
-                          return (
-                            <tr
-                              key={history.submissionId}
-                              className={`${bgColor} ${hoverColor} transition-colors`}
-                            >
-                              <td className="py-2.5 px-4 text-sm">
-                                {index + 1}
-                              </td>
-                              <td className="py-2.5 px-4">
-                                <div className="flex items-center">
-                                  <Avatar className="h-7 w-7 mr-2.5 bg-purple-100 text-purple-700">
-                                    <AvatarFallback>
-                                      <FileText className="h-4 w-4" />
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <span className="font-medium text-sm">
-                                    Tes BARISTA{" "}
-                                    {getMonthName(history.submittedAt)}
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="py-2.5 px-4">
-                                <div className="flex items-center">
-                                  <Calendar className="h-3.5 w-3.5 mr-1.5 text-slate-400" />
-                                  <span className="text-sm">
-                                    {formatDateTime(history.submittedAt)}
-                                  </span>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      ) : (
-                        <tr>
-                          <td
-                            colSpan={3}
-                            className="py-10 text-center text-slate-500 bg-white/80 backdrop-blur-sm"
-                          >
-                            <History className="h-10 w-10 mx-auto text-slate-300 mb-2" />
-                            <h3 className="text-base font-medium text-slate-700">
-                              Belum ada riwayat pengerjaan
-                            </h3>
-                            <p className="text-slate-500 mt-1 text-sm">
-                              {historySearchQuery
-                                ? "Coba ubah kata kunci pencarian"
-                                : "Anda belum pernah mengerjakan assessment"}
-                            </p>
-                          </td>
+              {/* History Table */}
+              <div className="bg-white rounded-lg overflow-hidden shadow-sm border border-purple-100">
+                {isHistoryLoading ? (
+                  <div className="p-8 text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-purple-600 mx-auto mb-4" />
+                    <p className="text-slate-500">
+                      Memuat riwayat pengerjaan...
+                    </p>
+                  </div>
+                ) : historyError ? (
+                  <div className="p-8 text-center">
+                    <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
+                    <h3 className="text-base font-medium text-slate-700 mb-1">
+                      Error Loading History
+                    </h3>
+                    <p className="text-slate-500 text-sm">{historyError}</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.location.reload()}
+                      className="mt-4"
+                    >
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Try Again
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="text-white bg-gradient-to-r from-purple-600 to-purple-600">
+                          <th className="py-2.5 px-4 text-left font-medium text-sm">
+                            No.
+                          </th>
+                          <th className="py-2.5 px-4 text-left font-medium text-sm">
+                            Assessment
+                          </th>
+                          <th className="py-2.5 px-4 text-left font-medium text-sm">
+                            Tanggal Pengerjaan
+                          </th>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </TabsContent>
+                      </thead>
+                      <tbody>
+                        {filteredHistory.length > 0 ? (
+                          filteredHistory.map((history, index) => {
+                            const bgColor =
+                              index % 2 === 0 ? "bg-white" : "bg-purple-50";
+                            const hoverColor = "hover:bg-purple-100";
+
+                            return (
+                              <tr
+                                key={history.submissionId}
+                                className={`${bgColor} ${hoverColor} transition-colors`}
+                              >
+                                <td className="py-2.5 px-4 text-sm">
+                                  {index + 1}
+                                </td>
+                                <td className="py-2.5 px-4">
+                                  <div className="flex items-center">
+                                    <Avatar className="h-7 w-7 mr-2.5 bg-purple-100 text-purple-700">
+                                      <AvatarFallback>
+                                        <FileText className="h-4 w-4" />
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <span className="font-medium text-sm">
+                                      Tes BARISTA{" "}
+                                      {getMonthName(history.submittedAt)}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="py-2.5 px-4">
+                                  <div className="flex items-center">
+                                    <Calendar className="h-3.5 w-3.5 mr-1.5 text-slate-400" />
+                                    <span className="text-sm">
+                                      {formatDateTime(history.submittedAt)}
+                                    </span>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        ) : (
+                          <tr>
+                            <td
+                              colSpan={3}
+                              className="py-10 text-center text-slate-500 bg-white/80 backdrop-blur-sm"
+                            >
+                              <History className="h-10 w-10 mx-auto text-slate-300 mb-2" />
+                              <h3 className="text-base font-medium text-slate-700">
+                                Belum ada riwayat pengerjaan
+                              </h3>
+                              <p className="text-slate-500 mt-1 text-sm">
+                                {historySearchQuery
+                                  ? "Coba ubah kata kunci pencarian"
+                                  : "Anda belum pernah mengerjakan assessment"}
+                              </p>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>

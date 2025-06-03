@@ -89,6 +89,7 @@ export default function ReportsPage() {
     const fetchAllRequests = async () => {
       try {
         const token = localStorage.getItem("token");
+        const username = localStorage.getItem("username");
 
         if (!token) {
           router.push("/login");
@@ -107,7 +108,7 @@ export default function ReportsPage() {
 
         // Fetch ALL leave requests
         const response = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/shift-management/leave-request/all`,
+          `https://rumahbaristensbe-production.up.railway.app/api/shift-management/leave-request/all?username=${username}`,
           {
             method: "GET",
             headers: {

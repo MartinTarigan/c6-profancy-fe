@@ -32,6 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Toast from "@/components/Toast";
 import ConfirmModal from "@/components/ConfirmModal";
+import LoadingIndicator from "@/components/LoadingIndicator";
 
 interface Option {
   id: string;
@@ -414,21 +415,7 @@ export default function KerjakanAssessment() {
     return Math.round((answeredQuestions / totalQuestions) * 100);
   };
 
-  if (isLoading)
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-blue-50 to-white">
-        <div className="relative w-20 h-20 mb-4">
-          <div className="absolute inset-0 rounded-full border-t-4 border-blue-600 animate-spin"></div>
-          <div className="absolute inset-3 rounded-full bg-white flex items-center justify-center">
-            <BookOpen className="h-8 w-8 text-blue-600" />
-          </div>
-        </div>
-        <h3 className="text-xl font-medium text-slate-700">
-          Memuat Assessment
-        </h3>
-        <p className="text-slate-500 mt-2">Mohon tunggu sebentar...</p>
-      </div>
-    );
+  if (isLoading) return <LoadingIndicator />;
 
   if (error)
     return (

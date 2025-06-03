@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import Link from "next/link";
+import LoadingIndicator from "@/components/LoadingIndicator";
+
 import {
   ArrowLeft,
   CalendarIcon,
@@ -222,14 +224,7 @@ export default function UpdatePeerReview() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-white-50 to-indigo-50 flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <h3 className="text-lg font-medium text-slate-700">Loading...</h3>
-        </div>
-      </div>
-    );
+    return <LoadingIndicator />;
   }
 
   return (

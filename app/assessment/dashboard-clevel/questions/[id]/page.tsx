@@ -2,13 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  CheckCircle,
-  FileText,
-  Loader2,
-  AlertCircle,
-} from "lucide-react";
+import { ArrowLeft, CheckCircle, FileText, AlertCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import LoadingIndicator from "@/components/LoadingIndicator";
 import { Label } from "@/components/ui/label";
 
 interface Question {
@@ -131,19 +126,7 @@ export default function AssessmentQuestionsPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-white-50 to-indigo-50 flex items-center justify-center p-4">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <h3 className="text-xl font-medium text-slate-700">
-            Memuat Soal Assessment
-          </h3>
-          <p className="text-slate-500 mt-2">
-            Mohon tunggu sementara kami mengambil data
-          </p>
-        </div>
-      </div>
-    );
+    return <LoadingIndicator />;
   }
 
   if (error) {

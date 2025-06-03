@@ -931,7 +931,9 @@ export default function MyCalendar() {
           <ConfirmModal
             message="Apakah Anda yakin ingin membatalkan perubahan?"
             onConfirm={handleConfirmCancel}
-            onClose={() => setShowConfirmModal(false)} isOpen={false}          />
+            onClose={() => setShowConfirmModal(false)}
+            isOpen={false}
+          />
         )}
 
         {/* Outlet Selection */}

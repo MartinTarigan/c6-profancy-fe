@@ -69,7 +69,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   // Form mode state
-  const [isLoginMode, setIsLoginMode] = useState(false);
+  const [isLoginMode, setIsLoginMode] = useState(true);
   const [animationComplete, setAnimationComplete] = useState(true);
   const [newUserStep, setNewUserStep] = useState<"initial" | "setPassword">(
     "initial"
@@ -183,12 +183,8 @@ export default function LoginPage() {
         return;
       }
 
-      // If all checks pass, move to the next step
+      // If all checks pass, move to the next step without showing success toast yet
       setNewUserStep("setPassword");
-      setToast({
-        type: "success",
-        message: "Verification successful! Please set your new password.",
-      });
     } catch (error) {
       setToast({ type: "error", message: "Failed to connect to server" });
     } finally {
@@ -371,7 +367,7 @@ export default function LoginPage() {
                           href="#"
                           className="text-[#3c67ff] hover:text-[#3b5694]"
                         >
-                          Forgot password?
+                          Lupa password?
                         </Link>
                       </div>
                     </div>

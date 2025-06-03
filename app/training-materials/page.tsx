@@ -756,7 +756,7 @@ export default function ManajemenMateriPelatihan() {
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
-              {/* <Link href={`/training/materi/${material.id}`}>
+              <Link href={`/training-materials/detail/${material.id}`}>
                 <Button
                   variant="outline"
                   size="sm"
@@ -765,7 +765,7 @@ export default function ManajemenMateriPelatihan() {
                   <Eye className="h-3.5 w-3.5 mr-1.5" />
                   Detail
                 </Button>
-              </Link> */}
+              </Link>
               {userRole === "Admin" && (
                 <div className="flex gap-2">
                   <Link href={`/training-materials/edit/${material.id}`}>
@@ -848,7 +848,7 @@ export default function ManajemenMateriPelatihan() {
                   <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
                   Buka Link
                 </a>
-                <Link href={`/training/materi/${material.id}`}>
+                <Link href={`/training-materials/detail/${material.id}`}>
                   <Button
                     variant="outline"
                     size="sm"

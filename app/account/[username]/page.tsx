@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import LoadingIndicator from "@/components/LoadingIndicator";
 import {
   Calendar,
   Building,
@@ -11,10 +13,10 @@ import {
   Home,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { format } from "date-fns";
 
 interface AccountData {
   fullName: string;
@@ -76,54 +78,26 @@ export default function DetailAkun() {
     }
   }, [username]);
 
-  // const formatDate = (dateString: string | null) => {
-  //   if (!dateString) return "-";
-  //   try {
-  //     const date = new Date(dateString);
-  //     return new Intl.DateTimeFormat("id-ID", {
-  //       day: "numeric",
-  //       month: "long",
-  //       year: "numeric",
-  //     }).format(date);
-  //   } catch (e) {
-  //     return e;
-  //   }
-  // };
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "-";
+    try {
+      const date = new Date(dateString);
+      return new Intl.DateTimeFormat("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }).format(date);
+    } catch (e) {
+      return "-";
+    }
+  };
 
   return (
     <div className="flex flex-col w-full max-w-5xl mx-auto px-4 py-6">
       <h1 className="text-primary text-3xl font-bold mb-8">Detail Akun</h1>
 
       {isLoading ? (
-        <Card className="w-full border border-gray-200 rounded-xl shadow-md overflow-hidden">
-          <div className="bg-primary/5 p-6 flex items-center">
-            <Skeleton className="h-16 w-16 rounded-full" />
-            <div className="ml-6 space-y-2">
-              <Skeleton className="h-6 w-48" />
-              <Skeleton className="h-4 w-32" />
-            </div>
-          </div>
-          <CardContent className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-6">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i}>
-                    <Skeleton className="h-4 w-24 mb-2" />
-                    <Skeleton className="h-5 w-40" />
-                  </div>
-                ))}
-              </div>
-              <div className="space-y-6">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i}>
-                    <Skeleton className="h-4 w-24 mb-2" />
-                    <Skeleton className="h-5 w-40" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <LoadingIndicator />
       ) : error ? (
         <Card className="w-full border border-red-200 rounded-xl shadow-md overflow-hidden">
           <div className="bg-red-50 p-8 text-destructive text-center">
@@ -207,9 +181,13 @@ export default function DetailAkun() {
                   <Phone className="h-5 w-5 text-primary mt-0.5 mr-3 flex-shrink-0" />
                   <div>
                     <h3 className="font-medium text-muted-foreground mb-1">
-                      Nomor HP
+                      Nomor HPx
                     </h3>
-                    <p className="text-lg">{accountData.phoneNumber}</p>
+                    <p className="text-lg">
+                      {accountData.phoneNumber.startsWith("0")
+                        ? "+62" + accountData.phoneNumber.substring(1)
+                        : accountData.phoneNumber}
+                    </p>
                   </div>
                 </div>
 
@@ -220,7 +198,12 @@ export default function DetailAkun() {
                       Tanggal Lahir
                     </h3>
                     <p className="text-lg">
-                      {/* {formatDate(accountData.dateOfBirth)} */}
+                      {accountData.dateOfBirth
+                        ? format(
+                            new Date(accountData.dateOfBirth),
+                            "dd MMMM yyyy"
+                          )
+                        : "-"}
                     </p>
                   </div>
                 </div>
@@ -255,10 +238,10 @@ export default function DetailAkun() {
                     </h3>
                     <div className="space-y-1">
                       <p className="text-sm text-muted-foreground">
-                        {/* Dibuat: {formatDate(accountData.createdAt)} */}
+                        Dibuat: {formatDate(accountData.createdAt)}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {/* Diperbarui: {formatDate(accountData.updatedAt)} */}
+                        Diperbarui: {formatDate(accountData.updatedAt)}
                       </p>
                     </div>
                   </div>
@@ -268,9 +251,16 @@ export default function DetailAkun() {
 
             <Separator className="my-8" />
 
-            <div className="flex justify-end">
+            <div className="flex justify-end space-x-3">
               <Button variant="outline" onClick={() => router.back()}>
                 Kembali
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => router.push(`/account/edit/${username}`)}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Edit Akun
               </Button>
             </div>
           </CardContent>

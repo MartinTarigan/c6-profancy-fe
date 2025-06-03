@@ -36,6 +36,8 @@ import {
 } from "date-fns";
 import { id } from "date-fns/locale";
 import Calendar from "react-calendar";
+import LoadingIndicator from "@/components/LoadingIndicator";
+
 import "react-calendar/dist/Calendar.css";
 
 interface ShiftData {
@@ -80,12 +82,30 @@ export default function ShiftDashboard() {
   >([]);
 
   // State for calendar view
+
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [formattedDate, setFormattedDate] = useState("");
   const [selectedDateShifts, setSelectedDateShifts] = useState<
     ShiftData["scheduleData"][0]["shifts"]
   >([]);
+
+  const getUniqueShifts = (shifts: ShiftData["scheduleData"][0]["shifts"]) => {
+    const seen = new Set();
+    const unique: ShiftData["scheduleData"][0]["shifts"] = [];
+
+    shifts.forEach((shift) => {
+      const key = `${shift.outlet}|${shift.employeeName}|${shift.shiftType}|${shift.shiftTime}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(shift);
+      }
+    });
+
+    return unique;
+  };
+
+  const uniqueSelectedDateShifts = getUniqueShifts(selectedDateShifts);
 
   // Fetch user data to check role
   useEffect(() => {
@@ -506,14 +526,7 @@ export default function ShiftDashboard() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4">Loading dashboard data...</p>
-        </div>
-      </div>
-    );
+    return <LoadingIndicator />;
   }
 
   if (error) {
@@ -870,6 +883,7 @@ export default function ShiftDashboard() {
                 >
                   List View
                 </Button>
+
                 <Button
                   variant={viewMode === "calendar" ? "default" : "outline"}
                   className={
@@ -914,43 +928,45 @@ export default function ShiftDashboard() {
                               </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                              {(daySchedule.shifts || []).map((shift, idx) => (
-                                <tr key={idx}>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                    {shift.outlet}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                    <div className="flex items-center gap-2">
-                                      <div className="w-6 h-6 rounded-full bg-[#5b5fc7] text-white flex items-center justify-center text-xs">
-                                        {shift.employeeInitial}
+                              {getUniqueShifts(daySchedule.shifts || []).map(
+                                (shift, idx) => (
+                                  <tr key={idx}>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                      {shift.outlet}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full bg-[#5b5fc7] text-white flex items-center justify-center text-xs">
+                                          {shift.employeeInitial}
+                                        </div>
+                                        {shift.employeeName}
                                       </div>
-                                      {shift.employeeName}
-                                    </div>
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                    <div className="flex items-center gap-2">
-                                      <span>
-                                        {shift.shiftType} ({shift.shiftTime})
-                                      </span>
-                                      <Badge
-                                        className={
-                                          shift.status === "active"
-                                            ? "bg-green-100 text-green-800 hover:bg-green-100"
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                      <div className="flex items-center gap-2">
+                                        <span>
+                                          {shift.shiftType} ({shift.shiftTime})
+                                        </span>
+                                        <Badge
+                                          className={
+                                            shift.status === "active"
+                                              ? "bg-green-100 text-green-800 hover:bg-green-100"
+                                              : shift.status === "upcoming"
+                                              ? "bg-blue-100 text-blue-800 hover:bg-blue-100"
+                                              : "bg-gray-100 text-gray-800 hover:bg-gray-100"
+                                          }
+                                        >
+                                          {shift.status === "active"
+                                            ? "Active"
                                             : shift.status === "upcoming"
-                                            ? "bg-blue-100 text-blue-800 hover:bg-blue-100"
-                                            : "bg-gray-100 text-gray-800 hover:bg-gray-100"
-                                        }
-                                      >
-                                        {shift.status === "active"
-                                          ? "Active"
-                                          : shift.status === "upcoming"
-                                          ? "Upcoming"
-                                          : "Completed"}
-                                      </Badge>
-                                    </div>
-                                  </td>
-                                </tr>
-                              ))}
+                                            ? "Upcoming"
+                                            : "Completed"}
+                                        </Badge>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                )
+                              )}
                             </tbody>
                           </table>
                         </div>
@@ -966,6 +982,7 @@ export default function ShiftDashboard() {
                 </>
               ) : (
                 // Calendar View
+
                 <div
                   className="flex flex-col md:flex-row justify-center items-center gap-[10px] w-full rounded-[20px] shadow-md bg-[#EDF1FF]"
                   style={{ padding: "28px 40px", alignSelf: "stretch" }}
@@ -1019,7 +1036,7 @@ export default function ShiftDashboard() {
                               .length > 0 ? (
                               <div className="space-y-2">
                                 {groupShiftsByType(
-                                  selectedDateShifts
+                                  uniqueSelectedDateShifts
                                 ).openingShifts.map((shift, index) => (
                                   <div
                                     key={index}
@@ -1081,7 +1098,7 @@ export default function ShiftDashboard() {
                               .length > 0 ? (
                               <div className="space-y-2">
                                 {groupShiftsByType(
-                                  selectedDateShifts
+                                  uniqueSelectedDateShifts
                                 ).closingShifts.map((shift, index) => (
                                   <div
                                     key={index}

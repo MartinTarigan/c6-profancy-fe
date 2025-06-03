@@ -39,6 +39,49 @@ export default function EditAkun() {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isRevoking, setIsRevoking] = useState(false);
+  const [outletName, setOutletName] = useState("");
+
+  // Define role hierarchy and all available roles
+  const roleHierarchy = {
+    "Probation Barista": 0,
+    "Intern Barista": 1,
+    Barista: 2,
+    "Head Bar": 3,
+    CLEVEL: 4,
+    HR: 4,
+    Admin: 4,
+  };
+
+  const allRoles = [
+    "Probation Barista",
+    "Intern Barista",
+    "Barista",
+    "Head Bar",
+    "CLEVEL",
+    "HR",
+    "Admin",
+  ];
+
+  // Function to get available roles based on current role
+  const getAvailableRoles = (currentRole: string | undefined) => {
+    if (!currentRole || !(currentRole in roleHierarchy)) {
+      return allRoles; // Return all roles if current role is not in hierarchy
+    }
+
+    if (currentRole === "Head Bar") {
+      return ["Head Bar", "Barista", "CLEVEL", "HR", "Admin"];
+    }
+
+    const currentRoleLevel =
+      roleHierarchy[currentRole as keyof typeof roleHierarchy];
+
+    // Filter roles that are at the same level or higher
+    return allRoles.filter(
+      (role) =>
+        roleHierarchy[role as keyof typeof roleHierarchy] >= currentRoleLevel ||
+        ["CLEVEL", "HR", "Admin"].includes(role) // Always include admin/management roles
+    );
+  };
 
   useEffect(() => {
     const storedRole = localStorage.getItem("roles");
@@ -72,6 +115,7 @@ export default function EditAkun() {
         if (data.data) {
           setRole(data.data.role);
           setAccountStatus(data.data.status);
+          setOutletName(data.data.outlet);
         }
       } catch (err) {
         setError(
@@ -105,6 +149,7 @@ export default function EditAkun() {
           body: JSON.stringify({
             role,
             status: accountStatus,
+            outletName,
           }),
         }
       );
@@ -138,6 +183,7 @@ export default function EditAkun() {
           body: JSON.stringify({
             role,
             status: "Revoked",
+            outletName,
           }),
         }
       );
@@ -215,11 +261,13 @@ export default function EditAkun() {
                       value={role}
                       onChange={(e) => setRole(e.target.value)}
                     >
-                      <option value="Barista">Barista</option>
-                      <option value="Head Bar">Head Bar</option>
-                      <option value="CLEVEL">CLEVEL</option>
-                      <option value="HR">HR</option>
-                      <option value="Admin">Admin</option>
+                      {getAvailableRoles(accountData?.role).map(
+                        (availableRole) => (
+                          <option key={availableRole} value={availableRole}>
+                            {availableRole}
+                          </option>
+                        )
+                      )}
                     </select>
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                       <svg
@@ -304,7 +352,7 @@ export default function EditAkun() {
 
             {/* Buttons */}
             <div className="flex justify-center gap-4 mt-10">
-              <Link href={`/account/${username}`}>
+              <Link href={`/account`}>
                 <Button
                   type="button"
                   variant="outline"

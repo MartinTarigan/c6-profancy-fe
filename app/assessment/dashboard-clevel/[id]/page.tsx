@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-empty-object-type */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,7 +10,6 @@ import {
   BarChart3,
   Download,
   FileText,
-  Loader2,
   PieChart,
   Search,
   Users,
@@ -52,6 +51,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import LoadingIndicator from "@/components/LoadingIndicator";
 
 interface AssignedUser {
   id: string;
@@ -451,19 +451,7 @@ export default function AssessmentDetailPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-white-50 to-indigo-50 flex items-center justify-center p-4">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <h3 className="text-xl font-medium text-slate-700">
-            Memuat Detail Assessment
-          </h3>
-          <p className="text-slate-500 mt-2">
-            Mohon tunggu sementara kami mengambil data
-          </p>
-        </div>
-      </div>
-    );
+    return <LoadingIndicator />;
   }
 
   if (error) {
@@ -729,39 +717,6 @@ export default function AssessmentDetailPage() {
                         className="h-2 bg-slate-100 [&>div]:bg-red-500"
                       />
                     </div>
-                  </div>
-
-                  <div className="mt-6 pt-6 border-t border-slate-100">
-                    <h4 className="font-medium text-sm mb-3">Insight Utama</h4>
-                    <ul className="space-y-2 text-sm">
-                      <li className="flex items-start">
-                        <span className="bg-green-100 text-green-700 rounded-full w-5 h-5 flex items-center justify-center text-xs mr-2 mt-0.5">
-                          ✓
-                        </span>
-                        <span>
-                          {assessmentDetail.scoreDistribution.high}% barista
-                          mendapat nilai sangat baik (80% atau lebih tinggi)
-                        </span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="bg-blue-100 text-blue-700 rounded-full w-5 h-5 flex items-center justify-center text-xs mr-2 mt-0.5">
-                          i
-                        </span>
-                        <span>
-                          {assessmentDetail.scoreDistribution.medium}% barista
-                          memenuhi kriteria kelulusan (70-79%)
-                        </span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="bg-red-100 text-red-700 rounded-full w-5 h-5 flex items-center justify-center text-xs mr-2 mt-0.5">
-                          !
-                        </span>
-                        <span>
-                          {assessmentDetail.scoreDistribution.low}% barista
-                          membutuhkan pelatihan tambahan (di bawah 70%)
-                        </span>
-                      </li>
-                    </ul>
                   </div>
                 </CardContent>
               </Card>
@@ -1035,19 +990,34 @@ export default function AssessmentDetailPage() {
                           </TableCell>
                           <TableCell className="text-center">
                             {participant.hasSubmitted ? (
-                              <Link
-                                href={`/assessment/review/${participant.submissionId}?assessmentId=${assessmentId}`}
-                              >
+                              participant.essayReviewed ? (
+                                // Already reviewed - just show disabled button without Link
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   className="gap-1"
+                                  disabled
                                 >
-                                  <Edit className="h-3 w-3" />
-                                  Review
+                                  <CheckCircle className="h-3 w-3" />
+                                  Sudah Dinilai
                                 </Button>
-                              </Link>
+                              ) : (
+                                // Not yet reviewed - show clickable Link with button
+                                <Link
+                                  href={`/assessment/review/${participant.submissionId}?assessmentId=${assessmentId}`}
+                                >
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-1"
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                    Review
+                                  </Button>
+                                </Link>
+                              )
                             ) : (
+                              // Not submitted - show disabled button
                               <Button
                                 variant="outline"
                                 size="sm"

@@ -1,10 +1,29 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import LoadingIndicator from "@/components/LoadingIndicator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import {
+  Loader2,
+  X,
+  Calendar,
+  MapPin,
+  FileText,
+  UserCheck,
+  ArrowLeft,
+  CheckCircle,
+  AlertCircle,
+  Building2,
+  Eye,
+  XCircle,
+} from "lucide-react";
 
 interface OvertimeLog {
   id: string;
@@ -241,37 +260,44 @@ export default function OvertimeLogDetail() {
     return outlet?.headBarName || "-";
   };
 
-  const getStatusClass = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "APPROVED":
-        return "text-green-600";
+        return (
+          <Badge className="bg-green-100 text-green-800 border-green-200">
+            Diterima
+          </Badge>
+        );
       case "REJECTED":
-        return "text-red-600";
+        return (
+          <Badge className="bg-red-100 text-red-800 border-red-200">
+            Ditolak
+          </Badge>
+        );
       case "PENDING":
-        return "text-yellow-600";
+        return (
+          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+            Menunggu Konfirmasi
+          </Badge>
+        );
       case "ONGOING":
-        return "text-blue-600";
+        return (
+          <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+            Ongoing
+          </Badge>
+        );
       case "CANCELLED":
-        return "text-red-600";
+        return (
+          <Badge className="bg-gray-100 text-gray-800 border-gray-200">
+            Cancelled
+          </Badge>
+        );
       default:
-        return "text-gray-600";
-    }
-  };
-
-  const getStatusDisplay = (status: string) => {
-    switch (status) {
-      case "APPROVED":
-        return "Diterima";
-      case "REJECTED":
-        return "Ditolak";
-      case "PENDING":
-        return "Menunggu Konfirmasi";
-      case "ONGOING":
-        return "Ongoing";
-      case "CANCELLED":
-        return "Cancelled";
-      default:
-        return status;
+        return (
+          <Badge className="bg-gray-100 text-gray-800 border-gray-200">
+            {status}
+          </Badge>
+        );
     }
   };
 
@@ -287,153 +313,333 @@ export default function OvertimeLogDetail() {
   };
 
   if (loading) {
-    return <LoadingIndicator />;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+          <span className="text-gray-600">Memuat detail log lembur...</span>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="py-10 px-4">
-      <h1 className="text-3xl font-bold text-center text-[#4169E1] mb-10">
-        Detail Log Lembur{" "}
-        <span className={getStatusClass(formData.status)}>
-          ({getStatusDisplay(formData.status)})
-        </span>
-      </h1>
-
-      <div className="max-w-3xl mx-auto bg-white border rounded-lg p-8 shadow space-y-6">
-        <div className="space-y-6">
-          <div>
-            <label htmlFor="dateOvertime" className="block mb-2 font-medium">
-              Tanggal Lembur
-            </label>
-            <input
-              id="dateOvertime"
-              name="dateOvertime"
-              type="text"
-              value={formatDate(formData.dateOvertime)}
-              readOnly
-              className="w-full border border-gray-300 rounded p-2 bg-gray-100"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="startHour" className="block mb-2 font-medium">
-              Jam Mulai
-            </label>
-            <input
-              id="startHour"
-              name="startHour"
-              type="text"
-              value={formData.startHour}
-              readOnly
-              className="w-full border border-gray-300 rounded p-2 bg-gray-100"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="outletName" className="block mb-2 font-medium">
-              Outlet
-            </label>
-            <input
-              id="outletName"
-              name="outletName"
-              type="text"
-              value={formData.outletName}
-              readOnly
-              className="w-full border border-gray-300 rounded p-2 bg-gray-100"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="duration" className="block mb-2 font-medium">
-              Durasi (Jam)
-            </label>
-            <input
-              id="duration"
-              name="duration"
-              type="text"
-              value={formData.duration}
-              readOnly
-              className="w-full border border-gray-300 rounded p-2 bg-gray-100"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="reason" className="block mb-2 font-medium">
-              Alasan Lembur
-            </label>
-            <textarea
-              id="reason"
-              name="reason"
-              value={formData.reason}
-              readOnly
-              rows={4}
-              className="w-full border border-gray-300 rounded p-2 bg-gray-100"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="verifier" className="block mb-2 font-medium">
-              Verifikator
-            </label>
-            <input
-              id="verifier"
-              name="verifier"
-              value={getVerifierName()}
-              readOnly
-              className="w-full border border-gray-300 rounded p-2 bg-gray-100"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="status" className="block mb-2 font-medium">
-              Status
-            </label>
-            <input
-              type="text"
-              value={getStatusDisplay(formData.status)}
-              readOnly
-              className={`w-full border border-gray-300 rounded p-2 bg-gray-100 ${getStatusClass(
-                formData.status
-              )}`}
-            />
-          </div>
-        </div>
-
-        <div className="flex justify-center gap-4 pt-4">
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="w-40 border border-[#4169E1] text-[#4169E1] hover:bg-blue-50 rounded py-2"
-          >
-            Kembali
-          </button>
-          {canCancelRequest() && (
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={handleRevoke}
-              disabled={updating}
-              className="w-40"
-            >
-              {updating ? "Memproses..." : "Batalkan Permohonan"}
+    <div className="min-h-screen bg-gray-50">
+      {/* Top Navigation Bar */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Eye className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-blue-600">
+                  Detail Log Lembur
+                </h1>
+                <p className="text-sm text-gray-500">
+                  Informasi lengkap log lembur
+                </p>
+              </div>
+            </div>
+            <Button variant="outline" onClick={handleCancel} className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Kembali
             </Button>
-          )}
+          </div>
         </div>
       </div>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Left Sidebar - Info Panel */}
+          <div className="lg:col-span-1 space-y-6">
+            <Card className="p-6">
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+                  <FileText className="h-8 w-8 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">
+                    Detail Log Lembur
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Informasi lengkap tentang log lembur yang telah diajukan
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            {/* Status Card */}
+            <Card className="p-6 border-blue-200 bg-blue-50">
+              <div className="flex items-start gap-3">
+                <CheckCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+                <div className="space-y-3 w-full">
+                  <h4 className="font-semibold text-blue-900">
+                    Status Permohonan
+                  </h4>
+                  <div className="flex justify-center w-full">
+                    {getStatusBadge(formData.status)}
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Outlet Info */}
+            {formData.outletName && (
+              <Card className="p-6">
+                <div className="flex items-start gap-3">
+                  <Building2 className="h-5 w-5 text-gray-600 mt-0.5" />
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-gray-900">
+                      Informasi Outlet
+                    </h4>
+                    <div className="space-y-1 text-sm">
+                      <p className="text-gray-700">
+                        <span className="font-medium">Nama:</span>{" "}
+                        {formData.outletName}
+                      </p>
+                      <p className="text-gray-700">
+                        <span className="font-medium">Verifikator:</span>{" "}
+                        {getVerifierName()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            {/* Action Guidelines */}
+            <Card className="p-6">
+              <h4 className="font-semibold text-gray-900 mb-3">Informasi</h4>
+              <div className="space-y-3 text-sm text-gray-600">
+                <div className="flex gap-2">
+                  <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
+                  <p>Semua informasi dalam halaman ini bersifat read-only</p>
+                </div>
+                <div className="flex gap-2">
+                  <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
+                  <p>Status akan diperbarui oleh admin atau sistem</p>
+                </div>
+                {canCancelRequest() && (
+                  <div className="flex gap-2">
+                    <div className="w-2 h-2 bg-red-600 rounded-full mt-2 flex-shrink-0"></div>
+                    <p>Anda dapat membatalkan permohonan jika diperlukan</p>
+                  </div>
+                )}
+              </div>
+            </Card>
+          </div>
+
+          {/* Main Content */}
+          <div className="lg:col-span-2">
+            <Card className="p-8">
+              <div className="space-y-8">
+                {/* Section 1: Waktu & Tanggal */}
+                <div>
+                  <div className="flex items-center gap-2 mb-6">
+                    <Calendar className="h-5 w-5 text-blue-600" />
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Waktu & Tanggal
+                    </h3>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Tanggal Lembur
+                      </Label>
+                      <Input
+                        value={formatDate(formData.dateOvertime)}
+                        readOnly
+                        className="h-11 bg-gray-50"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Jam Mulai
+                      </Label>
+                      <Input
+                        value={formData.startHour}
+                        readOnly
+                        className="h-11 bg-gray-50"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Section 2: Lokasi & Durasi */}
+                <div>
+                  <div className="flex items-center gap-2 mb-6">
+                    <MapPin className="h-5 w-5 text-blue-600" />
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Lokasi & Durasi
+                    </h3>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Outlet
+                      </Label>
+                      <Input
+                        value={formData.outletName}
+                        readOnly
+                        className="h-11 bg-gray-50"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Durasi Lembur
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          value={formData.duration}
+                          readOnly
+                          className="h-11 bg-gray-50 pr-12"
+                        />
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <span className="text-sm text-gray-500">jam</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Section 3: Detail & Verifikasi */}
+                <div>
+                  <div className="flex items-center gap-2 mb-6">
+                    <FileText className="h-5 w-5 text-blue-600" />
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Detail & Verifikasi
+                    </h3>
+                  </div>
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Alasan Lembur
+                      </Label>
+                      <Textarea
+                        value={formData.reason}
+                        readOnly
+                        rows={4}
+                        className="resize-none bg-gray-50"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Verifikator
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          value={getVerifierName()}
+                          readOnly
+                          className="h-11 bg-gray-50 pl-10"
+                        />
+                        <UserCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Status
+                      </Label>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          value={(() => {
+                            switch (formData.status) {
+                              case "APPROVED":
+                                return "Diterima";
+                              case "REJECTED":
+                                return "Ditolak";
+                              case "PENDING":
+                                return "Menunggu Konfirmasi";
+                              case "ONGOING":
+                                return "Ongoing";
+                              case "CANCELLED":
+                                return "Cancelled";
+                              default:
+                                return formData.status;
+                            }
+                          })()}
+                          readOnly
+                          className="h-11 bg-gray-50 flex-1"
+                        />
+                        {getStatusBadge(formData.status)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Action Section */}
+                <div className="flex justify-end gap-4 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={handleCancel}
+                    className="px-8"
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Kembali
+                  </Button>
+                  {canCancelRequest() && (
+                    <Button
+                      variant="destructive"
+                      onClick={handleRevoke}
+                      disabled={updating}
+                      className="px-8"
+                    >
+                      {updating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Memproses...
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="mr-2 h-4 w-4" />
+                          Batalkan Permohonan
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      {/* Toast Notification */}
       {toast && (
-        <div
-          className={`mt-4 p-4 rounded ${
-            toast.type === "Berhasil" ? "bg-green-500" : "bg-red-500"
-          } text-white`}
-        >
-          {toast.message}
-          <button
-            onClick={() => setToast(null)}
-            className="float-right font-bold"
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2">
+          <Alert
+            className={`min-w-[300px] shadow-lg border-2 ${
+              toast.type === "Berhasil"
+                ? "border-green-500 bg-green-50 text-green-800"
+                : "border-red-500 bg-red-50 text-red-800"
+            }`}
           >
-            X
-          </button>
+            <div className="flex items-center gap-2">
+              {toast.type === "Berhasil" ? (
+                <CheckCircle className="h-5 w-5 text-green-600" />
+              ) : (
+                <AlertCircle className="h-5 w-5 text-red-600" />
+              )}
+              <AlertDescription className="flex-1 font-medium">
+                {toast.message}
+              </AlertDescription>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setToast(null)}
+                className="h-auto p-1 hover:bg-transparent"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </Alert>
         </div>
       )}
     </div>

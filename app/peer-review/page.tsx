@@ -445,7 +445,7 @@ export default function ManajemenPeerReview() {
                                 className="rounded-full border-blue-200 hover:border-blue-300 hover:bg-blue-50 h-7 text-xs"
                               >
                                 <Eye className="h-3.5 w-3.5 mr-1" />
-                                Detail
+                                Update
                               </Button>
                             </Link>
                           ) : (

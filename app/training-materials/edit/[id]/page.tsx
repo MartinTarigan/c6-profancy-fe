@@ -265,7 +265,7 @@ export default function EditMateriPelatihan() {
 
           {/* Tombol */}
           <div className="flex justify-center gap-4 mt-10">
-            <Link href="/training/materi">
+            <Link href="/training-materials/">
               <Button
                 type="button"
                 variant="outline"

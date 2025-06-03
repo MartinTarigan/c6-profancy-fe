@@ -149,7 +149,6 @@ export default function CreateLeaveRequestPage() {
     }
 
     if (!username) {
-      // alert("Data pengguna tidak ditemukan. Silakan login kembali.");
       setToast({
         type: "error",
         message: "Data pengguna tidak ditemukan. Silakan login kembali.",
@@ -171,7 +170,6 @@ export default function CreateLeaveRequestPage() {
 
       const requestBody = {
         username: username,
-        // requestDate: date?.toISOString().split("T")[0],
         requestDate,
         leaveType: leaveType,
         reason: reason,
@@ -213,11 +211,6 @@ export default function CreateLeaveRequestPage() {
             ? err.message
             : "Gagal membuat permohonan. Silakan coba lagi.",
       });
-      // alert(
-      //   err instanceof Error
-      //     ? err.message
-      //     : "Gagal membuat permohonan. Silakan coba lagi."
-      // );
     } finally {
       setIsSubmitting(false);
     }
@@ -254,7 +247,7 @@ export default function CreateLeaveRequestPage() {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nama Barista</Label>
+                  <Label htmlFor="name">Username Barista</Label>
                   <Input
                     id="name"
                     value={fullName || username || "Loading..."}

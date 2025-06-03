@@ -9,7 +9,6 @@ import {
   Coffee,
   FileText,
   GraduationCap,
-  Loader2,
   UserCheck,
   Users,
   Clock,
@@ -30,6 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import LoadingIndicator from "@/components/LoadingIndicator";
 
 const TEMPLATES = [
   {
@@ -206,17 +206,7 @@ export default function UpdateAssessment() {
   const selectedTemplateInfo = TEMPLATES.find((t) => t.value === template);
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-slate-700 mx-auto mb-4" />
-          <h3 className="text-xl font-medium text-slate-700">
-            Memuat Data Assessment...
-          </h3>
-          <p className="text-slate-500 mt-2">Mohon tunggu sebentar</p>
-        </div>
-      </div>
-    );
+    return <LoadingIndicator />;
   }
 
   if (error) {

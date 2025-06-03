@@ -68,7 +68,7 @@ export default function EditProfile() {
 
   // State validasi & proses simpan
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [isValid, setIsValid] = useState(false);
+  const [isValid, setIsValid] = useState(false); // Kept for potential direct use or display
   const [isSaving, setIsSaving] = useState(false);
 
   // Ambil data user
@@ -90,18 +90,29 @@ export default function EditProfile() {
         const data: ApiResponse = await response.json();
         if (data.data) {
           setAccountData(data.data);
-          setFullName(data.data.fullName);
+          setFullName(data.data.fullName || ""); // Ensure string
           setGender(data.data.gender);
-          setPhoneNumber(data.data.phoneNumber);
-          setAddress(data.data.address);
+
+          // Format phone number: convert "0" prefix to "+62"
+          const phoneToSet = data.data.phoneNumber || "";
+          setPhoneNumber(
+            phoneToSet.startsWith("0")
+              ? "+62" + phoneToSet.substring(1)
+              : phoneToSet
+          );
+
+          setAddress(data.data.address || ""); // Ensure string
           if (data.data.dateOfBirth) {
             setDateOfBirth(new Date(data.data.dateOfBirth));
           } else {
             setDateOfBirth(undefined);
           }
-          setRole(data.data.role);
-          setStatus(data.data.status);
-          setOutlet(data.data.outlet);
+          setRole(data.data.role || ""); // Good practice for other strings
+          setStatus(data.data.status || "");
+          setOutlet(data.data.outlet || "");
+        } else {
+          // Handle case where data.data is null - e.g. account not found
+          setError("Account data not found in API response.");
         }
       } catch (err) {
         setError(
@@ -117,7 +128,7 @@ export default function EditProfile() {
     }
   }, [originalUsername]);
 
-  // Fungsi validasi form
+  // Fungsi validasi form - now returns errors object
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
 
@@ -147,18 +158,22 @@ export default function EditProfile() {
       newErrors.dateOfBirth = "Tanggal lahir wajib diisi.";
     } else {
       const today = new Date();
-      if (dateOfBirth < new Date(1900, 0, 1) || dateOfBirth > today) {
+      today.setHours(0, 0, 0, 0); // Compare date only
+      const dob = new Date(dateOfBirth);
+      dob.setHours(0, 0, 0, 0);
+
+      if (dob < new Date(1900, 0, 1) || dob > today) {
         newErrors.dateOfBirth = "Tanggal lahir tidak valid.";
       }
     }
-
-    setErrors(newErrors);
-    setIsValid(Object.keys(newErrors).length === 0);
+    return newErrors;
   };
 
-  // Jalankan validasi setiap kali field berubah
+  // Jalankan validasi setiap kali field berubah untuk UI feedback
   useEffect(() => {
-    validateForm();
+    const currentErrors = validateForm();
+    setErrors(currentErrors);
+    setIsValid(Object.keys(currentErrors).length === 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fullName, phoneNumber, address, dateOfBirth, gender]);
 
@@ -173,7 +188,7 @@ export default function EditProfile() {
         gender: gender,
         phoneNumber: phoneNumber.trim(),
         address: address.trim(),
-        dateOfBirth: dateOfBirth ? format(dateOfBirth, "yyyy-MM-dd") : "",
+        dateOfBirth: dateOfBirth ? format(dateOfBirth, "yyyy-MM-dd") : null, // Send null if undefined
       };
       if (newPassword.trim() !== "") {
         payload.password = newPassword;
@@ -191,14 +206,18 @@ export default function EditProfile() {
       );
       const result = await response.json();
       if (!response.ok) {
-        setError(result.message || "Error updating data");
+        setError(
+          result.message || `Error updating data: ${response.statusText}`
+        );
         return;
       }
       router.push(`/account/${originalUsername}`);
     } catch (err) {
       console.error("Error updating personal data:", err);
       setError(
-        err instanceof Error ? err.message : "An unknown error occurred"
+        err instanceof Error
+          ? err.message
+          : "An unknown error occurred while saving"
       );
     } finally {
       setIsSaving(false);
@@ -209,16 +228,15 @@ export default function EditProfile() {
   const handleSaveChanges = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validasi
-    validateForm();
-    if (!Object.keys(errors).length && !isValid) {
-      return;
-    }
-    if (!isValid) {
+    const currentErrors = validateForm();
+    setErrors(currentErrors); // Update UI with latest errors
+    const formIsValid = Object.keys(currentErrors).length === 0;
+    setIsValid(formIsValid); // Update isValid state
+
+    if (!formIsValid) {
       return;
     }
 
-    // Jika user memasukkan password, wajib verifikasi combination
     if (newPassword.trim() !== "") {
       setShowCombinationModal(true);
     } else {
@@ -228,10 +246,13 @@ export default function EditProfile() {
 
   // Konfirmasi combination
   const handleConfirmCombination = async () => {
-    const normalizedPhone = phoneNumber.startsWith("+62")
-      ? phoneNumber.replace(/^\+62/, "")
-      : phoneNumber;
+    // Ensure phoneNumber is not empty before trying to normalize
+    const phoneToNormalize = phoneNumber || "";
+    const normalizedPhone = phoneToNormalize.startsWith("+62")
+      ? phoneToNormalize.replace(/^\+62/, "")
+      : phoneToNormalize;
     const expectedCombination = `${originalUsername}@${normalizedPhone}`;
+
     if (combinationInput === expectedCombination) {
       setShowCombinationModal(false);
       setCombinationInput("");
@@ -239,7 +260,9 @@ export default function EditProfile() {
       await submitUpdate();
     } else {
       setCombinationError(
-        "Kombinasi tidak sesuai. Pastikan format: username@noHP"
+        `Kombinasi tidak sesuai. Pastikan format: ${originalUsername}@NomorHP (tanpa +62). Contoh: ${originalUsername}@${
+          normalizedPhone || "8123456789"
+        }`
       );
     }
   };
@@ -247,12 +270,17 @@ export default function EditProfile() {
   if (isLoading) {
     return <LoadingIndicator />;
   }
-  if (error) {
+  // Error display should be before !accountData if error is about fetching
+  if (error && !accountData) {
+    // If there's an error and no data yet, show error
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <div className="text-destructive text-center">
           <h3 className="text-xl font-semibold mb-2">Error Loading Data</h3>
           <p>{error}</p>
+          <Button onClick={() => window.location.reload()} className="mt-4">
+            Try Again
+          </Button>
         </div>
       </div>
     );
@@ -262,14 +290,41 @@ export default function EditProfile() {
       <div className="flex justify-center items-center min-h-[60vh]">
         <div className="text-center">
           <h3 className="text-xl font-semibold mb-2">Account Not Found</h3>
-          <p>The requested account could not be found.</p>
+          <p>The requested account could not be found or loaded.</p>
+          <Link href="/accounts">
+            {" "}
+            {/* Adjust link as needed */}
+            <Button variant="outline" className="mt-4">
+              Back to Accounts
+            </Button>
+          </Link>
         </div>
+      </div>
+    );
+  }
+  // If there was an error during save, but data was loaded, show it above the form
+  if (error && accountData) {
+    return (
+      <div className="flex flex-col items-center">
+        <div className="w-full max-w-4xl my-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+          <h3 className="font-bold">Update Failed</h3>
+          <p>{error}</p>
+        </div>
+        {/* Proceed to render the form below this error message */}
       </div>
     );
   }
 
   return (
     <div className="flex flex-col">
+      {/* Display save error above the form if it occurs */}
+      {error &&
+        isSaving /* Or a more specific error state for save failures */ && (
+          <div className="w-full max-w-4xl self-center my-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+            <h3 className="font-bold">Update Failed</h3>
+            <p>{error}</p>
+          </div>
+        )}
       <div className="flex flex-col items-center mb-6">
         <h1 className="text-primary text-3xl font-bold mb-6">Edit Profile</h1>
         <div className="w-full max-w-4xl border border-gray-200 rounded-lg p-8 bg-white shadow-sm">
@@ -322,6 +377,7 @@ export default function EditProfile() {
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     className="w-full border border-gray-300 rounded-lg p-2.5 focus:outline-none"
+                    placeholder="+628123456789"
                   />
                   {errors.phoneNumber && (
                     <p className="text-red-500 text-sm">{errors.phoneNumber}</p>
@@ -346,14 +402,17 @@ export default function EditProfile() {
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className="w-full justify-start text-left font-normal"
+                        className={`w-full justify-start text-left font-normal ${
+                          !dateOfBirth ? "text-muted-foreground" : ""
+                        }`}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {dateOfBirth
                           ? format(dateOfBirth, "dd MMMM yyyy", {
+                              // Corrected format string
                               locale: localeId,
                             })
-                          : "Select birthdate"}
+                          : "Pilih tanggal lahir"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -362,7 +421,12 @@ export default function EditProfile() {
                         selected={dateOfBirth}
                         onSelect={setDateOfBirth}
                         initialFocus
-                        disabled={(day) => day > new Date()}
+                        disabled={(day) =>
+                          day > new Date() || day < new Date("1900-01-01")
+                        }
+                        captionLayout="dropdown-buttons"
+                        fromYear={1900}
+                        toYear={new Date().getFullYear()}
                       />
                     </PopoverContent>
                   </Popover>
@@ -380,8 +444,8 @@ export default function EditProfile() {
                     <span
                       className={`px-4 py-1 rounded-full text-sm ${
                         status === "Active"
-                          ? "bg-green-100 text-success"
-                          : "bg-red-100 text-destructive"
+                          ? "bg-green-100 text-green-700" // Adjusted for better visibility
+                          : "bg-red-100 text-red-700" // Adjusted for better visibility
                       }`}
                     >
                       {status === "Active" ? "Active" : "Revoked"}
@@ -393,7 +457,7 @@ export default function EditProfile() {
 
             {/* New Password */}
             <div className="mt-6">
-              <h3 className="font-medium mb-2">New Password</h3>
+              <h3 className="font-medium mb-2">New Password (Optional)</h3>
               <Input
                 type="password"
                 id="newPassword"
@@ -411,11 +475,16 @@ export default function EditProfile() {
                   type="button"
                   variant="outline"
                   className="w-40 border-destructive text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  disabled={isSaving}
                 >
                   Batal
                 </Button>
               </Link>
-              <Button type="submit" className="w-40" disabled={isSaving}>
+              <Button
+                type="submit"
+                className="w-40"
+                disabled={isSaving || !isValid}
+              >
                 {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
               </Button>
             </div>
@@ -426,16 +495,28 @@ export default function EditProfile() {
       {/* Combination Modal */}
       {showCombinationModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-lg p-6 w-80">
+          <div className="bg-white rounded-lg p-6 w-96">
+            {" "}
+            {/* Increased width for better example text */}
             <h2 className="text-xl font-bold mb-4">Verifikasi Kombinasi</h2>
-            <p className="mb-2">
-              Masukkan Kombinasi (username@noHP). Contoh:{" "}
-              {`${originalUsername}@81375349081`}
+            <p className="mb-1 text-sm">
+              Untuk keamanan, masukkan kombinasi username dan nomor HP Anda saat
+              ini (tanpa +62).
+            </p>
+            <p className="mb-2 text-xs text-gray-500">
+              Contoh:{" "}
+              {`${originalUsername}@${(phoneNumber || "81234567890").replace(
+                /^\+62/,
+                ""
+              )}`}
             </p>
             <Input
               type="text"
               value={combinationInput}
-              onChange={(e) => setCombinationInput(e.target.value)}
+              onChange={(e) => {
+                setCombinationInput(e.target.value);
+                if (combinationError) setCombinationError(""); // Clear error on input change
+              }}
               className="w-full border border-gray-300 rounded-lg p-2.5 focus:outline-none mb-2"
             />
             {combinationError && (
@@ -443,7 +524,7 @@ export default function EditProfile() {
                 {combinationError}
               </p>
             )}
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-2 mt-4">
               <Button
                 variant="outline"
                 onClick={() => {

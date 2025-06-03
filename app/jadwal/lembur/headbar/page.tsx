@@ -1,20 +1,34 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
-  FileText,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import LoadingIndicator from "@/components/LoadingIndicator";
+
+import {
   Clock,
   Users,
   CheckSquare,
   FileBarChart,
+  Calendar,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle2,
+  Timer,
+  XCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { format, parse } from "date-fns";
 import { id } from "date-fns/locale";
-import LoadingIndicator from "@/components/LoadingIndicator";
 
 interface OvertimeLog {
   id: number;
@@ -43,25 +57,7 @@ interface User {
   id: string;
   username: string;
   role: string;
-  outlet?: string; // Sesuai dengan struktur dari API
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function parseJwt(token: string) {
-  try {
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
-    );
-    return JSON.parse(jsonPayload);
-  } catch (e) {
-    console.error("Failed to parse JWT:", e);
-    return null;
-  }
+  outlet?: string;
 }
 
 export default function HeadBarOvertimePage() {
@@ -251,171 +247,312 @@ export default function HeadBarOvertimePage() {
     }
   };
 
+  // Get status badge color
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-yellow-50 text-yellow-700 border-yellow-200"
+          >
+            Pending
+          </Badge>
+        );
+      case "APPROVED":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-green-50 text-green-700 border-green-200"
+          >
+            Approved
+          </Badge>
+        );
+      case "REJECTED":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-red-50 text-red-700 border-red-200"
+          >
+            Rejected
+          </Badge>
+        );
+      case "ONGOING":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-blue-50 text-blue-700 border-blue-200"
+          >
+            Ongoing
+          </Badge>
+        );
+      case "CANCELLED":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-gray-50 text-gray-700 border-gray-200"
+          >
+            Cancelled
+          </Badge>
+        );
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
   if (isLoading) {
     return <LoadingIndicator />;
   }
 
   if (error) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="text-destructive text-center">
-          <h3 className="text-xl font-semibold mb-2">Error Loading Data</h3>
-          <p>{error}</p>
-          <Button
-            className="mt-4"
-            onClick={() => {
-              setError(null);
-              setIsLoading(true);
-              router.refresh();
-            }}
-          >
-            Coba Lagi
-          </Button>
-        </div>
+      <div className="container mx-auto p-6">
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-8 flex flex-col items-center text-center">
+            <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
+            <h3 className="text-xl font-semibold mb-2 text-red-700">
+              Error Loading Data
+            </h3>
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button
+              variant="outline"
+              className="border-red-300 text-red-700 hover:bg-red-100"
+              onClick={() => {
+                setError(null);
+                setIsLoading(true);
+                router.refresh();
+              }}
+            >
+              Coba Lagi
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Dashboard Lembur HeadBar</h1>
-        {outletName && (
-          <p className="text-sm text-muted-foreground">Outlet: {outletName}</p>
-        )}
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Dashboard Lembur</h1>
+          <p className="text-gray-500">Kelola permohonan lembur barista</p>
+          {outletName && (
+            <p className="text-sm text-gray-400 mt-1">Outlet: {outletName}</p>
+          )}
+        </div>
+        <div className="mt-4 md:mt-0 flex items-center gap-2">
+          <Badge
+            variant="outline"
+            className="bg-white border-gray-200 text-gray-700 flex items-center gap-1"
+          >
+            <Calendar className="h-3.5 w-3.5" />
+            <span>
+              {new Date().toLocaleDateString("id-ID", {
+                month: "long",
+                year: "numeric",
+              })}
+            </span>
+          </Badge>
+        </div>
       </div>
 
-      {overtimeLogs.length === 0 && (
-        <div className="text-center py-4 text-muted-foreground">
-          Tidak ada data lembur untuk outlet ini. Pastikan outlet ID Anda benar
-          atau hubungi administrator.
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="overflow-hidden border-l-4 border-l-amber-500">
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="text-lg font-medium">Menunggu Persetujuan</h3>
-                <p className="text-4xl font-bold mt-2">{totalPending}</p>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-sm font-medium text-gray-500 mb-1">
+                  Menunggu Persetujuan
+                </p>
+                <h3 className="text-3xl font-bold text-gray-800">
+                  {totalPending}
+                </h3>
+                <p className="text-xs text-gray-500 mt-1 flex items-center">
+                  <Clock className="h-3 w-3 mr-1 text-amber-500" />
                   Permohonan lembur
                 </p>
               </div>
-              <Clock className="h-6 w-6 text-gray-400" />
+              <div className="bg-amber-100 p-3 rounded-full">
+                <Clock className="h-5 w-5 text-amber-600" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden border-l-4 border-l-emerald-500">
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="text-lg font-medium">Disetujui</h3>
-                <p className="text-4xl font-bold mt-2">{totalApproved}</p>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-sm font-medium text-gray-500 mb-1">
+                  Disetujui
+                </p>
+                <h3 className="text-3xl font-bold text-gray-800">
+                  {totalApproved}
+                </h3>
+                <p className="text-xs text-gray-500 mt-1 flex items-center">
+                  <TrendingUp className="h-3 w-3 mr-1 text-emerald-500" />
                   Permohonan lembur
                 </p>
               </div>
-              <CheckSquare className="h-6 w-6 text-gray-400" />
+              <div className="bg-emerald-100 p-3 rounded-full">
+                <CheckSquare className="h-5 w-5 text-emerald-600" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden border-l-4 border-l-red-500">
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="text-lg font-medium">Ditolak</h3>
-                <p className="text-4xl font-bold mt-2">{totalRejected}</p>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-sm font-medium text-gray-500 mb-1">
+                  Ditolak
+                </p>
+                <h3 className="text-3xl font-bold text-gray-800">
+                  {totalRejected}
+                </h3>
+                <p className="text-xs text-gray-500 mt-1 flex items-center">
+                  <XCircle className="h-3 w-3 mr-1 text-red-500" />
                   Permohonan lembur
                 </p>
               </div>
-              <FileText className="h-6 w-6 text-gray-400" />
+              <div className="bg-red-100 p-3 rounded-full">
+                <XCircle className="h-5 w-5 text-red-600" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden border-l-4 border-l-violet-500">
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="text-lg font-medium">Total Barista</h3>
-                <p className="text-4xl font-bold mt-2">{totalBaristas}</p>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-sm font-medium text-gray-500 mb-1">
+                  Total Barista
+                </p>
+                <h3 className="text-3xl font-bold text-gray-800">
+                  {totalBaristas}
+                </h3>
+                <p className="text-xs text-gray-500 mt-1 flex items-center">
+                  <Users className="h-3 w-3 mr-1 text-violet-500" />
                   Aktif bulan ini
                 </p>
               </div>
-              <Users className="h-6 w-6 text-gray-400" />
+              <div className="bg-violet-100 p-3 rounded-full">
+                <Users className="h-5 w-5 text-violet-600" />
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
+      {/* Main Content */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-xl font-bold mb-1">Menu Cepat</h2>
-            <p className="text-sm text-muted-foreground mb-6">
-              Akses cepat ke fitur utama
-            </p>
-            <div className="space-y-4">
+        {/* Quick Menu */}
+        <Card className="border-t-4 border-t-sky-500">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xl font-bold">Menu Cepat</CardTitle>
+            <CardDescription>Akses cepat ke fitur utama</CardDescription>
+          </CardHeader>
+          <CardContent className="p-6 pt-0">
+            <div className="grid gap-4">
               <Link
                 href="/jadwal/lembur/headbar/approval"
                 className="w-full block"
               >
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center gap-2">
+                <Button className="w-full bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 flex items-center justify-center gap-2 shadow-sm">
                   <CheckSquare size={18} />
                   <span>Approval Permohonan Lembur</span>
                 </Button>
               </Link>
+
               <Link
                 href="/jadwal/lembur/headbar/reports"
                 className="w-full block"
               >
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center gap-2">
+                <Button className="w-full bg-gradient-to-r from-violet-500 to-violet-600 hover:from-violet-600 hover:to-violet-700 flex items-center justify-center gap-2 shadow-sm">
                   <FileBarChart size={18} />
                   <span>Lihat Laporan Lembur</span>
                 </Button>
               </Link>
+
+              <div className="bg-sky-50 border border-sky-100 rounded-lg p-4 mt-2">
+                <div className="flex items-start gap-3">
+                  <div className="bg-sky-100 p-2 rounded-full">
+                    <CheckCircle2 className="h-5 w-5 text-sky-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-sky-800">Tips Approval</h4>
+                    <p className="text-sm text-sky-700">
+                      Periksa jadwal kerja dan kebutuhan operasional sebelum
+                      menyetujui permohonan lembur untuk memastikan efisiensi.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-xl font-bold mb-1">Permohonan Terbaru</h2>
-            <p className="text-sm text-muted-foreground mb-6">
+        {/* Recent Requests */}
+        <Card className="border-t-4 border-t-amber-500">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xl font-bold">
+              Permohonan Terbaru
+            </CardTitle>
+            <CardDescription>
               Permohonan lembur yang baru diajukan
-            </p>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-6 pt-0">
             {recentRequests.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Tidak ada permohonan terbaru untuk outlet ini.
+              <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                <Timer className="h-10 w-10 text-gray-300 mx-auto mb-2" />
+                <p className="text-gray-500 font-medium">
+                  Tidak ada permohonan terbaru
+                </p>
+                <p className="text-sm text-gray-400">
+                  Semua permohonan sudah ditinjau
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
                 {recentRequests.map((request) => (
-                  <div key={request.id} className="border-b pb-4 last:border-0">
-                    <div className="flex justify-between">
+                  <div
+                    key={request.id}
+                    className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-medium">{request.outletName}</p>
-                        <p className="text-sm">
-                          Tanggal: {formatDate(request.dateOvertime)}
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-medium text-gray-800">
+                            {request.baristaName || request.outletName}
+                          </p>
+                          {getStatusBadge(request.status)}
+                        </div>
+                        <p className="text-sm flex items-center gap-1 text-gray-600">
+                          <Calendar className="h-3.5 w-3.5" />
+                          {formatDate(request.dateOvertime)}
                         </p>
-                        <p className="text-sm">
+                        <p className="text-sm text-gray-600 flex items-center gap-1">
+                          <Timer className="h-3.5 w-3.5" />
                           Waktu: {formatTime(request.startHour)} - Durasi:{" "}
                           {formatTime(request.duration)}
                         </p>
-                        <p className="text-sm text-muted-foreground truncate max-w-[250px]">
+                        <p className="text-sm text-gray-500 truncate max-w-[250px] mt-1">
                           {request.reason}
                         </p>
                       </div>
                       <Link
                         href={`/jadwal/lembur/headbar/approval?id=${request.id}`}
                       >
-                        <Button size="sm" variant="outline">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:text-amber-800"
+                        >
                           Review
                         </Button>
                       </Link>
