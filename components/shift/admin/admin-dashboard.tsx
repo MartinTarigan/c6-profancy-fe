@@ -924,9 +924,9 @@ export function AdminDashboard() {
     );
   }
 
-  // if (isLoading) {
-  //   return <LoadingIndicator />;
-  // }
+  if (isLoading) {
+    return <LoadingIndicator />;
+  }
 
   return (
     <div className="flex-1 overflow-auto bg-slate-50">
