@@ -942,7 +942,7 @@ export default function PeerReviewDashboard() {
     } else {
       return (
         <div className="flex items-center text-gray-600">
-          <span>0.0</span>
+          <span></span>
         </div>
       );
     }
@@ -1121,6 +1121,19 @@ export default function PeerReviewDashboard() {
                 </ol>
               </div>
 
+              {/* Section Header for Filtered Data */}
+              <div className="mb-6">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h2 className="text-lg font-semibold text-blue-800 mb-2">
+                    📊 Data Berdasarkan Filter Tahun: {timeRange}
+                  </h2>
+                  <p className="text-blue-700 text-sm">
+                    Data di bawah ini menampilkan hasil peer review yang
+                    difilter berdasarkan tahun yang dipilih.
+                  </p>
+                </div>
+              </div>
+
               {/* Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <Card className="bg-white">
@@ -1259,19 +1272,6 @@ export default function PeerReviewDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-              </div>
-
-              {/* Section Header for Filtered Data */}
-              <div className="mb-6">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h2 className="text-lg font-semibold text-blue-800 mb-2">
-                    📊 Data Berdasarkan Filter Tahun: {timeRange}
-                  </h2>
-                  <p className="text-blue-700 text-sm">
-                    Data di bawah ini menampilkan hasil peer review yang
-                    difilter berdasarkan tahun yang dipilih.
-                  </p>
-                </div>
               </div>
 
               {/* Main Dashboard Content - Filtered Data */}
@@ -1509,6 +1509,62 @@ export default function PeerReviewDashboard() {
                 </Card>
               </div>
 
+              {/* Best & Worst Categories */}
+              <Card className="bg-white mb-6">
+                <CardContent className="p-4">
+                  <Tabs defaultValue="best">
+                    <TabsList className="grid w-full grid-cols-2 mb-4">
+                      <TabsTrigger value="best">Kategori Terbaik</TabsTrigger>
+                      <TabsTrigger value="worst">Kategori Terendah</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="best">
+                      <div className="space-y-3">
+                        {bestCategories.map((category, index) => (
+                          <div
+                            key={category.questionNumber}
+                            className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                          >
+                            <div className="flex items-center">
+                              <div className="bg-green-100 text-green-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3">
+                                {index + 1}
+                              </div>
+                              <p className="font-medium">{category.text}</p>
+                            </div>
+                            <p className="font-bold">
+                              {typeof category.averageScore === "number"
+                                ? category.averageScore.toFixed(1)
+                                : "0.0"}{" "}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </TabsContent>
+                    <TabsContent value="worst">
+                      <div className="space-y-3">
+                        {worstCategories.map((category, index) => (
+                          <div
+                            key={category.questionNumber}
+                            className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                          >
+                            <div className="flex items-center">
+                              <div className="bg-red-100 text-red-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3">
+                                {index + 1}
+                              </div>
+                              <p className="font-medium">{category.text}</p>
+                            </div>
+                            <p className="font-bold">
+                              {typeof category.averageScore === "number"
+                                ? category.averageScore.toFixed(1)
+                                : "0.0"}{" "}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                </CardContent>
+              </Card>
+
               {/* Section Header for Universal Data */}
               <div className="mt-12 mb-6">
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -1662,62 +1718,6 @@ export default function PeerReviewDashboard() {
                   </CardContent>
                 </Card>
               </div>
-
-              {/* Best & Worst Categories */}
-              <Card className="bg-white mb-6">
-                <CardContent className="p-4">
-                  <Tabs defaultValue="best">
-                    <TabsList className="grid w-full grid-cols-2 mb-4">
-                      <TabsTrigger value="best">Kategori Terbaik</TabsTrigger>
-                      <TabsTrigger value="worst">Kategori Terendah</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="best">
-                      <div className="space-y-3">
-                        {bestCategories.map((category, index) => (
-                          <div
-                            key={category.questionNumber}
-                            className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
-                          >
-                            <div className="flex items-center">
-                              <div className="bg-green-100 text-green-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3">
-                                {index + 1}
-                              </div>
-                              <p className="font-medium">{category.text}</p>
-                            </div>
-                            <p className="font-bold">
-                              {typeof category.averageScore === "number"
-                                ? category.averageScore.toFixed(1)
-                                : "0.0"}{" "}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="worst">
-                      <div className="space-y-3">
-                        {worstCategories.map((category, index) => (
-                          <div
-                            key={category.questionNumber}
-                            className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
-                          >
-                            <div className="flex items-center">
-                              <div className="bg-red-100 text-red-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3">
-                                {index + 1}
-                              </div>
-                              <p className="font-medium">{category.text}</p>
-                            </div>
-                            <p className="font-bold">
-                              {typeof category.averageScore === "number"
-                                ? category.averageScore.toFixed(1)
-                                : "0.0"}{" "}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
 
               {/* Barista Table */}
               <Card className="bg-white">
