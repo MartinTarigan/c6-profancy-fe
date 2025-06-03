@@ -1578,147 +1578,6 @@ export default function PeerReviewDashboard() {
                 </div>
               </div>
 
-              {/* Universal Data Section */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                {/* Status Distribution */}
-                <Card className="bg-white">
-                  <CardContent className="p-4">
-                    <h2 className="text-lg font-medium mb-4">
-                      Distribusi Status
-                    </h2>
-                    <div className="h-[200px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={statusCounts}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={60}
-                            outerRadius={80}
-                            paddingAngle={2}
-                            dataKey="value"
-                            label={({ name, percent }) => {
-                              const percentText = `${(percent * 100).toFixed(
-                                0
-                              )}%`;
-                              return `${name}\n${percentText}`;
-                            }}
-                            labelLine={false}
-                          >
-                            {statusCounts.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                          </Pie>
-                          <Tooltip
-                            formatter={(value) => [
-                              `${value} barista`,
-                              "Jumlah",
-                            ]}
-                            contentStyle={{
-                              borderRadius: "8px",
-                              border: "1px solid #e2e8f0",
-                            }}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 mt-4">
-                      {statusCounts.map((status) => (
-                        <div key={status.name} className="flex items-center">
-                          <div
-                            className="w-3 h-3 rounded-full mr-2"
-                            style={{ backgroundColor: status.color }}
-                          ></div>
-                          <span className="text-sm">
-                            {status.name}: {status.value}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Top Performers */}
-                <Card className="bg-white">
-                  <CardContent className="p-4">
-                    <h2 className="text-lg font-medium mb-4">
-                      Barista Terbaik
-                    </h2>
-                    <div className="space-y-3">
-                      {topPerformers.map((barista, index) => (
-                        <div
-                          key={barista.username}
-                          className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
-                        >
-                          <div className="flex items-center">
-                            <div className="bg-blue-100 text-blue-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3">
-                              {index + 1}
-                            </div>
-                            <div>
-                              <p className="font-medium">{barista.username}</p>
-                              <p className="text-xs text-gray-500">
-                                {barista.outlet}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-bold text-lg">
-                              {typeof barista.averageScore === "number"
-                                ? barista.averageScore.toFixed(1)
-                                : "0.0"}{" "}
-                            </p>
-                            {getTrendIndicator(
-                              barista.trend,
-                              barista.trendValue
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Bottom Performers */}
-                <Card className="bg-white">
-                  <CardContent className="p-4">
-                    <h2 className="text-lg font-medium mb-4">
-                      Barista Terendah
-                    </h2>
-                    <div className="space-y-3">
-                      {bottomPerformers.map((barista, index) => (
-                        <div
-                          key={barista.username}
-                          className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
-                        >
-                          <div className="flex items-center">
-                            <div className="bg-red-100 text-red-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3">
-                              {index + 1}
-                            </div>
-                            <div>
-                              <p className="font-medium">{barista.username}</p>
-                              <p className="text-xs text-gray-500">
-                                {barista.outlet}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-bold text-lg">
-                              {typeof barista.averageScore === "number"
-                                ? barista.averageScore.toFixed(1)
-                                : "0.0"}
-                            </p>
-                            {getTrendIndicator(
-                              barista.trend,
-                              barista.trendValue
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
               {/* Barista Table */}
               <Card className="bg-white">
                 <CardContent className="p-4">
@@ -1878,6 +1737,147 @@ export default function PeerReviewDashboard() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Universal Data Section */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                {/* Status Distribution */}
+                <Card className="bg-white">
+                  <CardContent className="p-4">
+                    <h2 className="text-lg font-medium mb-4">
+                      Distribusi Status
+                    </h2>
+                    <div className="h-[200px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={statusCounts}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={80}
+                            paddingAngle={2}
+                            dataKey="value"
+                            label={({ name, percent }) => {
+                              const percentText = `${(percent * 100).toFixed(
+                                0
+                              )}%`;
+                              return `${name}\n${percentText}`;
+                            }}
+                            labelLine={false}
+                          >
+                            {statusCounts.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            formatter={(value) => [
+                              `${value} barista`,
+                              "Jumlah",
+                            ]}
+                            contentStyle={{
+                              borderRadius: "8px",
+                              border: "1px solid #e2e8f0",
+                            }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 mt-4">
+                      {statusCounts.map((status) => (
+                        <div key={status.name} className="flex items-center">
+                          <div
+                            className="w-3 h-3 rounded-full mr-2"
+                            style={{ backgroundColor: status.color }}
+                          ></div>
+                          <span className="text-sm">
+                            {status.name}: {status.value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Top Performers */}
+                <Card className="bg-white">
+                  <CardContent className="p-4">
+                    <h2 className="text-lg font-medium mb-4">
+                      Barista Terbaik
+                    </h2>
+                    <div className="space-y-3">
+                      {topPerformers.map((barista, index) => (
+                        <div
+                          key={barista.username}
+                          className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                        >
+                          <div className="flex items-center">
+                            <div className="bg-blue-100 text-blue-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <p className="font-medium">{barista.username}</p>
+                              <p className="text-xs text-gray-500">
+                                {barista.outlet}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-lg">
+                              {typeof barista.averageScore === "number"
+                                ? barista.averageScore.toFixed(1)
+                                : "0.0"}{" "}
+                            </p>
+                            {getTrendIndicator(
+                              barista.trend,
+                              barista.trendValue
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Bottom Performers */}
+                <Card className="bg-white">
+                  <CardContent className="p-4">
+                    <h2 className="text-lg font-medium mb-4">
+                      Barista Terendah
+                    </h2>
+                    <div className="space-y-3">
+                      {bottomPerformers.map((barista, index) => (
+                        <div
+                          key={barista.username}
+                          className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                        >
+                          <div className="flex items-center">
+                            <div className="bg-red-100 text-red-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <p className="font-medium">{barista.username}</p>
+                              <p className="text-xs text-gray-500">
+                                {barista.outlet}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-lg">
+                              {typeof barista.averageScore === "number"
+                                ? barista.averageScore.toFixed(1)
+                                : "0.0"}
+                            </p>
+                            {getTrendIndicator(
+                              barista.trend,
+                              barista.trendValue
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </main>
         </div>
