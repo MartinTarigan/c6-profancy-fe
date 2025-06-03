@@ -1,5 +1,6 @@
 "use client";
 
+import { Metadata } from "next";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,20 @@ interface TrainingMaterial {
   createdAt: string;
 }
 
+type Props = {
+  params: { id: string };
+  searchParams: { [key: string]: string | string[] | undefined };
+};
+
+// Export metadata generation function if needed
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  // You can fetch data here to generate dynamic metadata
+  return {
+    title: `Training Material ${params.id}`,
+  };
+}
+
+// Use the correct Props type for your page component
 export default function MaterialDetail({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [material, setMaterial] = useState<TrainingMaterial | null>(null);
