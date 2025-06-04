@@ -122,7 +122,7 @@ export default function HeadBarLeaveRequestPage() {
 
         // Fetch ALL leave requests
         const response = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/shift-management/leave-request/all?username=${username}`,
+          `http://localhost:8080/api/shift-management/leave-request/all?username=${username}`,
           {
             method: "GET",
             headers: {

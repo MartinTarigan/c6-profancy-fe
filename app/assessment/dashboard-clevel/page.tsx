@@ -169,12 +169,9 @@ export default function AssessmentDashboard() {
           );
         }
 
-        const res = await fetch(
-          "https://rumahbaristensbe-production.up.railway.app/api/assessments",
-          {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-          }
-        );
+        const res = await fetch("http://localhost:8080/api/assessments", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
 
         if (!res.ok) {
           throw new Error(`Error fetching assessments: ${res.status}`);
@@ -208,7 +205,7 @@ export default function AssessmentDashboard() {
       for (const assessment of assessmentsData) {
         try {
           const summariesRes = await fetch(
-            `https://rumahbaristensbe-production.up.railway.app/api/trainee/assessment/${assessment.id}/summaries`,
+            `http://localhost:8080/api/trainee/assessment/${assessment.id}/summaries`,
             {
               headers: token ? { Authorization: `Bearer ${token}` } : {},
             }

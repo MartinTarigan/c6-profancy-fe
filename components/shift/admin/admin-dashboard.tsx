@@ -243,17 +243,14 @@ export function AdminDashboard() {
         return;
       }
 
-      const response = await fetch(
-        "https://rumahbaristensbe-production.up.railway.app/api/admin/outlets",
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
+      const response = await fetch("http://localhost:8080/api/admin/outlets", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
 
       if (response.status === 401) {
         setToastMessage({
@@ -311,17 +308,14 @@ export function AdminDashboard() {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const response = await fetch(
-        "https://rumahbaristensbe-production.up.railway.app/api/admin/baristas",
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
+      const response = await fetch("http://localhost:8080/api/admin/baristas", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
 
       if (!response.ok) throw new Error("Failed to fetch barista data");
 
@@ -367,7 +361,7 @@ export function AdminDashboard() {
       queryParams.append("sort", "tanggal-desc");
 
       const response = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/overtime-logs?${queryParams.toString()}`,
+        `http://localhost:8080/api/overtime-logs?${queryParams.toString()}`,
         {
           method: "GET",
           headers: {
@@ -450,7 +444,7 @@ export function AdminDashboard() {
         queryParams.append("outletId", requestDTO.outletId.toString());
 
       const response = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/admin/dashboard/summary?${queryParams.toString()}`,
+        `http://localhost:8080/api/admin/dashboard/summary?${queryParams.toString()}`,
         {
           method: "GET",
           headers: {

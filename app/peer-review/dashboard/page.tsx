@@ -197,8 +197,7 @@ export default function PeerReviewDashboard() {
 
   // URL backend Spring Boot
   const BACKEND_API_URL =
-    process.env.NEXT_PUBLIC_BACKEND_API_URL ||
-    "https://rumahbaristensbe-production.up.railway.app/api";
+    process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:8080/api";
 
   // Fungsi untuk mengambil data dari backend
   const fetchDashboardData = async () => {

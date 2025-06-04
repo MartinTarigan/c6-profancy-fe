@@ -86,9 +86,9 @@ export default function TambahAssessment() {
     let url: string;
     if (tpl === "PROBATIONBARISTA") {
       url =
-        "https://rumahbaristensbe-production.up.railway.app/api/trainee/peer-review-assignment/reviewees";
+        "http://localhost:8080/api/trainee/peer-review-assignment/reviewees";
     } else {
-      url = `https://rumahbaristensbe-production.up.railway.app/api/assessments/${tpl.toLowerCase()}`;
+      url = `http://localhost:8080/api/assessments/${tpl.toLowerCase()}`;
     }
     try {
       const res = await fetch(url, {
@@ -130,19 +130,16 @@ export default function TambahAssessment() {
         deadline: format(deadline, "yyyy-MM-dd"),
         assignedUsername: selectedUsers,
       };
-      const res = await fetch(
-        "https://rumahbaristensbe-production.up.railway.app/api/assessments",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(localStorage.getItem("token")
-              ? { Authorization: `Bearer ${localStorage.getItem("token")}` }
-              : {}),
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const res = await fetch("http://localhost:8080/api/assessments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(localStorage.getItem("token")
+            ? { Authorization: `Bearer ${localStorage.getItem("token")}` }
+            : {}),
+        },
+        body: JSON.stringify(payload),
+      });
       if (!res.ok) throw new Error(`Error ${res.status}`);
       router.push("/assessment");
     } catch (e) {

@@ -52,7 +52,7 @@ export default function BaristaDashboard() {
 
       try {
         const res = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/account/${username}`,
+          `http://localhost:8080/api/account/${username}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -94,14 +94,11 @@ export default function BaristaDashboard() {
       return;
     }
 
-    fetch(
-      "https://rumahbaristensbe-production.up.railway.app/api/baristas/stats",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    )
+    fetch("http://localhost:8080/api/baristas/stats", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then((res) => {
         if (!res.ok) throw new Error("Gagal fetch data barista");
         return res.json();
@@ -115,7 +112,7 @@ export default function BaristaDashboard() {
         alert("Gagal mengambil data dashboard barista.");
       });
 
-    fetch("https://rumahbaristensbe-production.up.railway.app/api/outlets", {
+    fetch("http://localhost:8080/api/outlets", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -132,14 +129,11 @@ export default function BaristaDashboard() {
         console.error("Error outlet:", err);
       });
 
-    fetch(
-      "https://rumahbaristensbe-production.up.railway.app/api/baristas/all",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    )
+    fetch("http://localhost:8080/api/baristas/all", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then((res) => {
         if (!res.ok) throw new Error("Gagal fetch semua barista");
         return res.json();

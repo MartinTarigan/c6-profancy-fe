@@ -62,10 +62,61 @@ export default function ManajemenMateriPelatihan() {
   } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState<string>("");
+  const [filterType, setFilterType] = useState<string>(""); // New state for material type filter
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "az" | "za">(
     "newest"
   );
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  const getMaterialIcon = (link: string) => {
+    if (
+      link.includes("youtube") ||
+      link.includes("youtu.be") ||
+      link.includes("vimeo")
+    ) {
+      return <FileText className="h-5 w-5 text-red-500" />;
+    } else if (
+      link.includes("docs") ||
+      link.includes("pdf") ||
+      link.includes(".doc")
+    ) {
+      return <FileText className="h-5 w-5 text-blue-500" />;
+    } else {
+      return <LinkIcon className="h-5 w-5 text-purple-500" />;
+    }
+  };
+
+  // Get material type based on link
+  const getMaterialType = (link: string) => {
+    if (
+      link.includes("youtube") ||
+      link.includes("youtu.be") ||
+      link.includes("vimeo")
+    ) {
+      return "Video";
+    } else if (
+      link.includes("docs") ||
+      link.includes("pdf") ||
+      link.includes(".doc")
+    ) {
+      return "Document";
+    } else {
+      return "Link";
+    }
+  };
+
+  // Get color for material type
+  const getMaterialTypeColor = (link: string) => {
+    const type = getMaterialType(link);
+    switch (type) {
+      case "Video":
+        return "bg-red-100 text-red-700 border-red-200";
+      case "Document":
+        return "bg-blue-100 text-blue-700 border-blue-200";
+      default:
+        return "bg-purple-100 text-purple-700 border-purple-200";
+    }
+  };
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -222,7 +273,10 @@ export default function ManajemenMateriPelatihan() {
       const matchesRole = filterRole
         ? material.assignedRoles.includes(filterRole)
         : true;
-      return matchesSearch && matchesRole;
+      const matchesType = filterType
+        ? getMaterialType(material.link).toUpperCase() === filterType
+        : true; // New type filter
+      return matchesSearch && matchesRole && matchesType;
     })
     .sort((a, b) => {
       switch (sortOrder) {
@@ -246,62 +300,14 @@ export default function ManajemenMateriPelatihan() {
   // Format role name for display
   const formatRoleName = (role: string) => {
     return role
-      .replace("_", " ")
-      .split("_")
+      .replace(/_/g, " ") // Replace all underscores
+      .split(" ")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(" ");
   };
 
   // Get material icon based on link
-  const getMaterialIcon = (link: string) => {
-    if (
-      link.includes("youtube") ||
-      link.includes("youtu.be") ||
-      link.includes("vimeo")
-    ) {
-      return <FileText className="h-5 w-5 text-red-500" />;
-    } else if (
-      link.includes("docs") ||
-      link.includes("pdf") ||
-      link.includes(".doc")
-    ) {
-      return <FileText className="h-5 w-5 text-blue-500" />;
-    } else {
-      return <LinkIcon className="h-5 w-5 text-purple-500" />;
-    }
-  };
-
-  // Get material type based on link
-  const getMaterialType = (link: string) => {
-    if (
-      link.includes("youtube") ||
-      link.includes("youtu.be") ||
-      link.includes("vimeo")
-    ) {
-      return "Video";
-    } else if (
-      link.includes("docs") ||
-      link.includes("pdf") ||
-      link.includes(".doc")
-    ) {
-      return "Document";
-    } else {
-      return "Link";
-    }
-  };
-
-  // Get color for material type
-  const getMaterialTypeColor = (link: string) => {
-    const type = getMaterialType(link);
-    switch (type) {
-      case "Video":
-        return "bg-red-100 text-red-700 border-red-200";
-      case "Document":
-        return "bg-blue-100 text-blue-700 border-blue-200";
-      default:
-        return "bg-purple-100 text-purple-700 border-purple-200";
-    }
-  };
+  
 
   if (error) {
     return (
@@ -411,7 +417,7 @@ export default function ManajemenMateriPelatihan() {
                   <h3 className="text-2xl font-bold text-slate-800 mt-1">
                     {
                       materials.filter(
-                        (m) => m.type === "VIDEO" || m.type === "DOCUMENT"
+                        (m) => getMaterialType(m.link) === "Video" || getMaterialType(m.link) === "Document"
                       ).length
                     }
                   </h3>
@@ -540,7 +546,7 @@ export default function ManajemenMateriPelatihan() {
                     </DropdownMenuContent>
                   </DropdownMenu>
 
-                  {/* Filter Dropdown */}
+                  {/* Filter Role Dropdown */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -549,7 +555,7 @@ export default function ManajemenMateriPelatihan() {
                         className="gap-1 bg-white border-slate-200 h-10"
                       >
                         <Filter className="h-3.5 w-3.5 text-slate-500" />
-                        <span className="hidden sm:inline">Filter</span>
+                        <span className="hidden sm:inline">Filter Peran</span>
                         {filterRole && (
                           <Badge className="ml-1 rounded-full bg-blue-600 text-white w-5 h-5 p-0 flex items-center justify-center">
                             1
@@ -573,24 +579,70 @@ export default function ManajemenMateriPelatihan() {
                       ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
+
+                  {/* Filter Type Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1 bg-white border-slate-200 h-10"
+                      >
+                        <Filter className="h-3.5 w-3.5 text-slate-500" />
+                        <span className="hidden sm:inline">Filter Tipe</span>
+                        {filterType && (
+                          <Badge className="ml-1 rounded-full bg-blue-600 text-white w-5 h-5 p-0 flex items-center justify-center">
+                            1
+                          </Badge>
+                        )}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuItem onClick={() => setFilterType("")}>
+                        <span>Semua Tipe</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setFilterType("VIDEO")}>
+                        <span>Video</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setFilterType("DOCUMENT")}>
+                        <span>Dokumen</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setFilterType("LINK")}>
+                        <span>Link</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 {/* Active Filters */}
-                {filterRole && (
-                  <div className="mt-2 flex items-center">
+                {(filterRole || filterType) && (
+                  <div className="mt-2 flex items-center flex-wrap gap-2">
                     <span className="text-xs text-slate-500 mr-2">
                       Filter aktif:
                     </span>
-                    <Badge className="bg-blue-100 text-blue-700 border border-blue-200 flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                      {formatRoleName(filterRole)}
-                      <button
-                        onClick={() => setFilterRole("")}
-                        className="ml-1 hover:bg-blue-200 rounded-full h-4 w-4 inline-flex items-center justify-center"
-                      >
-                        ×
-                      </button>
-                    </Badge>
+                    {filterRole && (
+                      <Badge className="bg-blue-100 text-blue-700 border border-blue-200 flex items-center gap-1">
+                        <Users className="h-3 w-3" />
+                        {formatRoleName(filterRole)}
+                        <button
+                          onClick={() => setFilterRole("")}
+                          className="ml-1 hover:bg-blue-200 rounded-full h-4 w-4 inline-flex items-center justify-center"
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    )}
+                    {filterType && (
+                      <Badge className="bg-blue-100 text-blue-700 border border-blue-200 flex items-center gap-1">
+                        {filterType}
+                        <button
+                          onClick={() => setFilterType("")}
+                          className="ml-1 hover:bg-blue-200 rounded-full h-4 w-4 inline-flex items-center justify-center"
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    )}
                   </div>
                 )}
               </div>
@@ -621,7 +673,7 @@ export default function ManajemenMateriPelatihan() {
             Tidak ada materi ditemukan
           </h3>
           <p className="text-slate-500 text-center max-w-md mb-6">
-            {searchTerm || filterRole
+            {searchTerm || filterRole || filterType
               ? "Coba sesuaikan pencarian atau filter Anda untuk menemukan apa yang Anda cari."
               : "Belum ada materi pelatihan yang tersedia saat ini."}
           </p>
@@ -739,21 +791,27 @@ export default function ManajemenMateriPelatihan() {
               <p className="text-sm text-slate-600 line-clamp-3 mb-3">
                 {material.description}
               </p>
-              <div className="flex items-center justify-between text-xs text-slate-500">
-                <div className="flex items-center">
-                  <Users className="h-3.5 w-3.5 mr-1" />
-                  <span>{material.assignedRoles.length} peran</span>
-                </div>
-                <a
-                  href={material.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 flex items-center"
-                >
-                  <LinkIcon className="h-3.5 w-3.5 mr-1" />
-                  <span>Buka Link</span>
-                </a>
+              <div className="flex flex-wrap items-center text-xs text-slate-500 gap-1 mt-2">
+                <Users className="h-3.5 w-3.5 mr-1" />
+                <span>Peran:</span>
+                {material.assignedRoles.map((role) => (
+                  <Badge
+                    key={role}
+                    className="bg-slate-100 text-slate-700 border border-slate-200 font-normal"
+                  >
+                    {formatRoleName(role)}
+                  </Badge>
+                ))}
               </div>
+              <a
+                href={material.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 flex items-center mt-2"
+              >
+                <LinkIcon className="h-3.5 w-3.5 mr-1" />
+                <span>Buka Link</span>
+              </a>
             </CardContent>
             <CardFooter className="flex justify-between">
               <Link href={`/training-materials/detail/${material.id}`}>
@@ -818,19 +876,27 @@ export default function ManajemenMateriPelatihan() {
                   </Avatar>
                   <div>
                     <h3 className="font-medium">{material.title}</h3>
-                    <div className="flex items-center text-xs text-slate-500 mt-1">
+                    <div className="flex flex-wrap items-center text-xs text-slate-500 mt-1 gap-x-2 gap-y-1">
                       <Badge
                         variant="outline"
                         className={getMaterialTypeColor(material.link)}
                       >
                         {getMaterialType(material.link)}
                       </Badge>
-                      <span className="mx-2">•</span>
+                      <span className="mx-0.5">•</span>
                       <Calendar className="h-3 w-3 mr-1" />
                       {formatDate(material.createdAt)}
-                      <span className="mx-2">•</span>
+                      <span className="mx-0.5">•</span>
                       <Users className="h-3 w-3 mr-1" />
-                      {material.assignedRoles.length} peran
+                      <span>Peran:</span>
+                      {material.assignedRoles.map((role) => (
+                        <Badge
+                          key={role}
+                          className="bg-slate-100 text-slate-700 border border-slate-200 font-normal"
+                        >
+                          {formatRoleName(role)}
+                        </Badge>
+                      ))}
                     </div>
                   </div>
                 </div>

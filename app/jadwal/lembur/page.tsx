@@ -192,8 +192,7 @@ export default function OvertimeLogList() {
       }
 
       // Determine if we need to add query parameters for sorting or filtering
-      let url =
-        "https://rumahbaristensbe-production.up.railway.app/api/overtime-logs";
+      let url = "http://localhost:8080/api/overtime-logs";
       const queryParams = [];
 
       if (selectedStatus !== "ALL") {
@@ -261,14 +260,11 @@ export default function OvertimeLogList() {
         return;
       }
 
-      const response = await fetch(
-        "https://rumahbaristensbe-production.up.railway.app/api/outlets",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch("http://localhost:8080/api/outlets", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) throw new Error("Failed to fetch outlets");
 

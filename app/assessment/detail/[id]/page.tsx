@@ -58,7 +58,7 @@ export default function DetailAssessment() {
 
         // Fetch assessment
         const assessmentRes = await fetch(
-          "https://rumahbaristensbe-production.up.railway.app/api/assessments",
+          "http://localhost:8080/api/assessments",
           {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
           }
@@ -75,7 +75,7 @@ export default function DetailAssessment() {
         // Fetch submissions
         setIsLoadingSubmissions(true);
         const submissionsRes = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/trainee/assessment/${assessmentId}/summaries`,
+          `http://localhost:8080/api/trainee/assessment/${assessmentId}/summaries`,
           { headers: token ? { Authorization: `Bearer ${token}` } : {} }
         );
         if (!submissionsRes.ok)

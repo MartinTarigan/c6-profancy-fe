@@ -157,15 +157,12 @@ export default function MyCalendar() {
       }
 
       try {
-        const res = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/account/${userId}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await fetch(`http://localhost:8080/api/account/${userId}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         const userRes = await res.json();
         console.log("✅ User data:", userRes);
@@ -199,15 +196,12 @@ export default function MyCalendar() {
 
     const fetchAllOutlets = async (token: string, userOutletName?: string) => {
       try {
-        const res = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/outlets`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await fetch(`http://localhost:8080/api/outlets`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         const data = await res.json();
         setOutlets(data);
@@ -262,7 +256,7 @@ export default function MyCalendar() {
       );
 
       const res = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/baristas?outletId=${outletId}&status=Active`,
+        `http://localhost:8080/api/baristas?outletId=${outletId}&status=Active`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -282,7 +276,7 @@ export default function MyCalendar() {
           "⚠️ No active baristas found, fetching all baristas as fallback"
         );
         const fallbackRes = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/baristas?outletId=${outletId}`,
+          `http://localhost:8080/api/baristas?outletId=${outletId}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -332,7 +326,7 @@ export default function MyCalendar() {
       const formattedEndDate = endDate.toISOString().split("T")[0];
 
       const res = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/shift/s/${outletId}?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
+        `http://localhost:8080/api/shift/s/${outletId}?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -522,7 +516,7 @@ export default function MyCalendar() {
 
         try {
           const res = await fetch(
-            `https://rumahbaristensbe-production.up.railway.app/api/shift/${shiftId}`,
+            `http://localhost:8080/api/shift/${shiftId}`,
             {
               method: "DELETE",
               headers: {
@@ -577,17 +571,14 @@ export default function MyCalendar() {
 
       // Save each shift
       for (const shift of shifts) {
-        const res = await fetch(
-          "https://rumahbaristensbe-production.up.railway.app/api/shift/create",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(shift),
-          }
-        );
+        const res = await fetch("http://localhost:8080/api/shift/create", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(shift),
+        });
 
         if (!res.ok) {
           const errorText = await res.text();

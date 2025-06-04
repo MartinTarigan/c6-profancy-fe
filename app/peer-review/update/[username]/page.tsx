@@ -77,7 +77,7 @@ export default function UpdatePeerReview() {
         setIsLoading(true);
         // 1. get assignments for this reviewee
         const res = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/trainee/peer-review-assignment/by-reviewee/${params.username}`,
+          `http://localhost:8080/api/trainee/peer-review-assignment/by-reviewee/${params.username}`,
           {
             headers: { Authorization: `Bearer ${storedToken}` },
           }
@@ -96,7 +96,7 @@ export default function UpdatePeerReview() {
 
         // 2. fetch full list of baristas for dropdown
         const reviewersResponse = await fetch(
-          "https://rumahbaristensbe-production.up.railway.app/api/trainee/peer-review-assignment/reviewers",
+          "http://localhost:8080/api/trainee/peer-review-assignment/reviewers",
           {
             headers: { Authorization: `Bearer ${storedToken}` },
           }
@@ -137,7 +137,7 @@ export default function UpdatePeerReview() {
     try {
       setIsSaving(true);
       const res = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/trainee/peer-review-assignment/update/${params.username}`,
+        `http://localhost:8080/api/trainee/peer-review-assignment/update/${params.username}`,
         {
           method: "PUT",
           headers: {

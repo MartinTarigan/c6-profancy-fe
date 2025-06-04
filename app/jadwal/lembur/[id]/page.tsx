@@ -123,15 +123,12 @@ export default function OvertimeLogDetail() {
 
   const fetchOutlets = async (storedToken: string) => {
     try {
-      const res = await fetch(
-        "https://rumahbaristensbe-production.up.railway.app/api/outlets",
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${storedToken}`,
-          },
-        }
-      );
+      const res = await fetch("http://localhost:8080/api/outlets", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${storedToken}`,
+        },
+      });
 
       if (!res.ok) throw new Error("Gagal mengambil data outlet");
 
@@ -152,7 +149,7 @@ export default function OvertimeLogDetail() {
 
     try {
       const res = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/overtime-logs/${params.id}`,
+        `http://localhost:8080/api/overtime-logs/${params.id}`,
         {
           method: "GET",
           headers: {
@@ -200,7 +197,7 @@ export default function OvertimeLogDetail() {
     setUpdating(true);
     try {
       const res = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/overtime-logs/${params.id}/status`,
+        `http://localhost:8080/api/overtime-logs/${params.id}/status`,
         {
           method: "PUT",
           headers: {
