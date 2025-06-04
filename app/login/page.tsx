@@ -100,6 +100,8 @@ export default function LoginPage() {
     setIsLoggingIn(false);
 
     try {
+      setIsLoggingIn(true);
+
       const res = await fetch(
         "https://rumahbaristensbe-production.up.railway.app/api/auth/login",
         {
