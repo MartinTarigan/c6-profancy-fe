@@ -107,7 +107,7 @@ export default function TambahAkunBaru() {
     };
     try {
       const response = await fetch(
-        "https://rumahbaristensbe-production.up.railway.app/api/account/create",
+        "http://localhost:8080/api/account/create",
         {
           method: "POST",
           headers: {

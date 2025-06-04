@@ -109,7 +109,7 @@ export default function EditLeaveRequestPage() {
 
         setIsLoading(true);
         const response = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/shift-management/leave-request/${id}`,
+          `http://localhost:8080/api/shift-management/leave-request/${id}`,
           {
             method: "GET",
             headers: {
@@ -193,7 +193,7 @@ export default function EditLeaveRequestPage() {
       };
 
       const response = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/shift-management/leave-request/${id}`,
+        `http://localhost:8080/api/shift-management/leave-request/${id}`,
         {
           method: "PUT",
           headers: {
@@ -254,7 +254,7 @@ export default function EditLeaveRequestPage() {
       };
 
       const response = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/shift-management/leave-request/${id}`,
+        `http://localhost:8080/api/shift-management/leave-request/${id}`,
         {
           method: "PUT",
           headers: {

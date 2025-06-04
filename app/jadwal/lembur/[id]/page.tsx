@@ -10,23 +10,12 @@ import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import {
-  Loader2,
-  X,
-  Calendar,
-  MapPin,
-  FileText,
-  UserCheck,
-  ArrowLeft,
-  CheckCircle,
-  AlertCircle,
-  Building2,
-  Eye,
-  XCircle,
-} from "lucide-react";
+import { Loader2, X, Calendar, MapPin, FileText, UserCheck, ArrowLeft, CheckCircle, AlertCircle, Building2, Eye, XCircle, RefreshCw } from 'lucide-react';
 
 interface OvertimeLog {
   id: string;
+  baristaId: number;
+  userId: string;
   dateOvertime: string;
   startHour: string;
   outletId: number | null;
@@ -49,13 +38,20 @@ export default function OvertimeLogDetail() {
     null
   );
   const [token, setToken] = useState<string | null>(null);
-  const [, setUserRoles] = useState<string[]>([]);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [username, setUsername] = useState<string>("");
+  const [userId, setUserId] = useState<string>("");
 
-  const [, setOvertimeLog] = useState<OvertimeLog | null>(null);
+  const [overtimeLog, setOvertimeLog] = useState<OvertimeLog | null>(null);
   const [outlets, setOutlets] = useState<
     { outletId: number; name: string; headBarName: string; headBarId: string }[]
   >([]);
+  
+  // State untuk modal resubmit
+  const [showResubmitModal, setShowResubmitModal] = useState(false);
+  const [resubmissionReason, setResubmissionReason] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     dateOvertime: "",
@@ -104,14 +100,31 @@ export default function OvertimeLogDetail() {
     // Parse token to get user roles
     try {
       const tokenPayload = parseJwt(storedToken);
-      if (tokenPayload && tokenPayload.roles) {
+      console.log("Token payload:", tokenPayload); // Debug log
+      
+      if (tokenPayload) {
         const roles = tokenPayload.roles || [];
         setUserRoles(roles);
+        
+        // Get username and userId from token
+        if (tokenPayload.sub) {
+          setUsername(tokenPayload.sub);
+        }
+        
+        // Try different possible fields for userId
+        if (tokenPayload.userId) {
+          setUserId(tokenPayload.userId);
+        } else if (tokenPayload.id) {
+          setUserId(tokenPayload.id);
+        } else if (tokenPayload.sub) {
+          setUserId(tokenPayload.sub);
+        }
 
         // Check if user is admin
         const adminCheck = roles.includes("ROLE_Admin");
         setIsAdmin(adminCheck);
         console.log("Is admin user:", adminCheck);
+        console.log("User ID:", tokenPayload.userId || tokenPayload.id || tokenPayload.sub);
       }
     } catch (err) {
       console.error("Error parsing JWT token:", err);
@@ -124,7 +137,7 @@ export default function OvertimeLogDetail() {
   const fetchOutlets = async (storedToken: string) => {
     try {
       const res = await fetch(
-        "https://rumahbaristensbe-production.up.railway.app/api/outlets",
+        "http://localhost:8080/api/outlets",
         {
           method: "GET",
           headers: {
@@ -152,7 +165,7 @@ export default function OvertimeLogDetail() {
 
     try {
       const res = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/overtime-logs/${params.id}`,
+        `http://localhost:8080/api/overtime-logs/${params.id}`,
         {
           method: "GET",
           headers: {
@@ -164,6 +177,7 @@ export default function OvertimeLogDetail() {
       if (!res.ok) throw new Error("Gagal mengambil detail log lembur");
 
       const data = await res.json();
+      console.log("Overtime log data:", data); // Debug log
       setOvertimeLog(data);
 
       setFormData({
@@ -200,7 +214,7 @@ export default function OvertimeLogDetail() {
     setUpdating(true);
     try {
       const res = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/overtime-logs/${params.id}/status`,
+        `http://localhost:8080/api/overtime-logs/${params.id}/status`,
         {
           method: "PUT",
           headers: {
@@ -236,6 +250,107 @@ export default function OvertimeLogDetail() {
       });
     } finally {
       setUpdating(false);
+    }
+  };
+
+  // Function untuk mengajukan kembali permohonan lembur
+  const handleResubmit = async () => {
+    if (!token) {
+      setToast({
+        type: "Gagal",
+        message: "Token tidak valid. Silakan login ulang!",
+      });
+      return;
+    }
+
+    if (!resubmissionReason.trim()) {
+      setToast({
+        type: "Gagal",
+        message: "Alasan tambahan tidak boleh kosong",
+      });
+      return;
+    }
+
+    if (resubmissionReason.length < 10) {
+      setToast({
+        type: "Gagal",
+        message: "Alasan tambahan minimal 10 karakter",
+      });
+      return;
+    }
+
+    if (!overtimeLog) {
+      setToast({
+        type: "Gagal",
+        message: "Data overtime log tidak ditemukan",
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      // Gunakan data dari overtime log yang sudah ada
+      const newOvertimeData = {
+        baristaId: overtimeLog.baristaId,
+        userId: overtimeLog.userId, // Gunakan userId dari overtime log yang sudah ada
+        outletId: overtimeLog.outletId,
+        dateOvertime: overtimeLog.dateOvertime,
+        startHour: overtimeLog.startHour,
+        duration: overtimeLog.duration,
+        reason: `${overtimeLog.reason}\n\n[PENGAJUAN ULANG] ${resubmissionReason}`
+      };
+
+      console.log("Sending resubmit data:", newOvertimeData); // Debug log
+
+      const res = await fetch(
+        `http://localhost:8080/api/overtime-logs`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(newOvertimeData),
+        }
+      );
+
+      if (!res.ok) {
+        const contentType = res.headers.get("content-type");
+        let errorMessage = "Gagal mengajukan kembali permohonan lembur";
+        
+        if (contentType && contentType.includes("application/json")) {
+          const data = await res.json();
+          errorMessage = data.message || errorMessage;
+        } else {
+          const text = await res.text();
+          errorMessage = text || errorMessage;
+        }
+        
+        console.error("Response error:", errorMessage); // Debug log
+        throw new Error(errorMessage);
+      }
+
+      const newOvertimeLog = await res.json();
+      console.log("New overtime log created:", newOvertimeLog); // Debug log
+
+      setToast({
+        type: "Berhasil",
+        message: "Permohonan lembur berhasil diajukan kembali dengan ID baru!",
+      });
+      setShowResubmitModal(false);
+      setResubmissionReason("");
+      
+      // Redirect ke overtime log yang baru dibuat
+      router.push(`/jadwal/lembur/${newOvertimeLog.id}`);
+      
+    } catch (error) {
+      console.error("❌ Error resubmitting overtime log:", error);
+      setToast({
+        type: "Gagal",
+        message: error instanceof Error ? error.message : "Gagal mengajukan kembali permohonan lembur",
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -310,6 +425,17 @@ export default function OvertimeLogDetail() {
 
     // Only show cancel button if status is not already cancelled
     return formData.status !== "CANCELLED";
+  };
+
+  // Check if user can resubmit the overtime request
+  const canResubmit = () => {
+    // Admin users cannot resubmit requests
+    if (isAdmin) {
+      return false;
+    }
+
+    // Only show resubmit button if status is REJECTED
+    return formData.status === "REJECTED";
   };
 
   if (loading) {
@@ -409,26 +535,7 @@ export default function OvertimeLogDetail() {
               </Card>
             )}
 
-            {/* Action Guidelines */}
-            <Card className="p-6">
-              <h4 className="font-semibold text-gray-900 mb-3">Informasi</h4>
-              <div className="space-y-3 text-sm text-gray-600">
-                <div className="flex gap-2">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
-                  <p>Semua informasi dalam halaman ini bersifat read-only</p>
-                </div>
-                <div className="flex gap-2">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
-                  <p>Status akan diperbarui oleh admin atau sistem</p>
-                </div>
-                {canCancelRequest() && (
-                  <div className="flex gap-2">
-                    <div className="w-2 h-2 bg-red-600 rounded-full mt-2 flex-shrink-0"></div>
-                    <p>Anda dapat membatalkan permohonan jika diperlukan</p>
-                  </div>
-                )}
-              </div>
-            </Card>
+            
           </div>
 
           {/* Main Content */}
@@ -584,6 +691,8 @@ export default function OvertimeLogDetail() {
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Kembali
                   </Button>
+                  
+                  {/* Tombol Batalkan Permohonan */}
                   {canCancelRequest() && (
                     <Button
                       variant="destructive"
@@ -604,12 +713,96 @@ export default function OvertimeLogDetail() {
                       )}
                     </Button>
                   )}
+                  
+                  {/* Tombol Ajukan Permohonan Kembali */}
+                  {canResubmit() && (
+                    <Button
+                      onClick={() => setShowResubmitModal(true)}
+                      className="px-8 bg-blue-600 hover:bg-blue-700"
+                    >
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Ajukan Permohonan Kembali
+                    </Button>
+                  )}
                 </div>
               </div>
             </Card>
           </div>
         </div>
       </div>
+
+      {/* Modal Ajukan Permohonan Kembali */}
+      {showResubmitModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Ajukan Permohonan Kembali</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowResubmitModal(false);
+                  setResubmissionReason("");
+                }}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <p className="text-sm text-gray-600 mb-4">
+              Tambahkan alasan yang lebih mendukung untuk pengajuan lembur Anda. 
+              Sistem akan membuat pengajuan baru dengan alasan tambahan.
+            </p>
+            
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="resubmissionReason" className="text-sm font-medium">
+                  Alasan Tambahan
+                </Label>
+                <Textarea
+                  id="resubmissionReason"
+                  value={resubmissionReason}
+                  onChange={(e) => setResubmissionReason(e.target.value)}
+                  placeholder="Jelaskan alasan tambahan yang mendukung pengajuan lembur Anda..."
+                  rows={4}
+                  className="mt-1 resize-none"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Minimal 10 karakter ({resubmissionReason.length}/500)
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-3 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowResubmitModal(false);
+                  setResubmissionReason("");
+                }}
+                disabled={submitting}
+              >
+                Batal
+              </Button>
+              <Button
+                onClick={handleResubmit}
+                disabled={submitting || resubmissionReason.length < 10}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Mengajukan...
+                  </>
+                ) : (
+                  "Ajukan Kembali"
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast Notification */}
       {toast && (

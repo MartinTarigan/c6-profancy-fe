@@ -83,8 +83,8 @@ export default function ManajemenPeerReview() {
       try {
         setIsLoading(true);
         const url = isAdmin
-          ? "https://rumahbaristensbe-production.up.railway.app/api/trainee/peer-review-assignment/all"
-          : `https://rumahbaristensbe-production.up.railway.app/api/trainee/peer-review-assignment/by-reviewer/${username}`;
+          ? "http://localhost:8080/api/trainee/peer-review-assignment/all"
+          : `http://localhost:8080/api/trainee/peer-review-assignment/by-reviewer/${username}`;
         const token = localStorage.getItem("token");
         const res = await fetch(url, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},

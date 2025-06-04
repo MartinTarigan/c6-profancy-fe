@@ -244,7 +244,7 @@ export function AdminDashboard() {
       }
 
       const response = await fetch(
-        "https://rumahbaristensbe-production.up.railway.app/api/admin/outlets",
+        "http://localhost:8080/api/admin/outlets",
         {
           method: "GET",
           headers: {
@@ -312,7 +312,7 @@ export function AdminDashboard() {
       if (!token) return;
 
       const response = await fetch(
-        "https://rumahbaristensbe-production.up.railway.app/api/admin/baristas",
+        "http://localhost:8080/api/admin/baristas",
         {
           method: "GET",
           headers: {
@@ -367,7 +367,7 @@ export function AdminDashboard() {
       queryParams.append("sort", "tanggal-desc");
 
       const response = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/overtime-logs?${queryParams.toString()}`,
+        `http://localhost:8080/api/overtime-logs?${queryParams.toString()}`,
         {
           method: "GET",
           headers: {
@@ -450,7 +450,7 @@ export function AdminDashboard() {
         queryParams.append("outletId", requestDTO.outletId.toString());
 
       const response = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/admin/dashboard/summary?${queryParams.toString()}`,
+        `http://localhost:8080/api/admin/dashboard/summary?${queryParams.toString()}`,
         {
           method: "GET",
           headers: {

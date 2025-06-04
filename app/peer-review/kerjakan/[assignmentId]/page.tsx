@@ -31,7 +31,7 @@ export default function KerjakanPeerReview() {
       const storedToken = localStorage.getItem("token");
       try {
         const res = await fetch(
-          "https://rumahbaristensbe-production.up.railway.app/api/peer-review/questions",
+          "http://localhost:8080/api/peer-review/questions",
           {
             headers: { Authorization: `Bearer ${storedToken}` },
           }
@@ -62,7 +62,7 @@ export default function KerjakanPeerReview() {
     });
     try {
       const res = await fetch(
-        "https://rumahbaristensbe-production.up.railway.app/api/peer-review/submit",
+        "http://localhost:8080/api/peer-review/submit",
         {
           method: "POST",
           headers: {

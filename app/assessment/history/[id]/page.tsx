@@ -91,7 +91,7 @@ export default function ViewUserSubmission() {
         //    that returns submission details including `assessmentId`.
         //    If not, this part needs to be adjusted based on your backend capabilities.
         const subDetailRes = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/trainee/submission/${submissionId}`, // ADJUST API ENDPOINT
+          `http://localhost:8080/api/trainee/submission/${submissionId}`, // ADJUST API ENDPOINT
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (!subDetailRes.ok) {
@@ -110,7 +110,7 @@ export default function ViewUserSubmission() {
 
         // 2. Fetch the user's answers for this submission
         const ansRes = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/trainee/answers/${submissionId}`,
+          `http://localhost:8080/api/trainee/answers/${submissionId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (!ansRes.ok) {
@@ -150,7 +150,7 @@ export default function ViewUserSubmission() {
         //    or the existing `/api/assessments` and then filter.
         //    Using a direct fetch is more efficient if available.
         const assRes = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/assessments/${assessmentId}`, // ADJUST API ENDPOINT if you have a direct one
+          `http://localhost:8080/api/assessments/${assessmentId}`, // ADJUST API ENDPOINT if you have a direct one
           {
             headers: { Authorization: `Bearer ${token}` },
           }
