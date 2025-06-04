@@ -142,8 +142,8 @@ export default function ManajemenAssessment() {
 
         const isManagement = ["Admin", "CLEVEL", "HR"].includes(role || "");
         const url = isManagement
-          ? "https://rumahbaristensbe-production.up.railway.app/api/assessments"
-          : `https://rumahbaristensbe-production.up.railway.app/api/assessments/access/${username}`;
+          ? "http://localhost:8080/api/assessments"
+          : `http://localhost:8080/api/assessments/access/${username}`;
 
         const res = await fetch(url, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -173,7 +173,7 @@ export default function ManajemenAssessment() {
         }
 
         const res = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/trainee/assessment/history/${username}`,
+          `http://localhost:8080/api/trainee/assessment/history/${username}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

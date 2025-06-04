@@ -170,7 +170,7 @@ export default function AssessmentDashboard() {
         }
 
         const res = await fetch(
-          "https://rumahbaristensbe-production.up.railway.app/api/assessments",
+          "http://localhost:8080/api/assessments",
           {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
           }
@@ -208,7 +208,7 @@ export default function AssessmentDashboard() {
       for (const assessment of assessmentsData) {
         try {
           const summariesRes = await fetch(
-            `https://rumahbaristensbe-production.up.railway.app/api/trainee/assessment/${assessment.id}/summaries`,
+            `http://localhost:8080/api/trainee/assessment/${assessment.id}/summaries`,
             {
               headers: token ? { Authorization: `Bearer ${token}` } : {},
             }

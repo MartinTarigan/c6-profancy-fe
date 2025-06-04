@@ -263,7 +263,7 @@ export default function ShiftDashboard() {
     try {
       console.log(`Fetching data for userId: ${userId}, period: ${period}`);
       const response = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/shift/personal-summary?userId=${userId}&period=${period}`,
+        `http://localhost:8080/api/shift/personal-summary?userId=${userId}&period=${period}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -347,7 +347,7 @@ export default function ShiftDashboard() {
       );
 
       const response = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/overtime-logs/user/${userId}`,
+        `http://localhost:8080/api/overtime-logs/user/${userId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -382,7 +382,7 @@ export default function ShiftDashboard() {
     try {
       const today = format(new Date(), "yyyy-MM-dd");
       const response = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/shift/detail?userId=${userId}&date=${today}`,
+        `http://localhost:8080/api/shift/detail?userId=${userId}&date=${today}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -420,7 +420,7 @@ export default function ShiftDashboard() {
       }
 
       const response = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/shift/s/${outletId}?startDate=${startDate}&endDate=${endDate}`,
+        `http://localhost:8080/api/shift/s/${outletId}?startDate=${startDate}&endDate=${endDate}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -482,7 +482,7 @@ export default function ShiftDashboard() {
 
     try {
       const response = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/shift/detail?userId=${userId}&date=${dateStr}`,
+        `http://localhost:8080/api/shift/detail?userId=${userId}&date=${dateStr}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

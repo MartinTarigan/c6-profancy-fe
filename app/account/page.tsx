@@ -87,7 +87,7 @@ export default function DaftarAkun() {
         }
 
         const response = await fetch(
-          "https://rumahbaristensbe-production.up.railway.app/api/account/viewall",
+          "http://localhost:8080/api/account/viewall",
           {
             method: "GET",
             headers: {

@@ -118,7 +118,7 @@ export default function HeadBarOvertimeApprovalPage() {
 
       try {
         const res = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/account/${userId}`,
+          `http://localhost:8080/api/account/${userId}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -152,7 +152,7 @@ export default function HeadBarOvertimeApprovalPage() {
     const fetchAllOutlets = async (token: string, userOutletName: string) => {
       try {
         const res = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/outlets`,
+          `http://localhost:8080/api/outlets`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -191,7 +191,7 @@ export default function HeadBarOvertimeApprovalPage() {
     const fetchOvertimeLogs = async (token: string, outletId: number) => {
       try {
         const response = await fetch(
-          "https://rumahbaristensbe-production.up.railway.app/api/overtime-logs?status=PENDING",
+          "http://localhost:8080/api/overtime-logs?status=PENDING",
           {
             method: "GET",
             headers: {
@@ -313,7 +313,7 @@ export default function HeadBarOvertimeApprovalPage() {
       const verifier = jwtPayload?.sub || "HeadBar";
 
       const response = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/overtime-logs/${selectedRequest.id}/approve`,
+        `http://localhost:8080/api/overtime-logs/${selectedRequest.id}/approve`,
         {
           method: "PUT",
           headers: {

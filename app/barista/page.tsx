@@ -52,7 +52,7 @@ export default function BaristaDashboard() {
 
       try {
         const res = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/account/${username}`,
+          `http://localhost:8080/api/account/${username}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -95,7 +95,7 @@ export default function BaristaDashboard() {
     }
 
     fetch(
-      "https://rumahbaristensbe-production.up.railway.app/api/baristas/stats",
+      "http://localhost:8080/api/baristas/stats",
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -115,7 +115,7 @@ export default function BaristaDashboard() {
         alert("Gagal mengambil data dashboard barista.");
       });
 
-    fetch("https://rumahbaristensbe-production.up.railway.app/api/outlets", {
+    fetch("http://localhost:8080/api/outlets", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -133,7 +133,7 @@ export default function BaristaDashboard() {
       });
 
     fetch(
-      "https://rumahbaristensbe-production.up.railway.app/api/baristas/all",
+      "http://localhost:8080/api/baristas/all",
       {
         headers: {
           Authorization: `Bearer ${token}`,

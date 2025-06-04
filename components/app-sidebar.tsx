@@ -53,7 +53,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     }
     try {
       const res = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/notifications/${username}`,
+        `http://localhost:8080/api/notifications/${username}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (!res.ok) throw new Error("Failed to fetch");

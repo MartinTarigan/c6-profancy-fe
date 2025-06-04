@@ -10,20 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import {
-  Loader2,
-  X,
-  Calendar,
-  MapPin,
-  FileText,
-  UserCheck,
-  ArrowLeft,
-  CheckCircle,
-  AlertCircle,
-  Building2,
-  Eye,
-  XCircle,
-} from "lucide-react";
+import { Loader2, X, Calendar, MapPin, FileText, UserCheck, ArrowLeft, CheckCircle, AlertCircle, Building2, Eye, XCircle, Clock } from 'lucide-react';
 
 interface OvertimeLog {
   id: string;
@@ -124,7 +111,7 @@ export default function OvertimeLogDetail() {
   const fetchOutlets = async (storedToken: string) => {
     try {
       const res = await fetch(
-        "https://rumahbaristensbe-production.up.railway.app/api/outlets",
+        "http://localhost:8080/api/outlets",
         {
           method: "GET",
           headers: {
@@ -152,7 +139,7 @@ export default function OvertimeLogDetail() {
 
     try {
       const res = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/overtime-logs/${params.id}`,
+        `http://localhost:8080/api/overtime-logs/${params.id}`,
         {
           method: "GET",
           headers: {
@@ -200,7 +187,7 @@ export default function OvertimeLogDetail() {
     setUpdating(true);
     try {
       const res = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/overtime-logs/${params.id}/status`,
+        `http://localhost:8080/api/overtime-logs/${params.id}/status`,
         {
           method: "PUT",
           headers: {
@@ -300,6 +287,25 @@ export default function OvertimeLogDetail() {
         );
     }
   };
+
+  const calculateEndTime = (startTime: string, duration: string): string => {
+    if (!startTime || !duration) return "-"; // jika tidak ada waktu mulai atau durasi, kembalikan "-"
+    
+    try {
+      const [startHour, startMinute] = startTime.split(":").map(Number); // memisahkan jam dan menit dari string, kemudian mengonversinya menjadi angka
+      const durationHours = parseInt(duration.replace(":00", "")); // menghilangkan ":00" dan mengonversi durasi ke angka (dalam jam), misal 8:00 jam jadi 8
+
+      const totalMinutes = startHour * 60 + startMinute + (durationHours * 60); // Menghitung total menit, misal 480 menit (jam mulai, 8*60) + 120 menit (durasi, 2*60) = 600 menit.
+      const endHour = Math.floor(totalMinutes / 60) % 24; // menghitung jam selesai (modulo 24 agar tetap dalam rentang 0-23), jadi 600 dibagi 60 = 10
+      const endMinute = totalMinutes % 60; // menghitung menit selesai
+
+      return `${endHour.toString().padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}`; // mengembalikan waktu selesai dalam format HH:mm, jadi jam selesai  adalah pukul 10:00.
+    } catch (error) {
+      console.error("Error calculating end time:", error); 
+      return "-"; // Jika ada error, kembalikan "-"
+    }
+};
+
 
   // Check if user can cancel the overtime request
   const canCancelRequest = () => {
@@ -456,13 +462,56 @@ export default function OvertimeLogDetail() {
                     </div>
                     <div className="space-y-2">
                       <Label className="text-sm font-medium text-gray-700">
+                        Durasi Lembur
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          value={formData.duration}
+                          readOnly
+                          className="h-11 bg-gray-50 pr-12"
+                        />
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <span className="text-sm text-gray-500">jam</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* New Section: Jam Kerja Lembur */}
+                <div>
+                  <div className="flex items-center gap-2 mb-6">
+                    <Clock className="h-5 w-5 text-blue-600" />
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Jam Kerja Lembur
+                    </h3>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
                         Jam Mulai
                       </Label>
-                      <Input
-                        value={formData.startHour}
-                        readOnly
-                        className="h-11 bg-gray-50"
-                      />
+                      <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-green-600" />
+                          <p className="font-medium text-green-900">{formData.startHour}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Jam Selesai
+                      </Label>
+                      <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-red-600" />
+                          <p className="font-medium text-red-900">
+                            {calculateEndTime(formData.startHour, formData.duration)}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

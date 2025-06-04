@@ -71,7 +71,7 @@ export default function MaterialDetail({ params }: any) {
       try {
         setIsLoading(true);
         const response = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/training-materials/${params.id}`,
+          `http://localhost:8080/api/training-materials/${params.id}`,
           {
             headers: {
               Authorization: `Bearer ${storedToken}`,
@@ -127,7 +127,7 @@ export default function MaterialDetail({ params }: any) {
 
     try {
       const res = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/training-materials/${material?.id}/delete`,
+        `http://localhost:8080/api/training-materials/${material?.id}/delete`,
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },

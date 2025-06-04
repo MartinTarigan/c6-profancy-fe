@@ -156,7 +156,7 @@ export default function AssessmentDetailPage() {
 
         // Fetch assessment data
         const assessmentRes = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/assessments`,
+          `http://localhost:8080/api/assessments`,
           {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
           }
@@ -179,7 +179,7 @@ export default function AssessmentDetailPage() {
 
         // Fetch submission summaries
         const summariesRes = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/trainee/assessment/${assessmentId}/summaries`,
+          `http://localhost:8080/api/trainee/assessment/${assessmentId}/summaries`,
           {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
           }

@@ -61,7 +61,7 @@ export default function UpdateAssessment() {
         const token = localStorage.getItem("token");
 
         const response = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/assessments/${id}`,
+          `http://localhost:8080/api/assessments/${id}`,
           {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
           }
@@ -107,9 +107,9 @@ export default function UpdateAssessment() {
     let url: string;
     if (tpl === "PROBATIONBARISTA") {
       url =
-        "https://rumahbaristensbe-production.up.railway.app/api/trainee/peer-review-assignment/reviewees";
+        "http://localhost:8080/api/trainee/peer-review-assignment/reviewees";
     } else {
-      url = `https://rumahbaristensbe-production.up.railway.app/api/assessments/${tpl.toLowerCase()}`;
+      url = `http://localhost:8080/api/assessments/${tpl.toLowerCase()}`;
     }
     try {
       const res = await fetch(url, {
@@ -163,7 +163,7 @@ export default function UpdateAssessment() {
 
       // Use PUT method for update
       const res = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/assessments/${id}`,
+        `http://localhost:8080/api/assessments/${id}`,
         {
           method: "PUT",
           headers: {
