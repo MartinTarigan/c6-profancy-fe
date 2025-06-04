@@ -50,6 +50,7 @@ interface ShiftSummary {
 }
 
 interface ShiftScheduleResponseDto {
+  createdAt: string | number | Date;
   shiftScheduleId: number;
   shiftType: number;
   dateShift: string;
@@ -419,7 +420,7 @@ export default function ShiftDashboard() {
       }
 
       const response = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/shift/${outletId}?startDate=${startDate}&endDate=${endDate}`,
+        `https://rumahbaristensbe-production.up.railway.app/api/shift/s/${outletId}?startDate=${startDate}&endDate=${endDate}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -436,7 +437,32 @@ export default function ShiftDashboard() {
         shift.baristas.some((barista) => barista.id === userId)
       );
 
-      userShifts.sort(
+      // Group shifts by date and get only the latest updated one per day
+      const latestShiftsByDay = new Map<string, ShiftScheduleResponseDto>();
+
+      userShifts.forEach((shift: ShiftScheduleResponseDto) => {
+        const shiftDate = new Date(shift.dateShift).toISOString().split("T")[0];
+
+        if (!latestShiftsByDay.has(shiftDate)) {
+          latestShiftsByDay.set(shiftDate, shift);
+        } else {
+          const existingShift = latestShiftsByDay.get(shiftDate)!;
+
+          // Compare createdAt timestamps and keep the more recent one
+          const existingCreatedAt = new Date(existingShift.createdAt).getTime();
+          const currentCreatedAt = new Date(shift.createdAt).getTime();
+
+          if (currentCreatedAt > existingCreatedAt) {
+            latestShiftsByDay.set(shiftDate, shift);
+          }
+        }
+      });
+
+      // Convert map values back to array
+      const filteredUserShifts = Array.from(latestShiftsByDay.values());
+
+      // Sort by date
+      filteredUserShifts.sort(
         (a: ShiftScheduleResponseDto, b: ShiftScheduleResponseDto) => {
           return (
             new Date(a.dateShift).getTime() - new Date(b.dateShift).getTime()
@@ -444,7 +470,7 @@ export default function ShiftDashboard() {
         }
       );
 
-      setUpcomingShifts(userShifts.slice(0, 5));
+      setUpcomingShifts(filteredUserShifts);
     } catch (err) {
       console.error("Error fetching upcoming shifts:", err);
     }

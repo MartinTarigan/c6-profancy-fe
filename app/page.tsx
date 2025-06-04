@@ -59,7 +59,7 @@ export default function Home() {
   }
 
   // Check if userRoles includes "ROLE_Admin" or "ROLE_HeadBar"
-  const isAdminOrHeadBar = userRoles.some((role) => role === "ROLE_Admin" || role === "ROLE_HeadBar" || role === "ROLE_CLevel")
+  const isAdminOrHeadBar = userRoles.some((role) => role === "ROLE_Admin" || role === "ROLE_HeadBar" || role === "ROLE_CLEVEL")
 
   // Show original home page for admin and headbar roles
   if (isAdminOrHeadBar) {
@@ -67,7 +67,9 @@ export default function Home() {
     if (localStorage.getItem("roles")?.includes("Admin")) {
       router.push("/jadwal/shift/admin")
       return null
-    } if (localStorage.getItem("roles")?.includes("CLEVEL")) {
+    } 
+    
+    if (localStorage.getItem("roles")?.includes("CLEVEL")) {
       router.push("/jadwal/shift/dashboard")
       return null
     }

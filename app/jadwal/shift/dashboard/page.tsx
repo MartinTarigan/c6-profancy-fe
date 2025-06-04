@@ -154,7 +154,7 @@ export default function ShiftDashboard() {
       }
 
       const response = await fetch(
-        "https://rumahbaristensbe-production.up.railway.app/api/shift/dashboard",
+        "https://rumahbaristensbe-production.up.railway.app/api/shift/d/dashboard",
         {
           headers: {
             Authorization: `Bearer ${token}`,

@@ -332,7 +332,7 @@ export default function MyCalendar() {
       const formattedEndDate = endDate.toISOString().split("T")[0];
 
       const res = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/shift/${outletId}?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
+        `https://rumahbaristensbe-production.up.railway.app/api/shift/s/${outletId}?startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
         {
           headers: {
             "Content-Type": "application/json",

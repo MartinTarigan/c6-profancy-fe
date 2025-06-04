@@ -40,7 +40,7 @@ interface TrainingMaterial {
   createdAt: string;
 }
 
-export default function MaterialDetail({ params }: any){
+export default function MaterialDetail({ params }: any) {
   const router = useRouter();
   const [material, setMaterial] = useState<TrainingMaterial | null>(null);
   const [isLoading, setIsLoading] = useState(true);
