@@ -1,5 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -175,6 +173,9 @@ export default function PeerReviewDashboard() {
 
         // Set default selected year ke tahun terbaru (atau yang pertama)
         setTimeRange(years[0]);
+
+        // Langsung fetch dashboard data setelah timeRange di-set
+        // fetchDashboardData akan dipanggil otomatis oleh useEffect dependency
       } else {
         const currentYear = String(new Date().getFullYear());
         setAvailableYears([currentYear]);
@@ -193,8 +194,7 @@ export default function PeerReviewDashboard() {
 
   // URL backend Spring Boot
   const BACKEND_API_URL =
-    process.env.NEXT_PUBLIC_BACKEND_API_URL ||
-    "https://rumahbaristensbe-production.up.railway.app/api";
+    process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:8080/api";
 
   // Fungsi untuk mengambil data dari backend
   const fetchDashboardData = async () => {
@@ -319,7 +319,7 @@ export default function PeerReviewDashboard() {
         // 5. Fetch baristas
         console.log("Fetching baristas...");
         const baristasRes = await fetch(
-          `${BACKEND_API_URL}/dashboard/peer-review/baristas?timeRange=${timeRange}&outlet=${
+          `${BACKEND_API_URL}/dashboard/peer-review/baristas?outlet=${
             filterOutlet !== "all" ? filterOutlet : ""
           }&status=${
             filterStatus !== "all" ? filterStatus : ""
@@ -343,7 +343,9 @@ export default function PeerReviewDashboard() {
         console.log("Fetching score trend...");
         const trendRes = await fetch(
           `${BACKEND_API_URL}/dashboard/peer-review/score-trend?timeRange=${timeRange}`,
-          { headers }
+          {
+            headers,
+          }
         );
         if (!trendRes.ok) {
           console.error("Error fetching score trend:", trendRes.status);
@@ -763,18 +765,18 @@ export default function PeerReviewDashboard() {
   };
 
   // Panggil fetchDashboardData saat komponen dimuat
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  // useEffect(() => {
+  //   fetchDashboardData()
+  // }, [])
 
   useEffect(() => {
     // Reset month filter ketika timeRange berubah
     setSelectedMonth("all");
   }, [timeRange]);
 
-  // Panggil fetchDashboardData saat filter berubah
+  // Panggil fetchDashboardData saat timeRange berubah
   useEffect(() => {
-    if (!isLoading) {
+    if (timeRange && timeRange !== "this-month") {
       fetchDashboardData();
     }
   }, [timeRange, selectedMonth]);
@@ -866,18 +868,6 @@ export default function PeerReviewDashboard() {
   };
 
   // Filter baristas based on search, status filter, and outlet filter
-  // const filteredBaristas = baristaData.filter((barista) => {
-  //   const matchesSearch = barista.username
-  //     .toLowerCase()
-  //     .includes(searchQuery.toLowerCase());
-  //   const matchesStatus =
-  //     filterStatus === "all" ||
-  //     barista.status.toLowerCase() === filterStatus.toLowerCase();
-  //   const matchesOutlet =
-  //     filterOutlet === "all" || barista.outlet === filterOutlet;
-  //   return matchesSearch && matchesStatus && matchesOutlet;
-  // });
-
   const filteredBaristas = (baristaData || []).filter((barista) => {
     const matchesSearch = barista?.username
       ?.toLowerCase()
@@ -952,7 +942,7 @@ export default function PeerReviewDashboard() {
     } else {
       return (
         <div className="flex items-center text-gray-600">
-          <span>0.0</span>
+          <span></span>
         </div>
       );
     }
@@ -1038,7 +1028,7 @@ export default function PeerReviewDashboard() {
     );
   }
 
-  if (!["CLEVEL"].includes(userRole)) {
+  if (!["CEO", "CMO", "CIOO"].includes(userRole)) {
     return (
       <div className="flex flex-col h-screen items-center justify-center">
         <h2 className="text-xl font-semibold text-red-600 mb-2">
@@ -1075,25 +1065,6 @@ export default function PeerReviewDashboard() {
                       ))}
                     </SelectContent>
                   </Select>
-                  {/* <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9"
-                    onClick={handleExportData}
-                    disabled={isExporting}
-                  >
-                    {isExporting ? (
-                      <>
-                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                        <span>Exporting...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Download className="h-4 w-4 mr-2" />
-                        <span>Export</span>
-                      </>
-                    )}
-                  </Button> */}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -1148,6 +1119,19 @@ export default function PeerReviewDashboard() {
                     3.5)
                   </li>
                 </ol>
+              </div>
+
+              {/* Section Header for Filtered Data */}
+              <div className="mb-6">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h2 className="text-lg font-semibold text-blue-800 mb-2">
+                    📊 Data Berdasarkan Filter Tahun: {timeRange}
+                  </h2>
+                  <p className="text-blue-700 text-sm">
+                    Data di bawah ini menampilkan hasil peer review yang
+                    difilter berdasarkan tahun yang dipilih.
+                  </p>
+                </div>
               </div>
 
               {/* Summary Cards */}
@@ -1290,509 +1274,312 @@ export default function PeerReviewDashboard() {
                 </Card>
               </div>
 
-              {/* Main Dashboard Content */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column */}
-                <div className="lg:col-span-2 space-y-6">
-                  {/* Outlet Performance */}
-                  <Card className="bg-white">
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-lg font-medium">
-                          Performa Berdasarkan Outlet
-                        </h2>
-                        <div className="flex gap-2">
-                          {timeRange.match(/^\d{4}$/) && (
-                            <Select
-                              value={selectedMonth}
-                              onValueChange={setSelectedMonth}
-                            >
-                              <SelectTrigger className="w-[140px]">
-                                <SelectValue placeholder="Pilih bulan" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="all">Semua Bulan</SelectItem>
-                                <SelectItem value="1">Januari</SelectItem>
-                                <SelectItem value="2">Februari</SelectItem>
-                                <SelectItem value="3">Maret</SelectItem>
-                                <SelectItem value="4">April</SelectItem>
-                                <SelectItem value="5">Mei</SelectItem>
-                                <SelectItem value="6">Juni</SelectItem>
-                                <SelectItem value="7">Juli</SelectItem>
-                                <SelectItem value="8">Agustus</SelectItem>
-                                <SelectItem value="9">September</SelectItem>
-                                <SelectItem value="10">Oktober</SelectItem>
-                                <SelectItem value="11">November</SelectItem>
-                                <SelectItem value="12">Desember</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          )}
-                        </div>
-                      </div>
-                      <div className="h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
-                            data={outletPerformanceData}
-                            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              {/* Main Dashboard Content - Filtered Data */}
+              <div className="space-y-6">
+                {/* Outlet Performance */}
+                <Card className="bg-white">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-lg font-medium">
+                        Performa Berdasarkan Outlet
+                      </h2>
+                      <div className="flex gap-2">
+                        {timeRange.match(/^\d{4}$/) && (
+                          <Select
+                            value={selectedMonth}
+                            onValueChange={setSelectedMonth}
                           >
-                            <CartesianGrid
-                              strokeDasharray="3 3"
-                              vertical={false}
-                            />
-                            <XAxis dataKey="name" />
-                            <YAxis stroke="#3b82f6" domain={[0, 4]} />
-                            <Tooltip />
-                            <Legend />
-                            <Bar
-                              dataKey="score"
-                              name="Rata-rata Skor"
-                              fill="#3b82f6"
-                              radius={[4, 4, 0, 0]}
-                              barSize={30}
-                            />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-
-                      {/* Tingkat Kelulusan Chart */}
-                      <div className="h-[300px] mt-6">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
-                            data={outletPerformanceData}
-                            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                          >
-                            <CartesianGrid
-                              strokeDasharray="3 3"
-                              vertical={false}
-                            />
-                            <XAxis dataKey="name" />
-                            <YAxis stroke="#f59e0b" domain={[0, 100]} />
-                            <Tooltip />
-                            <Legend />
-                            <Bar
-                              dataKey="passRate"
-                              name="Tingkat Kelulusan (%)"
-                              fill="#f59e0b"
-                              radius={[4, 4, 0, 0]}
-                              barSize={30}
-                            />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                      {/* <div className="h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
-                            data={outletPerformanceData}
-                            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                          >
-                            <CartesianGrid
-                              strokeDasharray="3 3"
-                              vertical={false}
-                            />
-                            <XAxis dataKey="name" />
-                            <YAxis
-                              yAxisId="left"
-                              orientation="left"
-                              stroke="#3b82f6"
-                              domain={[0, 4]}
-                            />
-                            <YAxis
-                              yAxisId="right"
-                              orientation="right"
-                              stroke="#f59e0b"
-                              domain={[0, 100]}
-                            />
-                            <Tooltip />
-                            <Legend />
-                            <Bar
-                              yAxisId="left"
-                              dataKey="score"
-                              name="Rata-rata Skor"
-                              fill="#3b82f6"
-                              radius={[4, 4, 0, 0]}
-                              barSize={30}
-                            />
-                            <Bar
-                              yAxisId="right"
-                              dataKey="passRate"
-                              name="Tingkat Kelulusan (%)"
-                              fill="#f59e0b"
-                              radius={[4, 4, 0, 0]}
-                              barSize={30}
-                            />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div> */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                        {Array.isArray(outletData) ? (
-                          outletData.map((outlet) => (
-                            <div
-                              key={outlet.name}
-                              className="bg-gray-50 p-3 rounded-lg"
-                            >
-                              <div className="flex items-center mb-1">
-                                <MapPin className="h-4 w-4 text-gray-500 mr-1" />
-                                <h3 className="font-medium">{outlet.name}</h3>
-                              </div>
-                              <div className="grid grid-cols-2 gap-2 text-sm">
-                                <div>
-                                  <p className="text-gray-500">Skor</p>
-                                  <p className="font-medium">
-                                    {typeof outlet.averageScore === "number"
-                                      ? outlet.averageScore.toFixed(1)
-                                      : "0.0"}{" "}
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-gray-500">Lulus</p>
-                                  <p className="font-medium">
-                                    {typeof outlet.passRate === "number"
-                                      ? outlet.passRate.toFixed(0) + "%"
-                                      : "0%"}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="col-span-4 text-center py-4 text-gray-500">
-                            Data outlet tidak tersedia
-                          </div>
+                            <SelectTrigger className="w-[140px]">
+                              <SelectValue placeholder="Pilih bulan" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Semua Bulan</SelectItem>
+                              <SelectItem value="1">Januari</SelectItem>
+                              <SelectItem value="2">Februari</SelectItem>
+                              <SelectItem value="3">Maret</SelectItem>
+                              <SelectItem value="4">April</SelectItem>
+                              <SelectItem value="5">Mei</SelectItem>
+                              <SelectItem value="6">Juni</SelectItem>
+                              <SelectItem value="7">Juli</SelectItem>
+                              <SelectItem value="8">Agustus</SelectItem>
+                              <SelectItem value="9">September</SelectItem>
+                              <SelectItem value="10">Oktober</SelectItem>
+                              <SelectItem value="11">November</SelectItem>
+                              <SelectItem value="12">Desember</SelectItem>
+                            </SelectContent>
+                          </Select>
                         )}
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                    <div className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={outletPerformanceData}
+                          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            vertical={false}
+                          />
+                          <XAxis dataKey="name" />
+                          <YAxis stroke="#3b82f6" domain={[0, 4]} />
+                          <Tooltip />
+                          <Legend />
+                          <Bar
+                            dataKey="score"
+                            name="Rata-rata Skor"
+                            fill="#3b82f6"
+                            radius={[4, 4, 0, 0]}
+                            barSize={30}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
 
-                  {/* Trend Over Time */}
-                  <Card className="bg-white">
-                    <CardContent className="p-4">
-                      <h2 className="text-lg font-medium mb-4">
-                        Tren Skor Peer Review
-                      </h2>
-                      <div className="h-[250px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart
-                            data={trendData}
-                            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                          >
-                            <defs>
-                              <linearGradient
-                                id="colorScore"
-                                x1="0"
-                                y1="0"
-                                x2="0"
-                                y2="1"
-                              >
-                                <stop
-                                  offset="5%"
-                                  stopColor="#3b82f6"
-                                  stopOpacity={0.8}
-                                />
-                                <stop
-                                  offset="95%"
-                                  stopColor="#3b82f6"
-                                  stopOpacity={0.1}
-                                />
-                              </linearGradient>
-                            </defs>
-                            <XAxis dataKey="month" />
-                            <YAxis domain={[0, 4]} />
-                            <CartesianGrid
-                              strokeDasharray="3 3"
-                              vertical={false}
-                            />
-                            <Tooltip />
-                            <Area
-                              type="monotone"
-                              dataKey="score"
-                              stroke="#3b82f6"
-                              fillOpacity={1}
-                              fill="url(#colorScore)"
-                            />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      </div>
-                      <div className="flex justify-between items-center mt-4 text-sm">
-                        <div>
-                          <span className="text-gray-500">
-                            Rata-rata 6 bulan:
-                          </span>
-                          <span className="font-medium ml-1">
-                            {trendData.length > 0
-                              ? (
-                                  trendData.reduce(
-                                    (sum, item) => sum + (item.score || 0),
-                                    0
-                                  ) / trendData.length
-                                ).toFixed(2)
-                              : "0.0"}
-                          </span>
-                        </div>
-                        {/* <div className="flex items-center text-green-600">
-                          <TrendingUp className="h-4 w-4 mr-1" />
-                          <span>
-                            {trendData.data?.length > 1
-                              ? `${(
-                                  trendData.data[trendData.data.length - 1]
-                                    .score - trendData.data[0].score
-                                ).toFixed(1)} peningkatan`
-                              : "+0.0 peningkatan"}
-                          </span>
-                        </div> */}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Category Performance */}
-                  <Card className="bg-white">
-                    <CardContent className="p-4">
-                      <h2 className="text-lg font-medium mb-4">
-                        Performa Berdasarkan Kategori
-                      </h2>
-                      <div className="h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
-                            data={questionSummary}
-                            layout="vertical"
-                            margin={{ top: 25, right: 0, left: 0, bottom: 0 }}
-                          >
-                            <CartesianGrid
-                              strokeDasharray="3 3"
-                              horizontal={true}
-                              vertical={false}
-                            />
-                            <XAxis type="number" domain={[0, 4]} />
-                            <YAxis
-                              dataKey="text"
-                              type="category"
-                              width={300}
-                              tick={{ fontSize: 12 }}
-                            />
-                            <Tooltip />
-                            <Bar
-                              dataKey="averageScore"
-                              name="Rata-rata Skor"
-                              fill="#3b82f6"
-                              radius={[0, 4, 4, 0]}
-                            />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Right Column */}
-                <div className="space-y-6">
-                  {/* Status Distribution */}
-                  <Card className="bg-white">
-                    <CardContent className="p-4">
-                      <h2 className="text-lg font-medium mb-4">
-                        Distribusi Status
-                      </h2>
-                      <div className="h-[200px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={statusCounts}
-                              cx="50%"
-                              cy="50%"
-                              innerRadius={60}
-                              outerRadius={80}
-                              paddingAngle={2}
-                              dataKey="value"
-                              label={({ name, percent }) => {
-                                const percentText = `${(percent * 100).toFixed(
-                                  0
-                                )}%`;
-                                return `${name}\n${percentText}`;
-                              }}
-                              labelLine={false}
-                            >
-                              {statusCounts.map((entry, index) => (
-                                <Cell
-                                  key={`cell-${index}`}
-                                  fill={entry.color}
-                                />
-                              ))}
-                            </Pie>
-                            <Tooltip
-                              formatter={(value) => [
-                                `${value} barista`,
-                                "Jumlah",
-                              ]}
-                              contentStyle={{
-                                borderRadius: "8px",
-                                border: "1px solid #e2e8f0",
-                              }}
-                            />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 mt-4">
-                        {statusCounts.map((status) => (
-                          <div key={status.name} className="flex items-center">
-                            <div
-                              className="w-3 h-3 rounded-full mr-2"
-                              style={{ backgroundColor: status.color }}
-                            ></div>
-                            <span className="text-sm">
-                              {status.name}: {status.value}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Top Performers */}
-                  <Card className="bg-white">
-                    <CardContent className="p-4">
-                      <h2 className="text-lg font-medium mb-4">
-                        Barista Terbaik
-                      </h2>
-                      <div className="space-y-3">
-                        {topPerformers.map((barista, index) => (
+                    {/* Tingkat Kelulusan Chart */}
+                    <div className="h-[300px] mt-6">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={outletPerformanceData}
+                          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            vertical={false}
+                          />
+                          <XAxis dataKey="name" />
+                          <YAxis stroke="#f59e0b" domain={[0, 100]} />
+                          <Tooltip />
+                          <Legend />
+                          <Bar
+                            dataKey="passRate"
+                            name="Tingkat Kelulusan (%)"
+                            fill="#f59e0b"
+                            radius={[4, 4, 0, 0]}
+                            barSize={30}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                      {Array.isArray(outletData) ? (
+                        outletData.map((outlet) => (
                           <div
-                            key={barista.username}
+                            key={outlet.name}
+                            className="bg-gray-50 p-3 rounded-lg"
+                          >
+                            <div className="flex items-center mb-1">
+                              <MapPin className="h-4 w-4 text-gray-500 mr-1" />
+                              <h3 className="font-medium">{outlet.name}</h3>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div>
+                                <p className="text-gray-500">Skor</p>
+                                <p className="font-medium">
+                                  {typeof outlet.averageScore === "number"
+                                    ? outlet.averageScore.toFixed(1)
+                                    : "0.0"}{" "}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-500">Lulus</p>
+                                <p className="font-medium">
+                                  {typeof outlet.passRate === "number"
+                                    ? outlet.passRate.toFixed(0) + "%"
+                                    : "0%"}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="col-span-4 text-center py-4 text-gray-500">
+                          Data outlet tidak tersedia
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Trend Over Time */}
+                <Card className="bg-white">
+                  <CardContent className="p-4">
+                    <h2 className="text-lg font-medium mb-4">
+                      Tren Skor Peer Review
+                    </h2>
+                    <div className="h-[250px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart
+                          data={trendData.data}
+                          margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                        >
+                          <defs>
+                            <linearGradient
+                              id="colorScore"
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="5%"
+                                stopColor="#3b82f6"
+                                stopOpacity={0.8}
+                              />
+                              <stop
+                                offset="95%"
+                                stopColor="#3b82f6"
+                                stopOpacity={0.1}
+                              />
+                            </linearGradient>
+                          </defs>
+                          <XAxis dataKey="month" />
+                          <YAxis domain={[0, 4]} />
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            vertical={false}
+                          />
+                          <Tooltip />
+                          <Area
+                            type="monotone"
+                            dataKey="score"
+                            stroke="#3b82f6"
+                            fillOpacity={1}
+                            fill="url(#colorScore)"
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="flex justify-between items-center mt-4 text-sm">
+                      <div>
+                        <span className="text-gray-500">
+                          Rata-rata 6 bulan:
+                        </span>
+                        <span className="font-medium ml-1">
+                          {trendData.data?.length > 0
+                            ? (
+                                trendData.data.reduce(
+                                  (sum, item) => sum + (item.score || 0),
+                                  0
+                                ) / trendData.data.length
+                              ).toFixed(2)
+                            : "0.0"}
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Category Performance */}
+                <Card className="bg-white">
+                  <CardContent className="p-4">
+                    <h2 className="text-lg font-medium mb-4">
+                      Performa Berdasarkan Kategori
+                    </h2>
+                    <div className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={questionSummary}
+                          layout="vertical"
+                          margin={{ top: 25, right: 0, left: 0, bottom: 0 }}
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            horizontal={true}
+                            vertical={false}
+                          />
+                          <XAxis type="number" domain={[0, 4]} />
+                          <YAxis
+                            dataKey="text"
+                            type="category"
+                            width={300}
+                            tick={{ fontSize: 12 }}
+                          />
+                          <Tooltip />
+                          <Bar
+                            dataKey="averageScore"
+                            name="Rata-rata Skor"
+                            fill="#3b82f6"
+                            radius={[0, 4, 4, 0]}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Best & Worst Categories */}
+              <Card className="bg-white mb-6">
+                <CardContent className="p-4">
+                  <Tabs defaultValue="best">
+                    <TabsList className="grid w-full grid-cols-2 mb-4">
+                      <TabsTrigger value="best">Kategori Terbaik</TabsTrigger>
+                      <TabsTrigger value="worst">Kategori Terendah</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="best">
+                      <div className="space-y-3">
+                        {bestCategories.map((category, index) => (
+                          <div
+                            key={category.questionNumber}
                             className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
                           >
                             <div className="flex items-center">
-                              <div className="bg-blue-100 text-blue-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3">
+                              <div className="bg-green-100 text-green-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3">
                                 {index + 1}
                               </div>
-                              <div>
-                                <p className="font-medium">
-                                  {barista.username}
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  {barista.outlet}
-                                </p>
-                              </div>
+                              <p className="font-medium">{category.text}</p>
                             </div>
-                            <div className="text-right">
-                              <p className="font-bold text-lg">
-                                {typeof barista.averageScore === "number"
-                                  ? barista.averageScore.toFixed(1)
-                                  : "0.0"}{" "}
-                              </p>
-                              {getTrendIndicator(
-                                barista.trend,
-                                barista.trendValue
-                              )}
-                            </div>
+                            <p className="font-bold">
+                              {typeof category.averageScore === "number"
+                                ? category.averageScore.toFixed(1)
+                                : "0.0"}{" "}
+                            </p>
                           </div>
                         ))}
                       </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Bottom Performers */}
-                  <Card className="bg-white">
-                    <CardContent className="p-4">
-                      <h2 className="text-lg font-medium mb-4">
-                        Barista Terendah
-                      </h2>
+                    </TabsContent>
+                    <TabsContent value="worst">
                       <div className="space-y-3">
-                        {bottomPerformers.map((barista, index) => (
+                        {worstCategories.map((category, index) => (
                           <div
-                            key={barista.username}
+                            key={category.questionNumber}
                             className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
                           >
                             <div className="flex items-center">
                               <div className="bg-red-100 text-red-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3">
                                 {index + 1}
                               </div>
-                              <div>
-                                <p className="font-medium">
-                                  {barista.username}
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  {barista.outlet}
-                                </p>
-                              </div>
+                              <p className="font-medium">{category.text}</p>
                             </div>
-                            <div className="text-right">
-                              <p className="font-bold text-lg">
-                                {typeof barista.averageScore === "number"
-                                  ? barista.averageScore.toFixed(1)
-                                  : "0.0"}
-                              </p>
-                              {getTrendIndicator(
-                                barista.trend,
-                                barista.trendValue
-                              )}
-                            </div>
+                            <p className="font-bold">
+                              {typeof category.averageScore === "number"
+                                ? category.averageScore.toFixed(1)
+                                : "0.0"}{" "}
+                            </p>
                           </div>
                         ))}
                       </div>
-                    </CardContent>
-                  </Card>
+                    </TabsContent>
+                  </Tabs>
+                </CardContent>
+              </Card>
 
-                  {/* Best & Worst Categories */}
-                  <Card className="bg-white">
-                    <CardContent className="p-4">
-                      <Tabs defaultValue="best">
-                        <TabsList className="grid w-full grid-cols-2 mb-4">
-                          <TabsTrigger value="best">
-                            Kategori Terbaik
-                          </TabsTrigger>
-                          <TabsTrigger value="worst">
-                            Kategori Terendah
-                          </TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="best">
-                          <div className="space-y-3">
-                            {bestCategories.map((category, index) => (
-                              <div
-                                key={category.questionNumber}
-                                className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
-                              >
-                                <div className="flex items-center">
-                                  <div className="bg-green-100 text-green-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3">
-                                    {index + 1}
-                                  </div>
-                                  <p className="font-medium">{category.text}</p>
-                                </div>
-                                <p className="font-bold">
-                                  {typeof category.averageScore === "number"
-                                    ? category.averageScore.toFixed(1)
-                                    : "0.0"}{" "}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        </TabsContent>
-                        <TabsContent value="worst">
-                          <div className="space-y-3">
-                            {worstCategories.map((category, index) => (
-                              <div
-                                key={category.questionNumber}
-                                className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
-                              >
-                                <div className="flex items-center">
-                                  <div className="bg-red-100 text-red-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3">
-                                    {index + 1}
-                                  </div>
-                                  <p className="font-medium">{category.text}</p>
-                                </div>
-                                <p className="font-bold">
-                                  {typeof category.averageScore === "number"
-                                    ? category.averageScore.toFixed(1)
-                                    : "0.0"}{" "}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        </TabsContent>
-                      </Tabs>
-                    </CardContent>
-                  </Card>
+              {/* Section Header for Universal Data */}
+              <div className="mt-12 mb-6">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <h2 className="text-lg font-semibold text-green-800 mb-2">
+                    🌍 Data Universal (Semua Tahun)
+                  </h2>
+                  <p className="text-green-700 text-sm">
+                    Data di bawah ini menampilkan informasi keseluruhan dari
+                    semua barista probation tanpa filter tahun.
+                  </p>
                 </div>
               </div>
 
               {/* Barista Table */}
-              <Card className="bg-white mt-6">
+              <Card className="bg-white">
                 <CardContent className="p-4">
                   <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-medium">
@@ -1895,10 +1682,6 @@ export default function PeerReviewDashboard() {
                                       }}
                                     ></div>
                                   </div>
-                                  {/* <span className="text-xs text-gray-500">
-                                    {barista.reviewsCompleted}/
-                                    {barista.reviewsTotal}
-                                  </span> */}
                                   <span className="text-xs text-gray-500">
                                     {barista.reviewsTotal === 0
                                       ? "-"
@@ -1954,6 +1737,147 @@ export default function PeerReviewDashboard() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Universal Data Section */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                {/* Status Distribution */}
+                <Card className="bg-white">
+                  <CardContent className="p-4">
+                    <h2 className="text-lg font-medium mb-4">
+                      Distribusi Status
+                    </h2>
+                    <div className="h-[200px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={statusCounts}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={80}
+                            paddingAngle={2}
+                            dataKey="value"
+                            label={({ name, percent }) => {
+                              const percentText = `${(percent * 100).toFixed(
+                                0
+                              )}%`;
+                              return `${name}\n${percentText}`;
+                            }}
+                            labelLine={false}
+                          >
+                            {statusCounts.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            formatter={(value) => [
+                              `${value} barista`,
+                              "Jumlah",
+                            ]}
+                            contentStyle={{
+                              borderRadius: "8px",
+                              border: "1px solid #e2e8f0",
+                            }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 mt-4">
+                      {statusCounts.map((status) => (
+                        <div key={status.name} className="flex items-center">
+                          <div
+                            className="w-3 h-3 rounded-full mr-2"
+                            style={{ backgroundColor: status.color }}
+                          ></div>
+                          <span className="text-sm">
+                            {status.name}: {status.value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Top Performers */}
+                <Card className="bg-white">
+                  <CardContent className="p-4">
+                    <h2 className="text-lg font-medium mb-4">
+                      Barista Terbaik
+                    </h2>
+                    <div className="space-y-3">
+                      {topPerformers.map((barista, index) => (
+                        <div
+                          key={barista.username}
+                          className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                        >
+                          <div className="flex items-center">
+                            <div className="bg-blue-100 text-blue-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <p className="font-medium">{barista.username}</p>
+                              <p className="text-xs text-gray-500">
+                                {barista.outlet}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-lg">
+                              {typeof barista.averageScore === "number"
+                                ? barista.averageScore.toFixed(1)
+                                : "0.0"}{" "}
+                            </p>
+                            {getTrendIndicator(
+                              barista.trend,
+                              barista.trendValue
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Bottom Performers */}
+                <Card className="bg-white">
+                  <CardContent className="p-4">
+                    <h2 className="text-lg font-medium mb-4">
+                      Barista Terendah
+                    </h2>
+                    <div className="space-y-3">
+                      {bottomPerformers.map((barista, index) => (
+                        <div
+                          key={barista.username}
+                          className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                        >
+                          <div className="flex items-center">
+                            <div className="bg-red-100 text-red-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <p className="font-medium">{barista.username}</p>
+                              <p className="text-xs text-gray-500">
+                                {barista.outlet}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-lg">
+                              {typeof barista.averageScore === "number"
+                                ? barista.averageScore.toFixed(1)
+                                : "0.0"}
+                            </p>
+                            {getTrendIndicator(
+                              barista.trend,
+                              barista.trendValue
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </main>
         </div>

@@ -84,15 +84,12 @@ export default function TambahLogLembur() {
   // FETCH OUTLETS
   const fetchOutlets = async (storedToken: string) => {
     try {
-      const res = await fetch(
-        "https://rumahbaristensbe-production.up.railway.app/api/outlets",
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${storedToken}`,
-          },
-        }
-      );
+      const res = await fetch("http://localhost:8080/api/outlets", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${storedToken}`,
+        },
+      });
 
       if (!res.ok) throw new Error("Gagal mengambil data outlet");
 
@@ -207,17 +204,14 @@ export default function TambahLogLembur() {
       console.log("🟢 Payload dikirim:", payload);
       console.log("🟢 Current Outlet:", currentOutlet);
 
-      const res = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/overtime-logs`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const res = await fetch(`http://localhost:8080/api/overtime-logs`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
 
       if (!res.ok) {
         const contentType = res.headers.get("content-type");

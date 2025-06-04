@@ -149,7 +149,7 @@ export default function NotificationsPage() {
     try {
       setIsRefreshing(true);
       const response = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/notifications/${username}`,
+        `http://localhost:8080/api/notifications/${username}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -270,15 +270,12 @@ export default function NotificationsPage() {
         )
       );
 
-      await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/notifications/${id}/read`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await fetch(`http://localhost:8080/api/notifications/${id}/read`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       console.log(`Marked notification ${id} as read`);
     } catch (err) {
@@ -310,7 +307,7 @@ export default function NotificationsPage() {
 
       // This is a placeholder for the actual API call
       // In a real implementation, you would call your API to mark all as read
-      // await fetch(`https://rumahbaristensbe-production.up.railway.app/api/notifications/mark-all-read`, {
+      // await fetch(`http://localhost:8080/api/notifications/mark-all-read`, {
       //   method: 'PUT',
       //   headers: {
       //     Authorization: `Bearer ${token}`,

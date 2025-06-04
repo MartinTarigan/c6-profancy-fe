@@ -150,7 +150,7 @@ export default function KerjakanAssessment() {
 
         // 1. Fetch assessment
         const res = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/assessments/access/${username}`,
+          `http://localhost:8080/api/assessments/access/${username}`,
           {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
           }
@@ -367,7 +367,7 @@ export default function KerjakanAssessment() {
       };
 
       const res = await fetch(
-        "https://rumahbaristensbe-production.up.railway.app/api/trainee/assessment/submit",
+        "http://localhost:8080/api/trainee/assessment/submit",
         {
           method: "POST",
           headers: {

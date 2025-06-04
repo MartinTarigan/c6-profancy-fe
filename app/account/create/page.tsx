@@ -106,17 +106,14 @@ export default function TambahAkunBaru() {
       status: status,
     };
     try {
-      const response = await fetch(
-        "https://rumahbaristensbe-production.up.railway.app/api/account/create",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(requestBody),
-        }
-      );
+      const response = await fetch("http://localhost:8080/api/account/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
       if (!response.ok) {
         const errorData = await response.json();
         if (

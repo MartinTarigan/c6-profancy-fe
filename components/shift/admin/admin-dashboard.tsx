@@ -222,17 +222,14 @@ export function AdminDashboard() {
         return;
       }
 
-      const response = await fetch(
-        "https://rumahbaristensbe-production.up.railway.app/api/admin/outlets",
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
+      const response = await fetch("http://localhost:8080/api/admin/outlets", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
 
       if (response.status === 401) {
         setToastMessage({
@@ -323,7 +320,7 @@ export function AdminDashboard() {
         queryParams.append("outletId", requestDTO.outletId.toString());
 
       const response = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/admin/dashboard/summary?${queryParams.toString()}`,
+        `http://localhost:8080/api/admin/dashboard/summary?${queryParams.toString()}`,
         {
           method: "GET",
           headers: {

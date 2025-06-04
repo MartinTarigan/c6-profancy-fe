@@ -100,14 +100,11 @@ export default function LoginPage() {
     setIsLoggingIn(false);
 
     try {
-      const res = await fetch(
-        "https://rumahbaristensbe-production.up.railway.app/api/auth/login",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password }),
-        }
-      );
+      const res = await fetch("http://localhost:8080/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
       const result = await res.json();
 
       if (res.ok) {
@@ -147,7 +144,7 @@ export default function LoginPage() {
     try {
       // First check if username exists and is not verified
       const checkRes = await fetch(
-        "https://rumahbaristensbe-production.up.railway.app/api/auth/check-username",
+        "http://localhost:8080/api/auth/check-username",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -204,7 +201,7 @@ export default function LoginPage() {
     try {
       // Change password
       const changeRes = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/account/change-password?username=${newUsername}`,
+        `http://localhost:8080/api/account/change-password?username=${newUsername}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

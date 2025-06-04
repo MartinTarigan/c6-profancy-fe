@@ -72,7 +72,7 @@ export default function AssessmentQuestionsPage() {
 
         // Fetch assessments to get the current assessment
         const assessmentsRes = await fetch(
-          "https://rumahbaristensbe-production.up.railway.app/api/assessments",
+          "http://localhost:8080/api/assessments",
           {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
           }
@@ -98,7 +98,7 @@ export default function AssessmentQuestionsPage() {
         // Fetch correct answers
         try {
           const correctAnswersRes = await fetch(
-            `https://rumahbaristensbe-production.up.railway.app/api/trainee/answers/correct/${assessmentId}`,
+            `http://localhost:8080/api/trainee/answers/correct/${assessmentId}`,
             {
               headers: token ? { Authorization: `Bearer ${token}` } : {},
             }

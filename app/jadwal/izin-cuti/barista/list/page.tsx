@@ -86,7 +86,7 @@ export default function LeaveRequestListPage() {
 
         setIsLoading(true);
         const response = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/shift-management/leave-request/user/username/${username}`,
+          `http://localhost:8080/api/shift-management/leave-request/user/username/${username}`,
           {
             method: "GET",
             headers: {
@@ -119,7 +119,7 @@ export default function LeaveRequestListPage() {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/shift-management/leave-request/${id}`,
+        `http://localhost:8080/api/shift-management/leave-request/${id}`,
         {
           method: "DELETE",
           headers: {

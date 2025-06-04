@@ -78,7 +78,7 @@ export default function EditProfile() {
         setIsLoading(true);
         const token = localStorage.getItem("token");
         const response = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/account/${originalUsername}`,
+          `http://localhost:8080/api/account/${originalUsername}`,
           {
             method: "GET",
             headers: { Authorization: `Bearer ${token}` },
@@ -179,7 +179,7 @@ export default function EditProfile() {
         payload.password = newPassword;
       }
       const response = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/account/update-personal?username=${originalUsername}`,
+        `http://localhost:8080/api/account/update-personal?username=${originalUsername}`,
         {
           method: "PUT",
           headers: {

@@ -62,15 +62,12 @@ export default function HeadBarOvertimeReportsPage() {
       }
 
       try {
-        const res = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/account/${userId}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await fetch(`http://localhost:8080/api/account/${userId}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         const userRes = await res.json();
         setUser(userRes.data);
@@ -91,15 +88,12 @@ export default function HeadBarOvertimeReportsPage() {
 
     const fetchAllOutlets = async (token: string, userOutletName: string) => {
       try {
-        const res = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/outlets`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await fetch(`http://localhost:8080/api/outlets`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         const data = await res.json();
         setOutlets(data);
@@ -126,7 +120,7 @@ export default function HeadBarOvertimeReportsPage() {
     const fetchOvertimeLogs = async (token: string, outletId: number) => {
       try {
         const response = await fetch(
-          "https://rumahbaristensbe-production.up.railway.app/api/overtime-logs",
+          "http://localhost:8080/api/overtime-logs",
           {
             method: "GET",
             headers: {

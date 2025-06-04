@@ -53,7 +53,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     }
     try {
       const res = await fetch(
-        `https://rumahbaristensbe-production.up.railway.app/api/notifications/${username}`,
+        `http://localhost:8080/api/notifications/${username}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (!res.ok) throw new Error("Failed to fetch");
@@ -142,9 +142,14 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       roleItems = [
         {
           title: "Account Management",
-          url: "/account",
+          url: "#",
           icon: Users,
-          standalone: true,
+          items: [
+            { title: "Barista", url: "/barista" },
+            { title: "Material", url: "/training-materials" },
+            { title: "Peer Review", url: "/peer-review" },
+            { title: "List Shift", url: "jadwal/shift" },
+          ],
         },
         {
           title: "Training Management",
@@ -154,6 +159,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             { title: "Assessment", url: "/assessment" },
             { title: "Material", url: "/training-materials" },
             { title: "Peer Review", url: "/peer-review" },
+            { title: "List Shift", url: "jadwal/shift" },
           ],
         },
       ];
@@ -205,14 +211,10 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           url: "#",
           icon: BookOpen,
           items: [
-            {
-              title: "Peer Review & Grading",
-              url: "/peer-review/dashboard",
-            },
-            {
-              title: "Performance Grading",
-              url: "/assessment/dashboard-clevel",
-            },
+            { title: "Barista", url: "/barista" },
+            { title: "Material", url: "/training-materials" },
+            { title: "Peer Review", url: "/peer-review" },
+            { title: "List Shift", url: "jadwal/shift" },
           ],
         },
       ];

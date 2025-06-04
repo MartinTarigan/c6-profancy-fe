@@ -78,14 +78,11 @@ export default function CreateLeaveRequestPage() {
     // Fetch user profile for additional info
     const fetchUserProfile = async () => {
       try {
-        const response = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/user/profile`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await fetch(`http://localhost:8080/api/user/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         if (response.ok) {
           const data = await response.json();
@@ -178,7 +175,7 @@ export default function CreateLeaveRequestPage() {
       };
 
       const response = await fetch(
-        "https://rumahbaristensbe-production.up.railway.app/api/shift-management/leave-request/create",
+        "http://localhost:8080/api/shift-management/leave-request/create",
         {
           method: "POST",
           headers: {

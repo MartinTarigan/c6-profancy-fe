@@ -133,8 +133,8 @@ export function ShiftHistoryModal({
       // Endpoint berbeda berdasarkan mode
       const endpoint =
         mode === "modal" && baristaId
-          ? `https://rumahbaristensbe-production.up.railway.app/api/admin/barista/${baristaId}/shifts?${queryParams.toString()}`
-          : `https://rumahbaristensbe-production.up.railway.app/api/admin/shifts/schedule?${queryParams.toString()}`;
+          ? `http://localhost:8080/api/admin/barista/${baristaId}/shifts?${queryParams.toString()}`
+          : `http://localhost:8080/api/admin/shifts/schedule?${queryParams.toString()}`;
 
       const response = await fetch(endpoint, {
         method: "GET",

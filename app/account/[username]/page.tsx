@@ -46,7 +46,7 @@ export default function DetailAkun() {
         const token = localStorage.getItem("token");
 
         const response = await fetch(
-          `https://rumahbaristensbe-production.up.railway.app/api/account/${username}`,
+          `http://localhost:8080/api/account/${username}`,
           {
             method: "GET",
             headers: {

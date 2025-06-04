@@ -41,7 +41,7 @@ export default function TambahPeerReview() {
       try {
         setIsLoading(true);
         const reviewersResponse = await fetch(
-          "https://rumahbaristensbe-production.up.railway.app/api/trainee/peer-review-assignment/reviewers",
+          "http://localhost:8080/api/trainee/peer-review-assignment/reviewers",
           {
             headers: { Authorization: `Bearer ${storedToken}` },
           }
@@ -55,7 +55,7 @@ export default function TambahPeerReview() {
         setReviewers(reviewersData.data || []);
 
         const revieweesResponse = await fetch(
-          "https://rumahbaristensbe-production.up.railway.app/api/trainee/peer-review-assignment/reviewees",
+          "http://localhost:8080/api/trainee/peer-review-assignment/reviewees",
           {
             headers: { Authorization: `Bearer ${storedToken}` },
           }
@@ -114,7 +114,7 @@ export default function TambahPeerReview() {
       setIsSubmitting(true);
       const formattedDate = format(deadline as Date, "yyyy-MM-dd");
       const response = await fetch(
-        "https://rumahbaristensbe-production.up.railway.app/api/trainee/peer-review-assignment/create",
+        "http://localhost:8080/api/trainee/peer-review-assignment/create",
         {
           method: "POST",
           headers: {
